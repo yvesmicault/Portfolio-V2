@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Storyboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#ecebe7;font:13px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#1d1d22;padding:40px 48px;width:1880px}
+h1{font-size:30px;letter-spacing:-.02em}
+.lead{color:#6a6863;margin:6px 0 28px;font-size:14px}
+.row{display:flex;gap:40px;align-items:flex-start}
+.col{width:410px}
+.st{display:flex;gap:10px;align-items:baseline;margin-bottom:10px}
+.st b{font-size:20px}.st span{color:#86847f;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.ph{width:410px;height:844px;border-radius:44px;background:#111;padding:10px;box-shadow:0 20px 50px rgba(0,0,0,.15)}
+.sc{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden}
+.bg{position:absolute;inset:0}
+.hd{position:absolute;top:22px;left:20px;right:20px;display:flex;justify-content:space-between;font-size:12px;z-index:3}
+.hd b{letter-spacing:.04em}.hd small{display:block;color:#86847f;font-size:10px}
+.hd .nv{display:flex;gap:10px;color:#86847f;font-size:11px}.hd .nv i{color:#1d1d22;font-style:normal}
+svg{position:absolute;inset:0;width:100%;height:100%}
+.pill{position:absolute;transform:translate(-50%,-50%);background:rgba(255,255,255,.7);border-radius:999px;padding:0 14px;height:44px;line-height:44px;font-weight:600;font-size:12px;letter-spacing:.06em;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.bar{position:absolute;left:12px;right:12px;bottom:18px;height:56px;border-radius:999px;background:rgba(255,255,255,.75);display:flex;align-items:center;gap:4px;padding:6px;box-shadow:0 6px 24px rgba(0,0,0,.08);font-size:12px}
+.bar span{height:44px;line-height:44px;padding:0 12px;border-radius:999px;color:#5f5d58;white-space:nowrap}
+.bar .on{background:#1d1d22;color:#fff}
+.bar .sp{flex:1}
+.nt{margin-top:16px;display:grid;grid-template-columns:70px 1fr;gap:6px 10px;font-size:13px}
+.nt dt{color:#86847f;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.ar{position:absolute;font-size:11px;color:#1d1d22;background:#fff;border-radius:999px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.img{position:absolute;border-radius:22px;overflow:hidden;background-size:cover;background-position:center}
+.t1{position:absolute;font-size:30px;font-weight:700;letter-spacing:-.02em}
+.t2{position:absolute;color:#5f5d58;font-size:12px}
+.srch{position:absolute;left:16px;right:16px;top:74px;height:44px;border-radius:999px;background:rgba(255,255,255,.75);color:#86847f;padding:0 16px;line-height:44px;font-size:13px}
+.cap{position:absolute;font-size:11.5px;text-align:center;transform:translateX(-50%);width:170px}
+.cap b{display:block;font-size:12.5px}.cap span{color:#5f5d58}
+.sheet{position:absolute;inset:0;background:#fbfaf8;padding:22px 18px}
+.sheet .top{display:flex;justify-content:space-between;font-size:11px;color:#86847f;margin-top:22px}
+.sheet .top i{font-style:normal;color:#1d1d22;display:flex;gap:6px;align-items:center}
+.sheet .top i::before{content:"";width:7px;height:7px;background:#e08058;border-radius:2px}
+.sheet .hero{height:236px;border-radius:18px;background-size:cover;background-position:center;margin:14px 0}
+.sheet h2{font-size:28px;letter-spacing:-.02em}
+.sheet dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:14px 0;font-size:12px}
+.sheet dt{color:#86847f}
+.sheet p{font-size:12.5px;color:#3d3b37}
+.sheet .pl{display:flex;gap:8px;margin-top:14px}.sheet .pl div{flex:1;height:70px;border-radius:10px;background-size:cover}
+.arrow{position:absolute;left:0;right:0;top:420px;text-align:center;font-size:12px;color:#86847f}
+</style></head><body>
+<h1>Accueil → Découvrir → Index → Projet</h1>
+<p class="lead">Storyboard au format téléphone (390 px). Une seule matière : le carré, qui devient pixel puis cube. Les mêmes modules forment le logo, les empreintes et la grille.</p>
+<div class="row" id="row"></div>
+<script src="data.js"></script><script src="emp.js"></script>
+<script>
+const P=window.PROJ,E=window.EMP,byId=Object.fromEntries(P.map(p=>[p.id,p]));
+const INK='#1d1d22';
+function bg(c1,c2,c3){return `<div class="bg" style="background:radial-gradient(70% 45% at 20% 25%,${c2},transparent),radial-gradient(60% 40% at 85% 80%,${c3},transparent),${c1}"></div>`}
+// cube axo : x,y en plan, z hauteur ; projection isométrique douce
+function iso(x,y,z,u,ox,oy){return [ox+(x-y)*u*.866,oy+(x+y)*u*.5-z*u]}
+function prism(x,y,w,d,h,u,ox,oy,top,s1,s2,stroke){
+  const p=(a,b,c)=>iso(a,b,c,u,ox,oy).join(','),
+  t=`${p(x,y,h)} ${p(x+w,y,h)} ${p(x+w,y+d,h)} ${p(x,y+d,h)}`,
+  r=`${p(x+w,y,0)} ${p(x+w,y+d,0)} ${p(x+w,y+d,h)} ${p(x+w,y,h)}`,
+  l=`${p(x,y+d,0)} ${p(x+w,y+d,0)} ${p(x+w,y+d,h)} ${p(x,y+d,h)}`;
+  const sk=stroke?` stroke="${stroke}" stroke-width=".5" stroke-linejoin="round"`:'';
+  return `<polygon points="${l}" fill="${s1}"${sk}/><polygon points="${r}" fill="${s2}"${sk}/><polygon points="${t}" fill="${top}"${sk}/>`}
+function emp(id,u,ox,oy,ink){const e=E[id];if(!e)return '';const n=e.n;let s='';
+  // ombre portée
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const h=e.h[j*n+i];if(!h)continue;const a=iso(i-n/2+.15,j-n/2+.15,0,u,ox,oy);}
+  for(let k=0;k<2*n;k++)for(let j=0;j<n;j++){const i=k-j;if(i<0||i>=n)continue;const h=e.h[j*n+i];if(!h)continue;
+    s+=prism(i-n/2,j-n/2,.92,.92,h*.8,u,ox,oy,'#fff',ink?'#b9b4c6':'#c9c5bd',ink?'#8e8aa0':'#a29e96','rgba(29,29,34,.35)')}
+  return s}
+function plan(id,u,ox,oy){const e=E[id];if(!e)return '';const n=e.n;let s='';
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){if(!e.h[j*n+i])continue;s+=`<rect x="${ox+(i-n/2)*u}" y="${oy+(j-n/2)*u}" width="${u*.86}" height="${u*.86}" rx="${u*.22}" fill="${INK}"/>`}return s}
+function head(nav){return `<div class="hd"><div><b>YVES MICAULT</b><small>architecte HMONP</small></div><div class="nv">${['Découvrir','Tous les projets','Carte','Profil'].map(x=>x==nav?`<i>${x}</i>`:`<span>${x}</span>`).join('')}</div></div>`}
+const cols=[];
+
+// 1 ACCUEIL
+{let s='';const u=19,ox=195,oy=360;
+ s+=`<ellipse cx="${ox}" cy="${oy+150}" rx="110" ry="20" fill="rgba(29,29,34,.08)"/>`;
+ for(let k=0;k<12;k++)for(let j=0;j<6;j++){const i=k-j;if(i<0||i>5)continue;
+   const c=['#c7d3f4','#f6cdb9','#cfe6d4','#ddd3f2'];
+   s+=prism(i-3,j-3,.94,.94,6,u,ox,oy,'#fff',j==5?'#9fb3ea':'#d9d6e3',i==5?'#f0b79c':'#bdb9c9','rgba(29,29,34,.25)')}
+ cols.push({n:'1',t:'Accueil',scr:bg('#f3f1ec','#e6defa','#d9ece0')+head('')+`<svg viewBox="0 0 390 824">${s}</svg>`+
+  `<div class="pill" style="left:84px;top:170px;color:#5878d6">DÉCOUVRIR</div><div class="pill" style="left:298px;top:170px;color:#e08058">TOUS LES PROJETS</div><div class="pill" style="left:80px;top:560px;color:#529c68">CARTE</div><div class="pill" style="left:308px;top:560px;color:#8c6ecc">PROFIL</div>`+
+  `<div class="t1" style="left:0;right:0;text-align:center;top:600px;font-size:34px">Yves Micault</div><div class="t2" style="left:0;right:0;text-align:center;top:644px">Architecte HMONP · projets d’agence, concours, études</div>`+
+  `<div class="t2" style="left:0;right:0;text-align:center;top:740px;color:#86847f">Touchez une porte, ou le cube pour découvrir</div>`,
+  g:'Toucher une porte (ou le cube = Découvrir).',u:'Comprendre qui, quoi ; choisir une porte ou passer.',e:'Le carré se trace, se remplit, prend son volume et flotte doucement. Au retour : déjà en place, sans intro.'})}
+
+// 2 DÉCOUVRIR
+{const p=byId.varese;let s=emp('varese',5.2,312,148,1);
+ cols.push({n:'2',t:'Découvrir',scr:bg('#eaf2ec','#d2e9d8','#e2ecf8')+head('Découvrir')+
+  `<div class="img" style="left:16px;right:16px;top:190px;height:300px;background-image:url(${p.hero})"></div><svg viewBox="0 0 390 824">${s}</svg>`+
+  `<div class="t2" style="left:20px;top:84px;color:#529c68;font-weight:600;letter-spacing:.06em">ÉTUDES · 3 / 31</div>`+
+  `<div class="t1" style="left:20px;top:510px">${p.t}</div><div class="t2" style="left:20px;top:550px">${p.c} · ${p.role}</div>`+
+  `<div class="t2" style="left:20px;right:20px;top:580px;line-height:1.5">Projet de gare · passerelle de liaison, espace paysager, espace public</div>`+
+  `<div class="ar" style="left:20px;top:640px">← glisser : projet suivant</div><div class="ar" style="left:20px;top:676px">toucher l’image : ouvrir</div>`+
+  `<div class="bar"><span class="on">Découvrir</span><span>Tout voir</span><span class="sp"></span><span>Plan</span><span class="on">Axo</span></div>`,
+  g:'Glisser = projet suivant. « Tout voir » = recule vers l’Index (pincer : raccourci optionnel).',u:'Parcourir sans rien chercher, un projet à la fois.',e:'L’empreinte (en haut à droite) bascule sur son arête, ~400 ms ; la nouvelle monte, l’image change en fondu. Image toujours entière.'})}
+
+// 3 INDEX
+{let s='';const ids=['varese','agri','terminus','elle','ventres','crank'];
+ const cap=[];ids.forEach((id,k)=>{const cx=103+(k%2)*184,cy=240+Math.floor(k/2)*180;s+=emp(id,3.4,cx,cy-10,0);
+   if(id=='varese')s+=`<rect x="${cx-82}" y="${cy-78}" width="164" height="160" rx="18" fill="none" stroke="#529c68" stroke-width="1.5"/>`;
+   const p=byId[id];cap.push(`<div class="cap" style="left:${cx}px;top:${cy+44}px"><b>${p.t}</b><span>${/\d{4}/.test(p.role)?p.role:p.y+' · '+p.role}</span></div>`)});
+ cols.push({n:'3',t:'Index',scr:bg('#f6f0e4','#efe2c8','#dbe7f6')+head('Tous les projets')+`<div class="srch">Rechercher : Lille, gare, 2021…</div>`+
+  `<div class="t2" style="left:20px;top:132px">9 projets · Études, Concours · tri : date</div><svg viewBox="0 0 390 824">${s}</svg>`+cap.join('')+
+  `<div class="bar"><span>Découvrir</span><span class="on">Index</span><span class="sp"></span><span class="on">Axo</span><span>Filtrer / Trier</span></div>`,
+  g:'Toucher une empreinte = ouvrir. « Filtrer / Trier » ouvre un panneau ; recherche toujours visible.',u:'Tout voir, trier (date en groupes, surface en m² en nommant laquelle), filtrer, chercher. Plus tard : mode « Même échelle » en mètres.',e:'Les empreintes reculent et se rangent en grille ; le projet en cours reste cerclé. Plan/Axo change la projection, pas le contenu.'})}
+
+// 4 PROJET
+{const p=byId.varese;
+ cols.push({n:'4',t:'Projet',scr:`<div class="sheet"><div class="top"><span>Études · ${p.role}</span><i>Retour</i></div><div class="hero" style="background-image:url(${p.hero})"></div><h2>${p.t}</h2><div class="t2" style="position:static;margin-top:4px">${p.line}</div><dl>${p.fiche.map(f=>`<dt>${f[0]}</dt><dd>${f[1]}</dd>`).join('')}</dl><p>${p.txt.slice(0,230)}…</p><div class="pl">${p.pl.map(x=>`<div style="background-image:url(${x})"></div>`).join('')}</div></div>`,
+  g:'« Retour » (ou glisser vers le bas).',u:'Comprendre le projet : rôle, données, texte, planches entières.',e:'La fiche s’ouvre depuis la case touchée ; l’empreinte cède la place à l’image intacte. Retour au même endroit, même filtre, même vue.'})}
+
+document.getElementById('row').innerHTML=cols.map(c=>`<div class="col"><div class="st"><b>${c.n}. ${c.t}</b></div><div class="ph"><div class="sc">${c.scr}</div></div>
+<dl class="nt"><dt>Geste</dt><dd>${c.g}</dd><dt>Utilité</dt><dd>${c.u}</dd><dt>Effet</dt><dd>${c.e}</dd></dl></div>`).join('');
+</script></body></html>
