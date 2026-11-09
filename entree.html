@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Signe et entrée</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--bg:#f2f1ed;--ink:#1d1d1b;--mut:#8a8a83;--hair:#dcdbd4}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:28px 0 50px}
+.top{max-width:1300px;margin:0 auto 22px;padding:0 16px}
+h1{font-family:Mono;font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.top p{font-size:15px;line-height:1.5;max-width:720px;margin-top:8px;color:#3c3c39}
+.row{display:flex;gap:26px;overflow-x:auto;padding:4px 16px 14px;scroll-snap-type:x mandatory;max-width:1300px;margin:0 auto}
+figure{flex:0 0 270px;scroll-snap-align:start}
+.ph{width:270px;height:540px;border:1px solid var(--hair);border-radius:26px;overflow:hidden}
+.ph canvas,.sz{width:100%;display:block}
+.ph canvas{height:100%}
+.sz{height:110px;margin-top:12px}
+figcaption{font-size:13px;line-height:1.45;margin-top:6px;color:#3c3c39}
+figcaption b{display:block;font-weight:600;font-size:16px;font-stretch:90%;color:var(--ink);margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="top">
+ <h1>Signe et entrée · quatre écritures · module : décalage = 1/4 du carré</h1>
+ <p>Même règle pour les quatre : un carré, son double décalé d'un quart, aucun trait de construction. Seule change la manière de remplir les pleins et le vide. Sous chaque écran, le signe à 96, 48 et 24 px.</p>
+</div>
+<div class="row">
+ <figure><div class="ph"><canvas data-v="0"></canvas></div><canvas class="sz" data-v="0" data-z="1"></canvas><figcaption><b>1 · Trois valeurs</b>Le carré en encre, le double en gris, le recouvrement en clair. On lit un volume, sans le dessiner.</figcaption></figure>
+ <figure><div class="ph"><canvas data-v="1"></canvas></div><canvas class="sz" data-v="1" data-z="1"></canvas><figcaption><b>2 · Le vide partagé</b>Deux pleins, et là où ils se croisent, un vide. Le plus graphique : un monogramme en négatif.</figcaption></figure>
+ <figure><div class="ph"><canvas data-v="2"></canvas></div><canvas class="sz" data-v="2" data-z="1"></canvas><figcaption><b>3 · Cadre et pixel</b>Le carré reste un cadre épais, le double est un plein. La limite et l'unité, côte à côte.</figcaption></figure>
+ <figure><div class="ph"><canvas data-v="3"></canvas></div><canvas class="sz" data-v="3" data-z="1"></canvas><figcaption><b>4 · L'épaisseur</b>Le double ne montre que ce qui dépasse : une bande en L. Le carré gagne une épaisseur, comme une extrusion.</figcaption></figure>
+</div>
+<script>
+const INK='#1d1d1b',MID='#8f8f88',LT='#dcdbd4',BG='#f2f1ed';
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const L=(a,b,t)=>a+(b-a)*t,ease=t=>t<=0?0:t>=1?1:t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,ph=(t,a,b)=>ease((t-a)/(b-a));
+// A = carré (x,y,s) ; B = double décalé de (d,-d) vers le haut à droite
+function V(v,g,x,y,s,d){const bx=x+d,by=y-d,ox=Math.max(x,bx),oy=Math.max(y,by),ow=s-Math.abs(d),oh=s-Math.abs(d);
+ if(v===0){g.fillStyle=MID;g.fillRect(bx,by,s,s);g.fillStyle=INK;g.fillRect(x,y,s,s);if(d>.3){g.fillStyle=LT;g.fillRect(ox,oy,ow,oh)}}
+ if(v===1){g.fillStyle=INK;g.beginPath();g.rect(x,y,s,s);if(d>.3)g.rect(bx,by,s,s);g.fill('evenodd')}
+ if(v===2){const w=s*.13;if(d>.3){g.fillStyle=INK;g.fillRect(bx,by,s,s)}g.fillStyle=BG;g.fillRect(x,y,s,s);
+  g.fillStyle=INK;g.beginPath();g.rect(x,y,s,s);g.rect(x+w,y+w,s-2*w,s-2*w);g.fill('evenodd')}
+ if(v===3){if(d>.3){g.fillStyle=MID;g.beginPath();g.moveTo(x,y);g.lineTo(bx,by);g.lineTo(bx+s,by);g.lineTo(bx+s,by+s);g.lineTo(x+s,y+s);g.lineTo(x+s,y);g.closePath();g.fill()}
+  g.fillStyle=INK;g.fillRect(x,y,s,s)}}
+function entry(g,w,h,t,v){const T=t%7,s=104,d=s/4,x=(w-s)/2-d/2,y=h*.36-s/2+d/2;
+ const grow=ph(T,0,.9),k=L(.08,1,grow),ss=s*k,dd=d*ph(T,1.1,2)*(1-ph(T,5.3,6.2));
+ V(v,g,x+(s-ss)/2,y+(s-ss)/2,ss,dd);
+ const a=ph(T,2.1,2.8)*(1-ph(T,5.2,5.7));g.globalAlpha=a;g.fillStyle=INK;g.textAlign='left';g.textBaseline='alphabetic';
+ const tx=28,ty=h*.64;g.font='600 32px Archivo';g.fontStretch='condensed';g.fillText('Yves',tx,ty);g.fillText('Micault',tx,ty+34);
+ g.font='10.5px Mono';g.fillStyle='#6d6d67';g.fillText('ARCHITECTE HMONP',tx,ty+58);
+ g.fillStyle=INK;g.font='500 15px Archivo';g.fillText('Entrer',tx,h-52);g.fillRect(tx,h-44,46,1.5);
+ // petit signe repère en haut
+ g.globalAlpha=a;V(v,g,w-28-16,28,16,4);g.globalAlpha=1}
+function sizes(g,w,h,v){let x=8;for(const z of [96,48,24]){const s=z*.8,d=s/4;V(v,g,x,(h-s)/2+d/2,s,d);x+=z+18}}
+const cells=[...document.querySelectorAll('canvas')].map(c=>({c,v:+c.dataset.v,z:!!c.dataset.z}));
+function size(){const dp=Math.min(2,devicePixelRatio||1);cells.forEach(x=>{const r=x.c.getBoundingClientRect();x.w=r.width;x.h=r.height;x.c.width=r.width*dp;x.c.height=r.height*dp;x.d=dp;x.done=false})}
+function frame(now){const t=red?4:now/1000;for(const x of cells){if(x.z&&x.done)continue;const g=x.c.getContext('2d');g.setTransform(x.d,0,0,x.d,0,0);g.clearRect(0,0,x.w,x.h);
+ if(x.z)sizes(g,x.w,x.h,x.v);else entry(g,x.w,x.h,t,x.v);x.done=true}requestAnimationFrame(frame)}
+addEventListener('resize',size);size();document.fonts.ready.then(()=>requestAnimationFrame(frame));
+</script>
+</body>
+</html>
