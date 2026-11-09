@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Yves Micault — Trame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f0e9;--tile:#fbfaf6;--ink:#171716;--mute:#8b867c;--line:#d9d3c7;--gap:#171716;
+  --e:#b46a5a;--c:#2f6e8c;--a:#46525e;--p:#6f6a5f;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;--sans:"Jost",system-ui,sans-serif;--s:min(62vw,44vh,460px)}
+body.nuit{--bg:#141414;--tile:#1f1f1e;--ink:#ecebe6;--mute:#8d8a83;--line:#3a3936;--gap:#000}
+body.trame{--bg:#f3f0e9}
+body.trame{background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:calc(var(--s)/3) calc(var(--s)/3);background-position:center}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background-color:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;transition:background-color .3s steps(3)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+
+header{position:fixed;inset:0 0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 0;display:flex;justify-content:space-between;align-items:flex-start;z-index:20}
+.brand{display:flex;gap:10px;align-items:center}
+.brand b{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.1em}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.06em}
+.hb{display:flex;gap:14px}.hb button{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:4px 0}
+
+/* la scène et le cube */
+#scene{position:fixed;inset:0;display:grid;place-items:center;perspective:2400px;touch-action:none;transition:opacity .35s steps(4)}
+#view{width:var(--s);height:var(--s);transform-style:preserve-3d;transition:transform 1.1s steps(9)}
+body.axo #view{transform:translateY(-4vh) rotateX(-24deg) rotateY(-36deg)}
+#cube{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s steps(6)}
+.face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;background:var(--gap);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face>div{position:relative;overflow:hidden;background:var(--tile)}
+.face img{width:100%;height:100%;object-fit:cover;display:block}
+.face svg{width:100%;height:100%;display:block}
+.face .ctr{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;color:#fff;text-align:center}
+.face .ctr b{font-family:var(--mono);font-weight:500;font-size:clamp(8px,2.4vw,11px);letter-spacing:.08em;text-transform:uppercase}
+.face .ctr small{font-family:var(--mono);font-size:clamp(7px,2vw,10px);opacity:.75}
+.face .txt{display:flex;align-items:flex-end;padding:6px;font-family:var(--mono);font-size:clamp(6.5px,1.9vw,9.5px);line-height:1.25;letter-spacing:.03em;text-transform:uppercase}
+.f-front{transform:translateZ(calc(var(--s)/2))}
+.f-right{transform:rotateY(90deg) translateZ(calc(var(--s)/2))}
+.f-back{transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.f-left{transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.f-top{transform:rotateX(90deg) translateZ(calc(var(--s)/2))}
+.f-bottom{transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+body:not(.axo) .face:not(.f-front){opacity:0}
+.face{transition:opacity .6s steps(4) .5s}
+
+/* ouverture : la trame à plat qui se dessine case par case */
+body:not(.axo) .f-front>div{animation:cell .5s steps(3) both;animation-delay:calc(var(--i)*70ms)}
+@keyframes cell{from{opacity:0;transform:scale(.6)}}
+
+/* barre du bas : la partie active */
+#dock{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px;z-index:10;transition:opacity .3s steps(3)}
+body:not(.axo) #dock{opacity:0}
+#sec{display:flex;align-items:center;gap:18px}
+#sec button.ar{width:40px;height:40px;border:1px solid var(--line);font-size:15px}
+#secName{min-width:9.5em;text-align:center}
+#secName b{display:block;font-weight:400;font-size:26px;line-height:1.1}
+#secName span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
+#openBtn{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--bg);padding:12px 22px}
+.hint{font-family:var(--mono);font-size:9.5px;color:var(--mute);letter-spacing:.06em}
+
+/* une partie ouverte : la face à plat, 9 cases, les rangées tournent */
+#board{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(56px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));z-index:15}
+body.open #board{display:flex}body.open #scene,body.open #dock{opacity:0;pointer-events:none}
+#bHead{width:min(92vw,62vh,560px);display:flex;justify-content:space-between;align-items:flex-end}
+#bHead b{font-weight:400;font-size:28px;line-height:1}
+#bHead span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
+#grid{width:min(92vw,62vh,560px);aspect-ratio:1;display:flex;flex-direction:column;gap:3px;padding:3px;background:var(--gap);perspective:900px;touch-action:pan-y}
+.row{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;transform-style:preserve-3d}
+.cellb{position:relative;overflow:hidden;background:var(--tile);text-align:left;animation:cell .45s steps(3) both;animation-delay:calc(var(--i)*55ms)}
+.cellb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cellb svg{position:absolute;inset:14% 14% 30%;width:72%;height:56%}
+.cellb .cap{position:absolute;left:0;right:0;bottom:0;padding:5px 6px;font-family:var(--mono);font-size:clamp(7.5px,2.2vw,10px);line-height:1.25;letter-spacing:.02em;text-transform:uppercase}
+.cellb.im .cap{color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.cellb .cap i{font-style:normal;opacity:.7;display:block}
+.cellb.empty{background:var(--tile);background-image:repeating-linear-gradient(135deg,transparent 0 7px,var(--line) 7px 8px);animation:none}
+#bFoot{width:min(92vw,62vh,560px);display:flex;justify-content:space-between;align-items:center}
+#bFoot button{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:10px 0}
+#pg{font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+.pager{display:flex;gap:10px;align-items:center}.pager button{width:38px;height:38px;border:1px solid var(--line)!important;padding:0!important}
+
+/* fiche projet */
+#sheet{position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;display:none}
+#sheet.on{display:block;animation:sheet .42s steps(6) both}
+@keyframes sheet{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.sh-top{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.sh-top button{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:6px 0}
+.sh-in{max-width:1080px;margin:0 auto;padding:16px 16px 60px}
+.hero{position:relative;aspect-ratio:4/3;background:var(--tile);overflow:hidden}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero svg{position:absolute;inset:18%;width:64%;height:64%}
+.fam{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:16px}
+.fam svg{width:14px;height:14px}
+.sh-in h2{font-weight:400;font-size:clamp(32px,9vw,56px);line-height:1;margin:8px 0 6px}
+.ln{font-size:15px;color:var(--mute)}
+dl{margin-top:20px;border-top:1px solid var(--ink)}
+dl div{display:grid;grid-template-columns:7.5em 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.4}
+dt{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+.txt{font-size:16px;line-height:1.6;margin-top:20px;text-align:justify;hyphens:auto}
+.sec{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:28px 0 10px;display:flex;justify-content:space-between}
+.pl{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--gap);padding:3px}
+.pl button{aspect-ratio:1;background:var(--tile);overflow:hidden}.pl img{width:100%;height:100%;object-fit:cover;display:block}
+.links{display:flex;flex-direction:column;margin-top:24px;border-top:1px solid var(--ink)}
+.links a{color:inherit;text-decoration:none;display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}
+.cr{font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-top:6px}
+@media (min-width:860px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero{aspect-ratio:16/9}}
+
+#lb{position:fixed;inset:0;background:#111;z-index:50;display:none}#lb.on{display:block}
+#lb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#lb .x{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top));color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:2}
+#lb .n{position:absolute;left:16px;top:calc(14px + env(safe-area-inset-top));color:#aaa;font-family:var(--mono);font-size:11px}
+#lb .pv,#lb .nx{position:absolute;top:0;bottom:0;width:35%;z-index:1}#lb .pv{left:0}#lb .nx{right:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><g fill="currentColor"><rect x="0" y="0" width="4.5" height="4.5"/><rect x="11.5" y="0" width="4.5" height="4.5"/><rect x="5.75" y="5.75" width="4.5" height="4.5"/><rect x="0" y="11.5" width="4.5" height="4.5"/><rect x="11.5" y="11.5" width="4.5" height="4.5"/></g></svg><b>YVES MICAULT</b><span>architecte · trame v2</span></div>
+  <div class="hb"><button id="bgBtn" aria-label="Changer le fond">Fond ◐</button></div>
+</header>
+
+<div id="scene"><div id="view"><div id="cube"></div></div></div>
+
+<div id="dock">
+  <div id="sec"><button class="ar" id="pv" aria-label="Face précédente">←</button><div id="secName"><b></b><span></span></div><button class="ar" id="nx" aria-label="Face suivante">→</button></div>
+  <button id="openBtn">Ouvrir</button>
+  <p class="hint">Faites tourner le cube · ↑ ↓ pour le dessus et le dessous</p>
+</div>
+
+<section id="board" aria-label="Partie ouverte">
+  <div id="bHead"><b id="bName"></b><span id="bInfo"></span></div>
+  <div id="grid"></div>
+  <div id="bFoot"><button id="back">↺ Cube</button><div class="pager"><button id="gp" aria-label="Page précédente">←</button><span id="pg"></span><button id="gn" aria-label="Page suivante">→</button></div></div>
+</section>
+
+<section id="sheet" aria-label="Fiche"><div class="sh-top"><button id="shClose">↓ Fermer</button><span class="mono" id="shN"></span></div><div class="sh-in" id="shIn"></div></section>
+<div id="lb"><span class="n" id="lbN"></span><button class="x" id="lbX">Fermer ×</button><img id="lbI" alt=""><button class="pv" id="lbP" aria-label="Précédente"></button><button class="nx" id="lbNx" aria-label="Suivante"></button></div>
+
+<script src="data.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const ALL=window.PROJ,PUB=window.PUB,CV=window.CV;
+const css=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
+const yrs=p=>p.y1&&p.y1!=p.y?`${p.y}–${p.y1}`:`${p.y}`;
+
+/* ---------- le glyphe : un motif 3×3 propre à chaque projet, tiré de son nom ---------- */
+function bitsOf(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0}
+  for(let k=0;k<40;k++){const b=(h>>>(k%23))&511;const n=b.toString(2).split("1").length-1;if(n>=4&&n<=6)return b;h=Math.imul(h^k,2654435761)>>>0}return 0b101010101}
+function glyph(id,col,gap=.16){const b=bitsOf(id);let r="";for(let i=0;i<9;i++){const x=(i%3),y=(i/3|0);
+  r+=b>>i&1?`<rect x="${x+gap/2}" y="${y+gap/2}" width="${1-gap}" height="${1-gap}" fill="${col}"/>`:`<rect x="${x+gap/2+.42}" y="${y+gap/2+.42}" width="${.16-gap/4}" height="${.16-gap/4}" fill="${col}" opacity=".35"/>`}
+  return `<svg viewBox="0 0 3 3" aria-hidden="true">${r}</svg>`}
+
+/* ---------- les six faces ---------- */
+const byFam=f=>ALL.filter(p=>p.fam==f).sort((a,b)=>b.y-a.y);
+const pubItems=PUB.map(b=>({id:b.id,t:b.t,c:"Publication",y:b.y,th:b.th,pub:b}));
+const FACES=[
+ {k:"a",name:"Agence",col:"--a",items:byFam("a"),info:"Hamonic+Masson · depuis 2017"},
+ {k:"c",name:"Concours",col:"--c",items:byFam("c"),info:"Concours d’idées et Europan"},
+ {k:"e",name:"Études",col:"--e",items:byFam("e"),info:"ENSA Clermont-Ferrand"},
+ {k:"p",name:"Publications",col:"--p",items:pubItems,info:"Books et documents"},
+ {k:"r",name:"Parcours",col:"--ink",items:CV.map((s,i)=>({id:"cv"+i,t:`CV · page ${i+1}`,c:"CV 2026",y:"",th:s,cv:i})),info:"CV 2026"},
+ {k:"m",name:"Profil",col:"--e",items:[],info:"Marseille · disponible janvier 2027"}];
+const POS=["front","right","back","left","top","bottom"];   // ordre des faces sur le cube
+const N=[[0,0,1],[1,0,0],[0,0,-1],[-1,0,0],[0,-1,0],[0,1,0]];
+const count=f=>f.k=="m"?"":`${f.items.length} ${f.k=="p"?"documents":f.k=="r"?"pages":"projets"}`;
+
+function tileFor(f,p){if(!p)return `<div style="background-image:repeating-linear-gradient(135deg,transparent 0 5px,var(--line) 5px 6px)"></div>`;
+  return p.th?`<div><img src="${p.th}" alt="" loading="lazy" decoding="async"></div>`:`<div style="padding:16%">${glyph(p.id,`var(${f.col})`)}</div>`}
+const PROFIL=["Architecte HMONP","Chef de projet","Marseille","Hamonic+Masson","Dispo janv. 2027","ymicault@ gmail.com","Master EVAN","CV 2026 ↓"];
+function faceHTML(f,i){const cells=[];const it=f.items.slice(0,8);
+  for(let j=0;j<9;j++){if(j==4){cells.push(`<div class="ctr" style="background:var(${f.col})"><b>${f.name}</b><small>${count(f)}</small></div>`);continue}
+    const n=j<4?j:j-1;
+    if(f.k=="m")cells.push(`<div class="txt">${PROFIL[n]}</div>`);else cells.push(tileFor(f,it[n]))}
+  return `<div class="face f-${POS[i]}">${cells.map((c,j)=>c.includes('style="')?c.replace('style="',`style="--i:${j};`):c.replace("<div",`<div style="--i:${j}"`)).join("")}</div>`}
+$("cube").innerHTML=FACES.map(faceHTML).join("");
+
+/* ---------- rotation : matrice 3×3 cumulée, quart de tour par crans ---------- */
+let M=[[1,0,0],[0,1,0],[0,0,1]];
+const mul=(A,B)=>A.map((r,i)=>[0,1,2].map(j=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const RY=s=>[[0,0,s],[0,1,0],[-s,0,0]];          // quart de tour autour de la verticale
+const RX=s=>[[1,0,0],[0,0,-s],[0,s,0]];          // quart de tour autour de l'horizontale
+function apply(){const m=M;$("cube").style.transform=`matrix3d(${m[0][0]},${m[1][0]},${m[2][0]},0,${m[0][1]},${m[1][1]},${m[2][1]},0,${m[0][2]},${m[1][2]},${m[2][2]},0,0,0,0,1)`;showSec()}
+function active(){let best=0,bz=-9;N.forEach((n,i)=>{const z=M[2][0]*n[0]+M[2][1]*n[1]+M[2][2]*n[2];if(z>bz){bz=z;best=i}});return best}
+function turn(R){M=mul(R,M).map(r=>r.map(v=>Math.round(v)));apply()}
+function showSec(){const f=FACES[active()];$("secName").querySelector("b").textContent=f.name;$("secName").querySelector("span").textContent=count(f)||f.info}
+$("pv").onclick=()=>{stopIdle();turn(RY(1))};$("nx").onclick=()=>{stopIdle();turn(RY(-1))};
+
+/* glisser sur le cube : horizontal = tourner, vertical = basculer ; toucher = ouvrir */
+let p0=null;$("scene").addEventListener("pointerdown",e=>{p0={x:e.clientX,y:e.clientY}});
+addEventListener("pointerup",e=>{if(!p0||document.body.classList.contains("open"))return;const dx=e.clientX-p0.x,dy=e.clientY-p0.y;p0=null;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<12){if(e.target.closest(".face"))openFace(active());return}
+  stopIdle();if(Math.abs(dx)>Math.abs(dy))turn(RY(dx>0?1:-1));else turn(RX(dy>0?-1:1))});
+addEventListener("keydown",e=>{if($("sheet").classList.contains("on")||$("lb").classList.contains("on")){if(e.key=="Escape"){closeLb();closeSheet()}if($("lb").classList.contains("on")){e.key=="ArrowRight"&&lbStep(1);e.key=="ArrowLeft"&&lbStep(-1)}return}
+  if(document.body.classList.contains("open")){if(e.key=="ArrowRight")page(1);if(e.key=="ArrowLeft")page(-1);if(e.key=="Escape")closeFace();return}
+  stopIdle();if(e.key=="ArrowRight")turn(RY(-1));if(e.key=="ArrowLeft")turn(RY(1));if(e.key=="ArrowUp")turn(RX(1));if(e.key=="ArrowDown")turn(RX(-1));if(e.key=="Enter")openFace(active())});
+
+/* au repos, le cube présente ses faces une à une */
+let idle=0,idleOff=0;function startIdle(){clearInterval(idle);idle=setInterval(()=>{if(!document.body.classList.contains("open")&&Date.now()>idleOff)turn(RY(-1))},3800)}
+function stopIdle(){idleOff=Date.now()+9000}
+
+/* ---------- une face ouverte : 9 cases, pages qui tournent rangée par rangée ---------- */
+let F=null,pgI=0;
+function cellHTML(p,i){if(!p)return `<div class="cellb empty"></div>`;
+  const cap=`<span class="cap">${p.t}<i>${p.c?p.c.split(",")[0]:""}${p.y?" · "+p.y:""}</i></span>`;
+  return p.th?`<button class="cellb im" style="--i:${i}" data-id="${p.id}"><img src="${p.th}" alt="" loading="lazy">${cap}</button>`
+    :`<button class="cellb" style="--i:${i}" data-id="${p.id}">${glyph(p.id,`var(${F.col})`)}${cap}</button>`}
+function rowsHTML(){const it=F.items.slice(pgI*9,pgI*9+9);let h="";for(let r=0;r<3;r++)h+=`<div class="row">${[0,1,2].map(c=>cellHTML(it[r*3+c],r*3+c)).join("")}</div>`;return h}
+const pages=()=>Math.max(1,Math.ceil(F.items.length/9));
+function openFace(i){const f=FACES[i];if(f.k=="m")return openProfil();F=f;pgI=0;
+  $("bName").textContent=f.name;$("bInfo").textContent=f.info;$("grid").innerHTML=rowsHTML();updPg();document.body.classList.add("open")}
+function closeFace(){document.body.classList.remove("open")}
+function updPg(){$("pg").textContent=`${pgI+1} / ${pages()}`;$("gp").style.visibility=$("gn").style.visibility=pages()>1?"visible":"hidden"}
+/* changer de page = faire tourner les trois rangées l'une après l'autre, comme un cube */
+let busy=false;function page(d){if(!F||pages()<2||busy)return;busy=true;pgI=(pgI+d+pages())%pages();
+  const nr=document.createElement("div");nr.innerHTML=rowsHTML();const rows=[...$("grid").children];
+  rows.forEach((row,r)=>{const a=row.animate([{transform:"rotateY(0)"},{transform:`rotateY(${d>0?-90:90}deg)`}],{duration:210,delay:r*110,easing:"steps(3,end)",fill:"forwards"});
+    a.onfinish=()=>{row.innerHTML=nr.children[r].innerHTML;row.querySelectorAll(".cellb").forEach(c=>c.style.animation="none");
+      row.animate([{transform:`rotateY(${d>0?90:-90}deg)`},{transform:"rotateY(0)"}],{duration:210,easing:"steps(3,end)",fill:"forwards"}).onfinish=()=>{if(r==2)busy=false}}});
+  updPg()}
+$("gp").onclick=()=>page(-1);$("gn").onclick=()=>page(1);$("back").onclick=closeFace;
+let g0=null;$("grid").addEventListener("pointerdown",e=>g0={x:e.clientX,y:e.clientY});
+$("grid").addEventListener("pointerup",e=>{if(!g0)return;const dx=e.clientX-g0.x,dy=e.clientY-g0.y;g0=null;
+  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))return page(dx<0?1:-1);
+  if(Math.abs(dx)<10&&Math.abs(dy)<10){const c=e.target.closest(".cellb[data-id]");c&&openItem(c.dataset.id)}});
+
+/* ---------- fiches ---------- */
+let lbList=[],lbI=0;
+function openItem(id){const it=F.items.find(p=>p.id==id);if(!it)return;
+  if(it.pub){lbList=it.pub.pages;return openLb(0)}
+  if(it.cv!=null){lbList=CV;return openLb(it.cv)}
+  openSheet(it)}
+function openSheet(p){const col=`var(--${p.fam})`;
+  const rows=(p.fiche||[]).filter(r=>r[1]&&r[1]!="—").map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("");
+  const pl=(p.pl||[]).filter(x=>x!=p.hero);
+  const links=[p.url?`<a href="${p.url}" target="_blank" rel="noopener">Fiche du projet chez Hamonic+Masson <span>↗</span></a>`:"",
+    p.fam!="a"?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
+  $("shIn").innerHTML=`<div class="hero">${p.hero?`<img src="${p.hero}" alt="${p.t}">`:glyph(p.id,col)}</div>${p.cr?`<p class="cr">${p.cr}</p>`:""}
+   <div class="cols"><div><div class="fam">${glyph(p.id,col,.1)}${{a:"Agence",c:"Concours",e:"Études"}[p.fam]} · ${p.role}</div><h2>${p.t}</h2><p class="ln">${p.line||p.c+" · "+yrs(p)}</p><dl>${rows}</dl>${links?`<div class="links">${links}</div>`:""}</div>
+   <div>${p.txt?`<p class="txt">${p.txt}</p>`:""}${pl.length?`<div class="sec"><span>Planches et images</span><span>${pl.length}</span></div><div class="pl">${pl.map((s,i)=>`<button data-lb="${i}"><img loading="lazy" src="${s}" alt="${p.t}, image ${i+1}"></button>`).join("")}</div>`:""}</div></div>`;
+  lbList=pl;$("shN").textContent=yrs(p);$("sheet").scrollTop=0;$("sheet").classList.add("on")}
+function openProfil(){$("shIn").innerHTML=`<h2>Profil</h2><dl>
+  <div><dt>Courriel</dt><dd><a href="mailto:ymicault@gmail.com" style="color:inherit">ymicault@gmail.com</a></dd></div>
+  <div><dt>Téléphone</dt><dd>+33 7 60 86 66 62</dd></div><div><dt>Ville</dt><dd>Marseille, France</dd></div>
+  <div><dt>En agence</dt><dd>Hamonic + Masson</dd></div><div><dt>Disponible</dt><dd>À partir de janvier 2027</dd></div></dl>
+  <div class="links"><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV <span>↓</span></a></div>
+  <p class="txt">« L’architecture ne se résume pas à ce que l’on construit, mais à ce que l’on rend possible. »</p>
+  <p class="txt">Mon parcours s’est construit entre Reims, Clermont-Ferrand et Moscou, au fil d’une formation qui m’a progressivement amené à considérer l’architecture au-delà du seul acte de bâtir. Le master EVAN, consacré aux relations entre ville, architecture et nature, a notamment nourri une réflexion sur les territoires, leurs transformations et les liens parfois fragiles qui unissent le paysage, le bâti et les usages.</p>
+  <p class="txt">Depuis 2017, cette approche s’est enrichie d’une pratique professionnelle au sein de l’agence Hamonic + Masson, à Paris puis à Marseille. De la conception aux phases de développement technique, à travers des projets de logements, d’équipements et d’opérations urbaines, j’ai appris à confronter l’intention architecturale à la complexité du réel.</p>`;
+  $("shN").textContent="Yves Micault";$("sheet").scrollTop=0;$("sheet").classList.add("on")}
+function closeSheet(){$("sheet").classList.remove("on")}
+$("shClose").onclick=closeSheet;$("shIn").addEventListener("click",e=>{const b=e.target.closest("[data-lb]");b&&openLb(+b.dataset.lb)});
+function openLb(i){lbI=i;$("lb").classList.add("on");showLb()}
+function showLb(){$("lbI").src=lbList[lbI];$("lbN").textContent=`${lbI+1} / ${lbList.length}`}
+function lbStep(d){lbI=(lbI+d+lbList.length)%lbList.length;showLb()}
+function closeLb(){$("lb").classList.remove("on")}
+$("lbX").onclick=closeLb;$("lbP").onclick=()=>lbStep(-1);$("lbNx").onclick=()=>lbStep(1);
+let lx=null;$("lb").addEventListener("touchstart",e=>lx=e.touches[0].clientX,{passive:true});$("lb").addEventListener("touchend",e=>{if(lx==null)return;const d=e.changedTouches[0].clientX-lx;lx=null;if(Math.abs(d)>50)lbStep(d<0?1:-1)},{passive:true});
+
+/* fonds : papier, trame, nuit */
+const BG=["","trame","nuit"];let bgI=0;
+try{bgI=+localStorage.getItem("bg")||0}catch(e){}
+function setBg(){document.body.classList.remove("trame","nuit");BG[bgI]&&document.body.classList.add(BG[bgI]);try{localStorage.setItem("bg",bgI)}catch(e){}}
+$("bgBtn").onclick=()=>{bgI=(bgI+1)%3;setBg()};setBg();
+
+/* ouverture : la trame à plat, puis le cube se forme */
+apply();setTimeout(()=>{document.body.classList.add("axo");startIdle()},1300);
+</script>
+</body>
+</html>
