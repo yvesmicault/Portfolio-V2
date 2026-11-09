@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Direction visuelle</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Plex;src:url(fonts/plexmono-400.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Plex;src:url(fonts/plexmono-500.woff2) format("woff2");font-weight:500}
+:root{--paper:#F3F1EC;--ink:#151517;--mute:#6E6B66;--hair:rgba(21,21,23,.16);--void:#E5432A;--card:#FBFAF7}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 Archivo,"Helvetica Neue",Arial,sans-serif;font-stretch:100%;-webkit-font-smoothing:antialiased}
+.mono{font-family:Plex,ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.wrap{max-width:1400px;margin:0 auto;padding:40px 16px 80px}
+@media(min-width:900px){.wrap{padding:56px 48px 100px}}
+.top{display:flex;justify-content:space-between;color:var(--mute);border-bottom:1px solid var(--hair);padding-bottom:12px}
+h1{font-weight:640;font-stretch:118%;font-size:clamp(34px,6.4vw,84px);line-height:.98;letter-spacing:-.025em;margin:36px 0 14px;max-width:1100px}
+h1 em{font-style:normal;display:inline-flex;align-items:center;gap:.12em}
+h1 em::after{content:"";width:.42em;height:.42em;background:var(--void);display:inline-block;margin-left:.08em;transform:translateY(.06em)}
+.lead{max-width:640px;color:#3b3a37;font-size:16px}
+h2{font-weight:600;font-stretch:112%;font-size:26px;letter-spacing:-.015em;margin:64px 0 4px}
+.sub{color:var(--mute);margin-bottom:20px}
+.ops{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+@media(min-width:900px){.ops{grid-template-columns:repeat(5,1fr)}}
+.op{background:var(--paper);padding:14px 14px 18px}
+.op canvas{width:100%;aspect-ratio:1;display:block}
+.op .n{color:var(--mute)}
+.op h3{font-weight:700;font-stretch:120%;font-size:22px;letter-spacing:-.01em;margin:8px 0 2px}
+.op p{font-size:13.5px;color:#3b3a37;line-height:1.4}
+.op .use{margin-top:8px;color:var(--mute);font-size:10.5px;line-height:1.5}
+.sys{display:grid;gap:24px;grid-template-columns:1fr}
+@media(min-width:900px){.sys{grid-template-columns:1.2fr 1fr}}
+.sw{display:flex;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.sw div{flex:1;padding:72px 10px 10px;font-size:10.5px}
+.ty{border:1px solid var(--hair);padding:18px}
+.ty .a{font-weight:700;font-stretch:120%;font-size:44px;letter-spacing:-.02em;line-height:1}
+.ty .b{font-weight:400;font-size:16px;margin:10px 0}
+.ty .c{color:var(--mute)}
+.phones{display:flex;flex-wrap:wrap;gap:40px}
+.ph{width:390px;max-width:100%}
+.ph .cap{margin-bottom:10px;color:var(--mute)}
+.scr{position:relative;width:390px;max-width:100%;height:844px;background:var(--paper);border:1px solid var(--hair);overflow:hidden}
+/* ---- accueil ---- */
+.hd{position:absolute;top:0;left:0;right:0;height:56px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hair)}
+.hd b{font-weight:640;font-stretch:112%;font-size:15px;letter-spacing:-.005em}
+.logo{position:absolute;top:56px;left:0;width:390px;height:340px}
+.man{position:absolute;left:18px;right:18px;top:392px;font-weight:560;font-stretch:108%;font-size:25px;line-height:1.08;letter-spacing:-.015em}
+.man span{color:var(--mute)}
+.ent{position:absolute;left:0;right:0;top:486px;border-top:1px solid var(--hair)}
+.ent a{display:grid;grid-template-columns:34px 1fr 62px;align-items:center;height:72px;padding:0 18px;border-bottom:1px solid var(--hair);color:var(--ink);text-decoration:none;cursor:pointer}
+.ent a .t{font-weight:640;font-stretch:116%;font-size:27px;letter-spacing:-.02em;line-height:1}
+.ent a .v{display:block;color:var(--mute);margin-top:4px;font-size:10px}
+.ent canvas{width:62px;height:52px}
+.ft{position:absolute;left:18px;right:18px;bottom:16px;display:flex;justify-content:space-between;color:var(--mute)}
+/* ---- projet ---- */
+.pv{position:absolute;inset:0;overflow:hidden}
+.pv .hd .mono{color:var(--mute)}
+.stage{position:absolute;top:56px;left:0;width:390px;height:300px}
+.stage canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+.stage .ph3{position:absolute;inset:22px 18px;background:#ddd center/cover;clip-path:inset(42% 40% 42% 40%);opacity:0}
+.pt{position:absolute;left:18px;right:18px;top:370px}
+.pt h4{font-weight:700;font-stretch:118%;font-size:40px;line-height:.95;letter-spacing:-.025em}
+.pt .l{color:var(--mute);margin-top:8px}
+.fi{position:absolute;left:18px;right:18px;top:466px;border-top:1px solid var(--hair)}
+.fi div{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--hair);font-size:13.5px;line-height:1.35}
+.fi div span{color:var(--mute);padding-top:2px}
+.nx{position:absolute;left:0;right:0;bottom:0;height:64px;border-top:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--paper)}
+.nx b{font-weight:600;font-stretch:112%;font-size:15px}
+.note{margin-top:14px;font-size:13px;color:#3b3a37;max-width:390px}
+.note .mono{color:var(--mute);display:block;margin-bottom:4px}
+.chg{columns:1;gap:40px;max-width:1100px}
+@media(min-width:900px){.chg{columns:2}}
+.chg li{break-inside:avoid;margin:0 0 10px 18px;font-size:14.5px}
+.chg b{font-weight:640}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top mono"><span>Portfolio V2 · direction visuelle 01</span><span>Yves Micault</span></div>
+  <h1>Le carré, c’est la contrainte. Le cube, c’est la <em>liberté</em></h1>
+  <p class="lead">L’addition des contraintes définit les libertés. Un seul module, quatre opérations, le même sens partout : la liberté se trouve dans la profondeur et dans les relations entre modules, jamais en sortant du cadre.</p>
+
+  <h2>Grammaire</h2>
+  <p class="sub">Un geste garde son sens d’une rubrique à l’autre.</p>
+  <div class="ops" id="ops"></div>
+
+  <h2>Matière</h2>
+  <p class="sub">Encre sur papier. Une seule couleur, réservée au vide : là où l’on entre.</p>
+  <div class="sys">
+    <div class="sw mono">
+      <div style="background:#F3F1EC">Papier<br>#F3F1EC</div>
+      <div style="background:#FBFAF7">Dessus<br>#FBFAF7</div>
+      <div style="background:#A9A59D">Face claire<br>#A9A59D</div>
+      <div style="background:#5B5954;color:#fff">Face sombre<br>#5B5954</div>
+      <div style="background:#151517;color:#fff">Encre<br>#151517</div>
+      <div style="background:#E5432A;color:#fff">Vide<br>#E5432A</div>
+    </div>
+    <div class="ty">
+      <div class="a">Archivo Expanded</div>
+      <div class="b">Archivo, du serré à l’étendu : la largeur de la lettre suit la même idée que le module, cadrée ou libre.</div>
+      <div class="c mono">IBM Plex Mono · légendes, données, cartouche</div>
+    </div>
+  </div>
+
+  <h2>À 390 px</h2>
+  <p class="sub">Les deux écrans sont vivants : l’accueil joue la grammaire en boucle, la fiche montre « creuser ».</p>
+  <div class="phones">
+    <div class="ph"><div class="cap mono">Accueil</div>
+      <div class="scr" id="home">
+        <div class="hd"><b>Yves Micault</b><span class="mono" style="color:var(--mute)">Architecte HMONP</span></div>
+        <canvas class="logo" id="logo"></canvas>
+        <div class="man">Le carré, c’est la contrainte.<br><span>Le cube, c’est la liberté.</span></div>
+        <div class="ent" id="ent"></div>
+        <div class="ft mono"><span>31 projets · 2013–2026</span><span>FR / EN</span></div>
+      </div>
+      <p class="note"><span class="mono">Accueil</span>Le logo est un vrai objet : un carré de 4 × 4 modules qui, en boucle lente, tourne, s’écarte, se creuse puis se rassemble. Chaque entrée porte l’opération qui lui correspond.</p>
+    </div>
+    <div class="ph"><div class="cap mono">Projet</div>
+      <div class="scr" id="proj"><div class="pv">
+        <div class="hd"><span class="mono">← Projets / Études</span><span class="mono">03 / 31</span></div>
+        <div class="stage" id="stage"><canvas id="fp"></canvas><div class="ph3" id="ph3"></div></div>
+        <div class="pt"><h4 id="pt"></h4><div class="l mono" id="pl"></div></div>
+        <div class="fi" id="fi"></div>
+        <div class="nx"><span class="mono" style="color:var(--mute)">← Retour</span><b>Champ libre →</b></div>
+      </div></div>
+      <p class="note"><span class="mono">Projet</span>On voit d’abord l’empreinte du projet, en volume. La toucher la creuse : les modules descendent et l’image apparaît dans le vide, entière.</p>
+    </div>
+  </div>
+
+  <h2>Ce qui change vraiment</h2>
+  <ul class="chg">
+    <li><b>Fond :</b> plus de dégradés pastel, de halos ni de pixels flottants. Un papier chaud uni : le contraste revient.</li>
+    <li><b>Volumes :</b> dessus clair, deux faces franchement ombrées, joints fins entre modules. Les empreintes se lisent sur le fond.</li>
+    <li><b>Couleur :</b> une seule, le rouge du vide, qui n’apparaît que là où l’on creuse ou là où l’on est. Les rubriques ne sont plus codées par couleur, mais par les mots.</li>
+    <li><b>Typographie :</b> Archivo étendu pour les titres, Plex Mono pour les données. Plus de grands titres flottants sur des bulles.</li>
+    <li><b>Hiérarchie :</b> listes et tableaux tirés au filet, comme un cartouche. Plus de pastilles ni de barre-pilule.</li>
+    <li><b>Mouvement :</b> les quatre opérations seulement. Tourner sert à comprendre, plus jamais à passer au projet suivant.</li>
+  </ul>
+</div>
+<script src="data.js"></script><script src="emp.js"></script>
+<script>
+(()=>{
+const TOP='#FBFAF7',SA=[169,165,157],SB=[91,89,84],INK='#151517',VOID='#E5432A',VOIDD='#B8331F';
+const ez=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)), seg=(t,a,b)=>ez(cl((t-a)/(b-a)));
+const lerp=(a,b,t)=>a+(b-a)*t;
+// vue : a = rotation, axo = 0 (plan) → 1 (axonométrie)
+function V(a,axo,u,ox,oy){const r=a+Math.PI/4*axo;return{ca:Math.cos(r),sa:Math.sin(r),k:1-.45*axo,hz:.86*axo,u,ox,oy}}
+const P=(v,x,y,z)=>{const X=x*v.ca-y*v.sa,Y=x*v.sa+y*v.ca;return[v.ox+X*v.u,v.oy+(Y*v.k-z*v.hz)*v.u]};
+function quad(g,pts,fill,stroke){g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<4;i++)g.lineTo(pts[i][0],pts[i][1]);g.closePath();g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=.6;g.stroke()}}
+const shade=(X)=>{const t=cl(.5-X*.6);return `rgb(${lerp(SB[0],SA[0],t)|0},${lerp(SB[1],SA[1],t)|0},${lerp(SB[2],SA[2],t)|0})`};
+// une boîte : x,y,w,d en plan ; z0 bas ; h hauteur ; vd = vide (dessus rouge)
+function boxes(g,v,B,stroke='rgba(21,21,23,.55)'){
+  B.forEach(b=>{b.k=(b.x+b.w/2)*v.sa+(b.y+b.d/2)*v.ca+(b.z0+b.h)*.001});B.sort((a,b)=>a.k-b.k);
+  const N=[[0,1],[1,0],[0,-1],[-1,0]].map(([nx,ny])=>({Y:nx*v.sa+ny*v.ca,X:nx*v.ca-ny*v.sa}));
+  for(const b of B){const x0=b.x,x1=b.x+b.w,y0=b.y,y1=b.y+b.d,z0=b.z0,z1=b.z0+b.h;
+    if(v.hz*b.h>.01){const F=[[[x0,y1],[x1,y1]],[[x1,y0],[x1,y1]],[[x0,y0],[x1,y0]],[[x0,y0],[x0,y1]]];
+      for(let s=0;s<4;s++){if(N[s].Y<=.01)continue;const [[a1,b1],[a2,b2]]=F[s];quad(g,[P(v,a1,b1,z0),P(v,a2,b2,z0),P(v,a2,b2,z1),P(v,a1,b1,z1)],b.vd?VOIDD:shade(N[s].X),stroke)}}
+    quad(g,[P(v,x0,y0,z1),P(v,x1,y0,z1),P(v,x1,y1,z1),P(v,x0,y1,z1)],b.vd?VOID:(b.ink?INK:TOP),stroke)}
+}
+function fit(c){const r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(c.width!=Math.round(r.width*d)){c.width=r.width*d;c.height=r.height*d}const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);g.clearRect(0,0,r.width,r.height);return[g,r.width,r.height]}
+const J=.08; // le joint
+function grid(n,m,h,f){const B=[];for(let j=0;j<m;j++)for(let i=0;i<n;i++){const b={x:i-n/2+J/2,y:j-m/2+J/2,w:1-J,d:1-J,z0:0,h};if(f)f(b,i,j);B.push(b)}return B}
+
+// ---------- les 5 opérations ----------
+const OPS=[
+ {n:'00',t:'Carré / cube',p:'Deux lectures du même objet : en plan, la règle ; en volume, l’espace.',u:'Partout : bascule Plan / Axo',
+  draw:(g,w,h,t)=>{const s=seg(t,.15,.45)-seg(t,.7,.95);boxes(g,V(0,s,w*.17,w/2,h*.5+h*.08*s),grid(3,3,3*s+.02))}},
+ {n:'01',t:'Assembler',p:'Réunir des modules pour créer un espace.',u:'Tous les projets : l’index se compose',
+  draw:(g,w,h,t)=>{const s=seg(t,.1,.5)-seg(t,.78,.98);boxes(g,V(0,1,w*.13,w/2,h*.62),grid(4,4,1,(b,i,j)=>{const a=(i*7+j*13)%10/10*6.28,r=(1-s)*1.6;b.x+=Math.cos(a)*r;b.y+=Math.sin(a)*r;b.z0=(1-s)*((i+j)%3)*.8}))}},
+ {n:'02',t:'Écarter',p:'Distinguer et ouvrir un passage.',u:'Carte : les projets se distribuent',
+  draw:(g,w,h,t)=>{const s=seg(t,.15,.5)-seg(t,.75,.98);boxes(g,V(0,1,w*.15,w/2,h*.6),grid(4,4,2,(b,i,j)=>{b.x+=(i<2?-1:1)*s*.7;b.y+=(j<2?-1:1)*s*.25}))}},
+ {n:'03',t:'Creuser',p:'Accéder au contenu ; le volume devient habitable.',u:'Découvrir, fiche projet : on entre',
+  draw:(g,w,h,t)=>{const s=seg(t,.15,.5)-seg(t,.75,.98);boxes(g,V(0,1,w*.15,w/2,h*.6),grid(4,4,2,(b,i,j)=>{if(i>0&&i<3&&j>0&&j<3){b.h=lerp(2,.12,s);b.vd=s>.04}}))}},
+ {n:'04',t:'Tourner',p:'Comprendre le même objet autrement.',u:'Profil, vues d’un projet',
+  draw:(g,w,h,t)=>{const s=seg(t,.1,.42)+seg(t,.58,.9);const L=[];[[0,0,3],[1,0,1],[2,0,1],[0,1,2],[0,2,1]].forEach(([i,j,hh])=>L.push({x:i-1.5+J/2,y:j-1.5+J/2,w:1-J,d:1-J,z0:0,h:hh}));
+    boxes(g,V(s*Math.PI/2,1,w*.16,w/2,h*.62),L)}}];
+const ops=document.getElementById('ops');
+ops.innerHTML=OPS.map(o=>`<div class="op"><canvas></canvas><div class="n mono">${o.n}</div><h3>${o.t}</h3><p>${o.p}</p><div class="use mono">${o.u}</div></div>`).join('');
+const opC=[...ops.querySelectorAll('canvas')];
+
+// ---------- accueil ----------
+const ENT=[['01','Découvrir','creuser · un projet à la fois',3],['02','Tous les projets','assembler · trier, chercher',1],['03','Carte','écarter · le territoire',2],['04','Profil','tourner · l’architecte',4]];
+const ent=document.getElementById('ent');
+ent.innerHTML=ENT.map(e=>`<a><span class="mono" style="color:var(--mute)">${e[0]}</span><span><span class="t">${e[1]}</span><span class="v mono">${e[2]}</span></span><canvas></canvas></a>`).join('');
+const entC=[...ent.querySelectorAll('canvas')];
+const logo=document.getElementById('logo');
+// boucle du logo : plan (contrainte) → tourner → écarter → creuser → rassembler → plan
+function drawLogo(t){const [g,w,h]=fit(logo);const T=t%11/11;
+  const axo=seg(T,.12,.24)-seg(T,.86,.97),rot=seg(T,.26,.38)*Math.PI/2,sp=seg(T,.42,.52)-seg(T,.6,.68),dig=seg(T,.62,.72)-seg(T,.78,.86);
+  const B=grid(4,4,lerp(.02,4,axo),(b,i,j)=>{b.x+=(i<2?-1:1)*sp*.5;b.y+=(j<2?-1:1)*sp*.5;
+    if(i>0&&i<3&&j>0&&j<3&&dig>0){b.h=lerp(b.h,.15,dig);b.vd=dig>.05}});
+  // le carré en plan porte un repère : un module rouge, là où l'on entre
+  if(axo<.05)B[1*4+2].vd=true;
+  boxes(g,V(rot,axo,w*.13*(1-.32*axo),w/2,h*.47+h*.25*axo),B)}
+function drawEnt(t){entC.forEach((c,k)=>{const [g,w,h]=fit(c);const o=OPS[ENT[k][3]];g.save();o.draw(g,w,h,(t*.25+k*.25)%1);g.restore()})}
+
+// ---------- projet ----------
+const pr=(window.PROJ||[]).find(p=>p.id=='varese'),E=(window.EMP||{}).varese;
+document.getElementById('pt').textContent=pr.t;
+document.getElementById('pl').textContent=pr.c+' · '+pr.role;
+document.getElementById('fi').innerHTML=pr.fiche.map(f=>`<div><span class="mono">${f[0]}</span>${f[1]}</div>`).join('')+`<div><span class="mono">Rôle</span>Projet personnel, Master 1</div>`;
+const ph3=document.getElementById('ph3');ph3.style.backgroundImage=`url(${pr.hero})`;
+const fp=document.getElementById('fp');
+function drawProj(t){const [g,w,h]=fit(fp);const T=t%8/8,dig=seg(T,.3,.48),back=seg(T,.88,.99),s=dig-back;
+  const n=E.n,B=[];for(let j=0;j<n;j++)for(let i=0;i<n;i++){const hh=E.h[j*n+i];if(!hh)continue;B.push({x:i-n/2+.04,y:j-n/2+.04,w:.92,d:.92,z0:0,h:lerp(hh*.9,.1,s),vd:s>.5})}
+  // cadrer l'empreinte dans la scène, quelle que soit sa forme
+  const v1=V(0,1,1,0,0);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;B.forEach(b=>[[b.x,b.y,0],[b.x+b.w,b.y+b.d,0],[b.x+b.w,b.y,0],[b.x,b.y+b.d,0],[b.x,b.y,b.h],[b.x+b.w,b.y+b.d,b.h]].forEach(([x,y,z])=>{const q=P(v1,x,y,z);x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])}));
+  const u=Math.min((w-60)/(x1-x0),(h-50)/(y1-y0));
+  g.globalAlpha=1-cl((s-.5)*2.2);boxes(g,V(0,1,u,w/2-(x0+x1)/2*u,h/2-(y0+y1)/2*u),B,'rgba(21,21,23,.45)');g.globalAlpha=1;
+  const o=cl((s-.35)*2.5),c=1-ez(cl((s-.45)/.5));ph3.style.opacity=o;ph3.style.clipPath=`inset(${42*c}% ${40*c}% ${42*c}% ${40*c}%)`}
+document.getElementById('stage').addEventListener('click',()=>{t0=performance.now()-8000*.25});
+
+let t0=performance.now();
+function loop(now){const t=(now-t0)/1000;
+  opC.forEach((c,k)=>{const [g,w,h]=fit(c);OPS[k].draw(g,w,h,(t/4.5+k*.13)%1)});
+  drawLogo(t);drawEnt(t);drawProj(t);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
