@@ -6,8 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Yves Micault · architecte</title>
 <style>
-:root{--bg:#0e0e0d;--fg:#efece4;--mu:#8d8a83;--ac:#d2553a;--ln:rgba(239,236,228,.07)}
-:root[data-theme=day]{--bg:#efece4;--fg:#161615;--mu:#77746d;--ln:rgba(22,22,21,.08)}
+:root{--bg:#f6f4f0;--fg:#1d1d22;--mu:#86847f;--ac:#e07b52;--ln:rgba(29,29,34,.09)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font:14px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;overscroll-behavior:none}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
@@ -17,12 +16,12 @@ header *{pointer-events:auto}
 .brand small{display:block;font-weight:400;color:var(--mu);letter-spacing:0}
 nav{display:flex;gap:14px;font-size:13px}
 nav a{color:var(--mu);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px}
-nav a::before{content:"";width:7px;height:7px;background:currentColor;opacity:.35;transition:.3s}
-nav a.on{color:var(--fg)}nav a.on::before{background:var(--ac);opacity:1}
-.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:4px;align-items:center;background:var(--bg);border:1px solid var(--ln);padding:5px;z-index:3;max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none;transition:opacity .4s}
+nav a::before{content:"";width:7px;height:7px;border-radius:2px;background:currentColor;opacity:.35;transition:.3s}
+nav a.on{color:var(--fg)}nav a.on::before{background:var(--fg);opacity:1}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:4px;align-items:center;background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.7);box-shadow:0 6px 24px rgba(29,29,34,.08);border-radius:999px;padding:5px;z-index:3;max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none;transition:opacity .4s}
 .bar::-webkit-scrollbar{display:none}
-.bar button{flex:none;background:none;border:0;color:var(--mu);font:inherit;font-size:12px;padding:8px 10px;cursor:pointer;display:flex;gap:6px;align-items:center;white-space:nowrap}
-.bar button.on{color:var(--bg);background:var(--fg)}
+.bar button{flex:none;background:none;border:0;color:var(--mu);font:inherit;font-size:12px;padding:8px 12px;border-radius:999px;transition:background .3s,color .3s;cursor:pointer;display:flex;gap:6px;align-items:center;white-space:nowrap}
+.bar button.on{color:#fff;background:var(--fg)}
 .bar .sep{flex:none;width:1px;height:20px;background:var(--ln);margin:0 3px}
 .bar svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.4}
 .bar input{width:74px;accent-color:var(--ac)}
@@ -32,13 +31,13 @@ nav a.on{color:var(--fg)}nav a.on::before{background:var(--ac);opacity:1}
 #prof h1{font-size:clamp(28px,6vw,44px);line-height:1;letter-spacing:-.01em}
 #prof p{color:var(--mu);margin:8px 0 12px}
 #prof a{color:var(--fg);border-bottom:1px solid var(--ac);text-decoration:none;font-size:13px}
-#sheet{position:fixed;inset:0;z-index:5;background:var(--bg);overflow-y:auto;transform:translateY(100%);transition:transform .6s cubic-bezier(.2,.8,.2,1);-webkit-overflow-scrolling:touch}
+#sheet{position:fixed;inset:0;z-index:5;background:#fbfaf8;overflow-y:auto;transform:translateY(100%);transition:transform .6s cubic-bezier(.2,.8,.2,1);-webkit-overflow-scrolling:touch}
 #sheet.open{transform:none}
 #sheet .in{max-width:980px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px 60px}
 #sheet .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:12px;color:var(--mu)}
 #sheet .x{background:none;border:0;color:var(--fg);font:inherit;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
 #sheet .x::before{content:"";width:7px;height:7px;background:var(--ac)}
-.hero{position:relative;width:100%;aspect-ratio:3/2;background:var(--ln);overflow:hidden}
+.hero{position:relative;width:100%;aspect-ratio:3/2;background:var(--ln);overflow:hidden;border-radius:18px}
 .hero canvas,.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero canvas{image-rendering:pixelated;transition:opacity .9s ease}
 #sheet h2{font-size:clamp(26px,5vw,40px);line-height:1.05;margin:18px 0 4px}
@@ -46,10 +45,11 @@ nav a.on{color:var(--fg)}nav a.on::before{background:var(--ac);opacity:1}
 #sheet dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:18px 0;font-size:13px}
 #sheet dt{color:var(--mu)}
 #sheet .tx{max-width:640px;margin:0 0 18px}
-#sheet .pl img{width:100%;display:block;margin-top:10px}
+#sheet .pl img{width:100%;display:block;margin-top:10px;border-radius:12px}
 #sheet .lk{color:var(--fg);border-bottom:1px solid var(--ac);text-decoration:none}
-@media(max-width:560px){nav{gap:10px}nav a::before{display:none}.brand small{display:none}}
+@media(max-width:560px){.bar .lb{display:none}.bar button{padding:8px 10px}nav{gap:10px}nav a::before{display:none}.brand small{display:none}}
 #ttl{position:fixed;left:0;right:0;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);text-align:center;z-index:2;cursor:pointer;transition:opacity .5s}
+#tw i{display:inline-block;width:.3em;height:.3em;border-radius:.07em;margin-right:.18em;vertical-align:.12em}
 #tw{font-size:clamp(34px,8vw,64px);font-weight:700;letter-spacing:-.02em;line-height:1;transition:opacity .18s,transform .3s}
 #tn{display:block;color:var(--mu);font-size:12px;margin-top:6px}
 #hint{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 150px)}
@@ -60,7 +60,7 @@ nav a.on{color:var(--fg)}nav a.on::before{background:var(--ac);opacity:1}
 <canvas id="c"></canvas>
 <header>
   <div class="brand" id="brand">YVES MICAULT<small>architecte HMONP</small></div>
-  <nav id="nav"><a data-m="a">Agence</a><a data-m="c">Concours</a><a data-m="e">Études</a><a data-m="prof">Profil</a></nav>
+  <nav id="nav"><a data-m="all">Tous</a><a data-m="a">Agence</a><a data-m="c">Concours</a><a data-m="e">Études</a><a data-m="prof">Profil</a></nav>
 </header>
 <div id="ttl"><div id="tw"></div><small id="tn"></small></div>
 <div id="hint">Glissez pour tourner le cube · touchez-le pour entrer</div>
@@ -73,9 +73,27 @@ nav a.on{color:var(--fg)}nav a.on::before{background:var(--ac);opacity:1}
 const cv=document.getElementById('c'),g=cv.getContext('2d');
 let W,H,DPR;
 const root=document.documentElement;
-const TH={night:{bg:'#0e0e0d',top:[239,236,228],s1:[150,147,140],s2:[84,82,78],ac:[210,85,58],grid:'rgba(239,236,228,.06)',txt:'#efece4',mu:'#8d8a83'},
-          day:{bg:'#efece4',top:[22,22,21],s1:[92,90,86],s2:[150,147,140],ac:[210,85,58],grid:'rgba(22,22,21,.07)',txt:'#161615',mu:'#77746d'}};
-let th=TH.night;
+const INK=[29,29,34],WH=[255,255,255];
+// une ambiance par univers : fond pastel, deux halos, couleur de rubrique
+const AMB={home:{bg:[244,242,237],b1:[236,229,247],b2:[221,236,226],ac:[29,29,34]},
+ a:{bg:[234,239,250],b1:[206,220,246],b2:[244,229,240],ac:[86,120,214]},
+ c:{bg:[250,238,230],b1:[248,214,196],b2:[250,238,198],ac:[226,128,88]},
+ e:{bg:[233,243,235],b1:[205,231,211],b2:[224,236,249],ac:[82,156,104]},
+ prof:{bg:[241,236,249],b1:[224,213,244],b2:[250,222,231],ac:[140,110,204]},
+ all:{bg:[246,240,228],b1:[240,228,204],b2:[216,230,246],ac:[176,132,64]},
+ sand:{bg:[243,243,241],b1:[222,233,246],b2:[246,233,222],ac:[29,29,34]}};
+let amb={bg:[...AMB.home.bg],b1:[...AMB.home.b1],b2:[...AMB.home.b2]},ambK='home';
+const th={txt:'#1d1d22',mu:'#86847f'},FW=[0,0,0,0];
+const grain=(()=>{const c=document.createElement('canvas');c.width=c.height=160;const x=c.getContext('2d'),d=x.createImageData(160,160);
+  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=16}x.putImageData(d,0,0);return c})();
+let grainPat=null;
+function drawBg(t){g.fillStyle=rgb(amb.bg);g.fillRect(0,0,W,H);const T=t/1000,M=Math.max(W,H);
+  for(const [c,x,y,r] of [[amb.b1,.22+.08*Math.sin(T*.13),.28+.07*Math.cos(T*.11),.7],[amb.b2,.8+.06*Math.cos(T*.09),.74+.08*Math.sin(T*.12),.65],[amb.b1,.86,.14+.05*Math.sin(T*.1),.4]]){
+    const gr=g.createRadialGradient(x*W,y*H,0,x*W,y*H,M*r),k=`${c[0]|0},${c[1]|0},${c[2]|0}`;gr.addColorStop(0,`rgba(${k},.95)`);gr.addColorStop(1,`rgba(${k},0)`);g.fillStyle=gr;g.fillRect(0,0,W,H)}
+  // de grands pixels blancs qui flottent, très doux
+  for(let i=0;i<5;i++){const s=(70+i*40)*(mob()?.7:1),x=(((i*.23+T*.006*(i%2?1:-1))%1)+1)%1*(W+s)-s/2,y=(.12+.19*i+.02*Math.sin(T*.2+i))*H;
+    g.fillStyle=`rgba(255,255,255,${.3-.04*i})`;g.beginPath();g.roundRect(x-s/2,y-s/2,s,s,s*.22);g.fill()}
+  if(!grainPat)grainPat=g.createPattern(grain,'repeat');g.fillStyle=grainPat;g.fillRect(0,0,W,H)}
 const rgb=a=>`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;
 const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 const mob=()=>W<700;
@@ -92,7 +110,7 @@ const N=6; let home={ax:0,ay:0};
 
 function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;g.setTransform(DPR,0,0,DPR,0,0);
   home.ax=W/2;home.ay=H*(mob()?.46:.47);
-  if(mode=='home')layoutHome();if(tiles.length&&mode.length==1)layoutProj(true);if(mode=='prof')layoutProf();if(mode=='sand')Ct=C=mob()?16:20}
+  if(mode=='home')layoutHome();if(isP())layoutProj(true);if(mode=='prof')layoutProf();if(mode=='sand')Ct=C=mob()?16:20}
 addEventListener('resize',resize);
 
 // ---------- projection locale ----------
@@ -128,7 +146,7 @@ function active(){let best=0,bv=-9;for(let f=0;f<4;f++){const [nx,ny]=faceN(f);c
 let curF=-1;
 const tw=document.getElementById('tw'),tn=document.getElementById('tn'),ttl=document.getElementById('ttl');
 function showCat(f){if(f==curF)return;curF=f;tw.style.opacity=0;tw.style.transform='translateY(8px)';
-  setTimeout(()=>{tw.textContent=CATS[f].t;const c=CATS[f];tn.textContent=c.id=='prof'?'CV · portrait':`${PRO.filter(p=>p.fam==c.id).length} projets`;tw.style.opacity=1;tw.style.transform='none'},180)}
+  setTimeout(()=>{const k=AMB[CATS[f].id].ac;tw.innerHTML=`<i style="background:${rgb(k)}"></i>${CATS[f].t}`;const c=CATS[f];tn.textContent=c.id=='prof'?'CV · portrait':`${PRO.filter(p=>p.fam==c.id).length} projets`;tw.style.opacity=1;tw.style.transform='none'},180)}
 
 // ---------- sandbox (cachée) ----------
 function seedSand(){if(sand.size)return;const n=5,o=-2;for(let i=0;i<n;i++)for(let j=0;j<n;j++)sand.set(key(o+i,o+j),{i:o+i,j:o+j,h:1,a:i==n-1&&j==0})}
@@ -153,17 +171,18 @@ function glyph(id,n){let h=2166136261;for(const ch of id){h^=ch.charCodeAt(0);h=
   for(let j=0;j<n;j++)for(let i=0;i<n;i++)L[j*n+i]=L[j*n+Math.min(i,n-1-i)];return L}
 
 // ---------- projets : une grille d'écran, chaque projet tourne sur lui-même ----------
+const isP=()=>['a','c','e','all'].includes(mode);
 const T=8,FAM={a:'Agence',c:'Concours',e:'Études'},PRO=window.PROJ||[];
 async function layoutProj(keep){
-  const list=PRO.filter(p=>p.fam==mode);const cols=W<700?2:W<1100?4:5;
+  const tok=mode,list=PRO.filter(p=>mode=='all'||p.fam==mode);const cols=W<700?2:W<1100?4:5;
   const cw=(W-32)/cols,rh=cw*.92+34;Ct=cw/(T*1.55);
   tiles=list.map((p,n)=>({p,ax:16+cw*(n%cols+.5),ay:96+cw*.42+Math.floor(n/cols)*rh,r:cw*.46}));
   maxPan=Math.max(0,96+Math.ceil(list.length/cols)*rh-(H-80));
   const L=await Promise.all(tiles.map(t=>t.p.th?sample(t.p.th,T,T):null));
-  if(mode!=list[0]?.fam)return;
+  if(mode!=tok)return;
   const out=[];
   tiles.forEach((t,n)=>{const l=L[n]||glyph(t.p.id,T);
-    for(let j=0;j<T;j++)for(let i=0;i<T;i++){const v=l[j*T+i];
+    for(let j=0;j<T;j++)for(let i=0;i<T;i++){const v=L[n]?1-l[j*T+i]:l[j*T+i];
       out.push({x:i-T/2,y:j-T/2,ax:t.ax,ay:t.ay,sc:1,s:.18+.82*v,h:.4+v*3,tile:n,d:keep?0:n*30+(i+j)*8})}});
   setField(out);
 }
@@ -172,7 +191,7 @@ async function layoutProf(){
   const n=mob()?30:40;Ct=Math.min((W-32)/n/1.3,(H-260)/n,mob()?10:12);
   const L=await sample('img/yves_cv.jpg',n,n);if(!L||mode!='prof')return;
   const out=[],ay=mob()?H*.38:H*.42;
-  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const v=L[j*n+i];if(v<.06)continue;out.push({x:i-n/2,y:j-n/2,ax:W/2,ay,s:.12+.88*v,h:v*5,d:(j*n+i)%97*4+j*8})}
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const v=1-L[j*n+i];if(v<.06)continue;out.push({x:i-n/2,y:j-n/2,ax:W/2,ay,s:.12+.88*v,h:v*5,d:(j*n+i)%97*4+j*8})}
   setField(out);
 }
 
@@ -183,22 +202,23 @@ const I={sq:'<svg viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8" fil
  er:'<svg viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8"/></svg>',
  l:'<svg viewBox="0 0 14 14"><path d="M11.5 5A5 5 0 1 0 12 9M11.5 1.5V5H8"/></svg>',
  r:'<svg viewBox="0 0 14 14"><path d="M2.5 5A5 5 0 1 1 2 9M2.5 1.5V5H6"/></svg>'};
-function views(){return `<button data-v="0">${I.sq}Plan</button><button data-v="1">${I.cu}Axo</button><span class="sep"></span><button data-r="-1" title="Tourner">${I.l}</button><button data-r="1" title="Tourner">${I.r}</button>`}
+function views(){return `<button data-v="0" title="Plan">${I.sq}<span class="lb">Plan</span></button><button data-v="1" title="Axo">${I.cu}<span class="lb">Axo</span></button><span class="sep"></span><button data-r="-1" title="Tourner">${I.l}</button><button data-r="1" title="Tourner">${I.r}</button>`}
 function buildBar(){
-  bar.innerHTML=(mode=='sand'?`<button data-t="sq">${I.sq}Carré</button><button data-t="cu">${I.cu}Cube</button><button data-t="er">${I.er}Gomme</button><span class="sep"></span><button data-a="clr">Effacer</button><span class="sep"></span>`:'')+views();sync()}
-function sync(){bar.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t==tool&&mode=='sand'||b.dataset.v==AX));
+  bar.innerHTML=(isP()?['all','a','c','e'].map(f=>`<button data-f="${f}">${f=='all'?'Tous':FAM[f]}</button>`).join('')+'<span class="sep"></span>':'')+(mode=='sand'?`<button data-t="sq">${I.sq}Carré</button><button data-t="cu">${I.cu}Cube</button><button data-t="er">${I.er}Gomme</button><span class="sep"></span><button data-a="clr">Effacer</button><span class="sep"></span>`:'')+views();sync()}
+function sync(){bar.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t==tool&&mode=='sand'||b.dataset.v==AX||b.dataset.f==mode));
   document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.m==mode))}
 function turn(d){q+=d;if(mode=='home')hint.style.opacity=0}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.t){tool=b.dataset.t;if(tool=='cu')AX=1}
   if(b.dataset.v)AX=+b.dataset.v;
   if(b.dataset.r)turn(+b.dataset.r);
+  if(b.dataset.f){go(b.dataset.f);return}
   if(b.dataset.a=='clr'){P.forEach(p=>{p.ts=0;p.dead=true});sand.clear()}
   sync()});
-function go(m){if(m==mode)return;const was=mode;mode=m;panT=0;hoverTile=-1;
+function go(m){if(m==mode)return;mode=m;if(m!='home')ambK=m;panT=0;hoverTile=-1;
   prof.classList.toggle('hide',m!='prof');hint.style.opacity=0;ttl.classList.toggle('hide',m!='home');
   if(m=='home'){layoutHome();curF=-1}
-  if(m.length==1)layoutProj();
+  if(isP())layoutProj();
   if(m=='prof')layoutProf();
   if(m=='sand'){Ct=mob()?16:20;seedSand();setField(sandList())}
   buildBar()}
@@ -231,17 +251,17 @@ cv.addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.inside
   const dx=e.clientX-ptr.sx,dy=e.clientY-ptr.sy;ptr.moved=Math.max(ptr.moved,Math.hypot(dx,dy));
   if(mode=='sand')paint(e.clientX,e.clientY);
   if(mode=='home'){const st=Math.round(dx/70);if(st!=ptr.turned){turn(ptr.turned-st);ptr.turned=st;if(!AX){AX=1;sync()}}}
-  if(mode.length==1)panT=Math.max(0,Math.min(maxPan,ptr.p0-dy))});
+  if(isP())panT=Math.max(0,Math.min(maxPan,ptr.p0-dy))});
 cv.addEventListener('pointerup',e=>{ptr.down=false;if(e.pointerType!='mouse')ptr.x=ptr.y=-1e4;
-  if(ptr.moved<8){if(mode.length==1){const t=tileAt(e.clientX,e.clientY);if(t>=0)openP(tiles[t].p)}
+  if(ptr.moved<8){if(isP()){const t=tileAt(e.clientX,e.clientY);if(t>=0)openP(tiles[t].p)}
     if(mode=='home'&&Math.hypot(e.clientX-home.ax,e.clientY-home.ay)<N*C)go(CATS[curF].id)}});
 cv.addEventListener('pointerleave',()=>{ptr.inside=false;ptr.x=ptr.y=-1e4});
-cv.addEventListener('wheel',e=>{if(mode.length==1){panT=Math.max(0,Math.min(maxPan,panT+e.deltaY));e.preventDefault()}},{passive:false});
+cv.addEventListener('wheel',e=>{if(isP()){panT=Math.max(0,Math.min(maxPan,panT+e.deltaY));e.preventDefault()}},{passive:false});
 function tileAt(sx,sy){return tiles.findIndex(t=>Math.abs(sx-t.ax)<t.r&&Math.abs(sy+pan-t.ay)<t.r)}
 
 // ---------- dessin ----------
 function quad(a,b,c,d,col){g.fillStyle=col;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.lineTo(c[0],c[1]);g.lineTo(d[0],d[1]);g.closePath();g.fill()}
-function grid(){const R=Math.ceil(Math.hypot(W,H)/C/2)+2;g.strokeStyle=th.grid;g.lineWidth=1;g.beginPath();const o={ax:W/2,ay:H/2};
+function grid(){const R=Math.ceil(Math.hypot(W,H)/C/2)+2;g.strokeStyle='rgba(29,29,34,.06)';g.lineWidth=1;g.beginPath();const o={ax:W/2,ay:H/2};
   for(let i=-R;i<=R;i++){let a=lp(o,i,-R,0),b=lp(o,i,R,0);g.moveTo(...a);g.lineTo(...b);a=lp(o,-R,i,0);b=lp(o,R,i,0);g.moveTo(...a);g.lineTo(...b)}g.stroke()}
 const SIDES=[[0,1,'y1'],[1,0,'x1'],[0,-1,'y0'],[-1,0,'x0']];
 let last=performance.now();
@@ -250,9 +270,11 @@ function frame(now){
   const f=1-Math.pow(.004,dt/1000),fs=1-Math.pow(.0006,dt/1000);
   const tAng=AX||mode=='home'||mode=='sand'?q*Math.PI/2+(AX?Math.PI/4:0):Math.round(q/4)*Math.PI*2; // en plan, images et portrait restent à l'endroit
   ang+=(tAng-ang)*f;hz+=(AX-hz)*f;C+=(Ct-C)*f;pan+=(panT-pan)*fs;setView();
-  g.fillStyle=th.bg;g.fillRect(0,0,W,H);
+  const AK=mode=='home'?(curF>=0?CATS[curF].id:'home'):ambK,A=AMB[AK]||AMB.home;
+  for(const k of ['bg','b1','b2'])amb[k]=mix(amb[k],mode=='home'&&k=='bg'?mix(A.bg,AMB.home.bg,.4):A[k],f*.5);
+  drawBg(now);
   if(mode=='sand')grid();
-  if(mode.length==1){const t=ptr.inside&&!ptr.down?tileAt(ptr.x,ptr.y):-1;if(t!=hoverTile){hoverTile=t;cv.style.cursor=t>=0?'pointer':'default'}}
+  if(isP()){const t=ptr.inside&&!ptr.down?tileAt(ptr.x,ptr.y):-1;if(t!=hoverTile){hoverTile=t;cv.style.cursor=t>=0?'pointer':'default'}}
   else cv.style.cursor=mode=='sand'?'crosshair':mode=='home'?'grab':'default';
   const af=mode=='home'?active():-1;if(mode=='home'&&intro>=1)showCat(af);
   const [mx,my]=ptr.x>-1e3?unl(W/2,mob()?H*.38:H*.42,ptr.x,ptr.y):[1e9,1e9];
@@ -267,39 +289,49 @@ function frame(now){
   P=P.filter(p=>!(p.dead&&p.s<.02));
   P.sort((a,b)=>(a.ay-(a.sc?pan:0)+(a.x*sa+a.y*ca)*C*kk)-(b.ay-(b.sc?pan:0)+(b.x*sa+b.y*ca)*C*kk));
 
-  const top=rgb(th.top),ac=th.ac;
-  // faces latérales visibles et leur teinte (lumière fixe venant de l'écran haut-gauche)
-  const vis=SIDES.map(([nx,ny])=>{const X=nx*ca-ny*sa,Y=nx*sa+ny*ca;return {Y,col:mix(th.s2,th.s1,Math.max(0,Math.min(1,.5-X*.6)))}});
+  // plan : pixels à l'encre ; axo : maquette blanche, faces ombrées dans la teinte du fond
+  const topI=rgb(mix(INK,WH,Math.min(1,hz*1.3))),ACC=[226,128,88];
+  const shade=X=>mix(amb.bg,INK,.08+.17*Math.max(0,Math.min(1,.5+X*.7)));
+  const vis=SIDES.map(([nx,ny])=>{const X=nx*ca-ny*sa,Y=nx*sa+ny*ca;return {Y,X,col:shade(X)}});
+  for(let k=0;k<4;k++)FW[k]+=((k==af?1:0)-FW[k])*f;
+  const flat=Math.abs(sa*ca)<.02;
   for(const p of P){if(p.s<.01)continue;
     const yy=p.ay-(p.sc?pan:0);if(yy<-200||yy>H+200)continue;
     const a=p.s/2,cx=p.x+.5,cy=p.y+.5,x0=cx-a,x1=cx+a,y0=cy-a,y1=cy+a,z=Math.max(0,p.h)*Math.min(1,p.s*1.4);
-    const tc=p.tone>.01?rgb(mix(th.top,ac,p.tone)):top;
+    const home_=mode=='home'&&p.face!==undefined;
+    let tc=p.tone>.01?rgb(mix(mix(INK,WH,Math.min(1,hz*1.3)),ACC,p.tone)):topI;
+    if(home_){const fc=p.face>=0?AMB[CATS[p.face].id].ac:null;
+      tc=fc?rgb(mix(WH,fc,(.28+.72*FW[p.face])*Math.max(0,1-hz*1.4))):'#fff'}
     if(hz*z>.02){
       const B={x0y0:lp(p,x0,y0,0),x1y0:lp(p,x1,y0,0),x1y1:lp(p,x1,y1,0),x0y1:lp(p,x0,y1,0)},
             Tz={x0y0:lp(p,x0,y0,z),x1y0:lp(p,x1,y0,z),x1y1:lp(p,x1,y1,z),x0y1:lp(p,x0,y1,z)};
       const E=[['x0y1','x1y1'],['x1y0','x1y1'],['x0y0','x1y0'],['x0y0','x0y1']];
-      for(let s=0;s<4;s++){if(vis[s].Y<=0.01)continue;const [u,v]=E[s];
-        quad(B[u],B[v],Tz[v],Tz[u],rgb(p.tone>.01&&mode=='home'?mix(vis[s].col,ac,p.tone*.85):vis[s].col))}
-      quad(Tz.x0y0,Tz.x1y0,Tz.x1y1,Tz.x0y1,mode=='home'?rgb(mix(th.top,ac,p.tone*Math.max(0,1-hz*1.6))):tc);
-    }else quad(lp(p,x0,y0,0),lp(p,x1,y0,0),lp(p,x1,y1,0),lp(p,x0,y1,0),tc);
+      const ii=Math.round(p.tx+N/2),jj=Math.round(p.ty+N/2),out=[jj==N-1,ii==N-1,jj==0,ii==0];
+      for(let s=0;s<4;s++){if(vis[s].Y<=0.01)continue;const [u,v]=E[s];let col=vis[s].col;
+        if(home_&&out[s]){const fc=AMB[CATS[s].id].ac;col=mix(mix(WH,fc,.35+.65*FW[s]),INK,.04+.1*Math.max(0,Math.min(1,.5+vis[s].X*.7)))}
+        quad(B[u],B[v],Tz[v],Tz[u],rgb(col))}
+      quad(Tz.x0y0,Tz.x1y0,Tz.x1y1,Tz.x0y1,home_?'#fff':tc);
+    }else if(flat){const c=[lp(p,x0,y0,0),lp(p,x1,y1,0)],X0=Math.min(c[0][0],c[1][0]),Y0=Math.min(c[0][1],c[1][1]),w=Math.abs(c[1][0]-c[0][0]),h=Math.abs(c[1][1]-c[0][1]);
+      g.fillStyle=tc;g.beginPath();g.roundRect(X0,Y0,w,h,Math.min(w,h)*.24);g.fill()}
+    else quad(lp(p,x0,y0,0),lp(p,x1,y0,0),lp(p,x1,y1,0),lp(p,x0,y1,0),tc);
   }
   // légendes des projets, sous chaque maquette, toujours lisibles
-  if(mode.length==1){g.font='12px "Helvetica Neue",Helvetica,Arial,sans-serif';g.textBaseline='top';g.textAlign='center';
+  if(isP()){g.font='12px "Helvetica Neue",Helvetica,Arial,sans-serif';g.textBaseline='top';g.textAlign='center';
     tiles.forEach((t,n)=>{const y=t.ay-pan+t.r*.95;if(y<-20||y>H)return;
       g.fillStyle=n==hoverTile?th.txt:th.mu;g.fillText(t.p.t.length>26?t.p.t.slice(0,25)+'…':t.p.t,t.ax,y);
       g.globalAlpha=.6;g.fillText(String(t.p.y),t.ax,y+15);g.globalAlpha=1});g.textAlign='left'}
   // plan de l'accueil : les 4 côtés portent les 4 rubriques
   if(mode=='home'&&intro>=1&&hz<.5){g.globalAlpha=1-hz*2;g.font='11px "Helvetica Neue",Helvetica,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
-    const o=N/2+1.1;for(let s=0;s<4;s++){const [nx,ny]=faceN(s);const pt=lp(home,nx*o,ny*o,0);g.fillStyle=s==af?rgb(ac):th.mu;g.fillText(CATS[s].t.toUpperCase(),pt[0],pt[1])}
+    const o=N/2+1.1;for(let s=0;s<4;s++){const [nx,ny]=faceN(s);const pt=lp(home,nx*o,ny*o,0);g.fillStyle=rgb(AMB[CATS[s].id].ac);g.font=(s==af?'700 12px':'11px')+' "Helvetica Neue",Helvetica,Arial,sans-serif';g.fillText(CATS[s].t.toUpperCase(),pt[0],pt[1])}
     g.globalAlpha=1;g.textAlign='left'}
   if(mode=='sand'&&ptr.x>-1e3){const [x,y]=unl(W/2,H/2,ptr.x,ptr.y),i=Math.floor(x),j=Math.floor(y),o={ax:W/2,ay:H/2};
-    g.strokeStyle=rgb(ac);g.lineWidth=1.5;g.beginPath();g.moveTo(...lp(o,i,j,0));g.lineTo(...lp(o,i+1,j,0));g.lineTo(...lp(o,i+1,j+1,0));g.lineTo(...lp(o,i,j+1,0));g.closePath();g.stroke()}
+    g.strokeStyle=rgb(ACC);g.lineWidth=1.5;g.beginPath();g.moveTo(...lp(o,i,j,0));g.lineTo(...lp(o,i+1,j,0));g.lineTo(...lp(o,i+1,j+1,0));g.lineTo(...lp(o,i,j+1,0));g.closePath();g.stroke()}
   if(intro<1){intro=Math.min(1,(now-introT0)/1400);drawIntro(intro)}
   requestAnimationFrame(frame);
 }
 // ouverture : le contour du carré se trace, puis les pixels le remplissent
 function drawIntro(t){const o=-N/2,pts=[[o,o],[o+N,o],[o+N,o+N],[o,o+N],[o,o]].map(([x,y])=>lp(home,x,y,0)),k=Math.min(1,t/.55)*4;
-  g.strokeStyle=rgb(th.top);g.lineWidth=1.5;g.globalAlpha=1-Math.max(0,(t-.8)/.2);g.beginPath();g.moveTo(...pts[0]);
+  g.strokeStyle=rgb(INK);g.lineWidth=1.5;g.globalAlpha=1-Math.max(0,(t-.8)/.2);g.beginPath();g.moveTo(...pts[0]);
   for(let s=0;s<4;s++){const e=Math.min(1,Math.max(0,k-s));if(e<=0)break;const a=pts[s],b=pts[s+1];g.lineTo(a[0]+(b[0]-a[0])*e,a[1]+(b[1]-a[1])*e)}g.stroke();g.globalAlpha=1}
 function start(){resize();layoutHome();C=Ct;const now=performance.now();
   P.forEach(p=>{p.x=p.tx;p.y=p.ty;p.ax=p.tax;p.ay=p.tay;p.s=0;p.d=now+800+(p.tx+p.ty+N)*45});
