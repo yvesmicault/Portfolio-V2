@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0b0c">
+<title>Métamorphose</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--fg:#ecebe8;--mut:#7d7c78}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0b0b0c;color:var(--fg);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#gl{position:fixed;inset:0;touch-action:none}
+button{all:unset;cursor:pointer}
+button:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:baseline;padding:18px 20px;z-index:3;pointer-events:none}
+.top b{font-weight:600;font-size:14px;font-stretch:92%;pointer-events:auto}
+.top span{font-family:Mono;font-size:10.5px;color:var(--mut);letter-spacing:.06em}
+#photo{position:fixed;z-index:1;opacity:0;transition:opacity .9s ease;pointer-events:none;object-fit:cover}
+.mk{position:fixed;z-index:2;transform:translate(-5px,-50%);font-size:12px;font-stretch:92%;white-space:nowrap;padding:6px 8px 6px 14px;transition:opacity .4s;color:#cfcfcb}
+.mk.nt span{opacity:0}.mk span{transition:opacity .3s}
+.mk::before{content:"";position:absolute;left:2px;top:50%;width:5px;height:5px;margin-top:-2.5px;background:#fff;border-radius:50%;box-shadow:0 0 10px #fff}
+.cap{position:fixed;left:20px;right:20px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:3;display:flex;flex-direction:column;gap:12px;transition:opacity .5s}
+.cap .k{font-family:Mono;font-size:10.5px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.cap h1{font-size:clamp(30px,7vw,64px);font-weight:700;font-stretch:84%;letter-spacing:-.04em;line-height:.95}
+.cap .ln{font-size:14px;color:#b5b4b0;max-width:520px;line-height:1.4}
+.bar{display:flex;gap:6px;flex-wrap:wrap}
+.bar button{font-size:13.5px;padding:9px 15px;border-radius:99px;background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:background .3s}
+.bar button:hover{background:rgba(255,255,255,.16)}
+.bar button.on{background:#ecebe8;color:#0b0b0c}
+.hint{font-family:Mono;font-size:10.5px;color:var(--mut)}
+.hide{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="Globe des projets, en points"></canvas>
+<img id="photo" alt="">
+<div class="top"><b id="home">Yves Micault</b><span id="st">GLOBE</span></div>
+<div id="marks"></div>
+<div class="cap" id="cap"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="data.js"></script>
+<script src="morph-data.js"></script>
+<script>
+// ============ Un seul nuage de points. Il est le globe, puis la maquette d'un projet, puis son image. ============
+// Rien ne glisse depuis les bords : chaque passage est une métamorphose sur place.
+const N=16000,MD=window.MD,PR=window.PROJ;
+const IDS=['varese','agri','terminus','elle','ventres','crank','synergies','siberian','equilibrium'];
+const P=Object.fromEntries(IDS.map(id=>[id,PR.find(p=>p.id===id)]));
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd=(()=>{let s=7;return()=>(s=(s*1664525+1013904223)>>>0)/4294967296})();
+
+// ---------- formes cibles ----------
+function sampleSegs(arr,n,jit=0){const S=[];let tot=0;for(let i=0;i<arr.length;i+=6){const l=Math.hypot(arr[i+3]-arr[i],arr[i+4]-arr[i+1],arr[i+5]-arr[i+2]);S.push(l);tot+=l}
+ const out=new Float32Array(n*3);if(!tot)return out;
+ for(let k=0;k<n;k++){let r=rnd()*tot,i=0;while(r>S[i]&&i<S.length-1){r-=S[i];i++}const t=rnd(),o=i*6;
+  for(let c=0;c<3;c++)out[k*3+c]=arr[o+c]+(arr[o+3+c]-arr[o+c])*t+(jit?(rnd()-.5)*jit:0)}return out}
+const toXYZ=(lon,lat,r=1)=>{const a=lat*Math.PI/180,b=lon*Math.PI/180;return[r*Math.cos(a)*Math.sin(b),r*Math.sin(a),r*Math.cos(a)*Math.cos(b)]};
+function globeShape(){const segs=[];
+ for(const l of MD.c)for(let i=0;i+3<l.length;i+=2){const a=toXYZ(l[i],l[i+1]),b=toXYZ(l[i+2],l[i+3]);segs.push(...a,...b)}
+ const n1=Math.floor(N*.62),A=sampleSegs(segs,n1),out=new Float32Array(N*3);out.set(A);
+ // le reste : une sphère très fine, régulière
+ for(let k=n1;k<N;k++){const u=rnd()*2-1,t=rnd()*Math.PI*2,s=Math.sqrt(1-u*u);out[k*3]=s*Math.cos(t);out[k*3+1]=u;out[k*3+2]=s*Math.sin(t)}
+ return out}
+const SH={globe:globeShape()};
+function modelShape(id){if(!SH[id]){const m=MD.p[id];SH[id]=sampleSegs(m.s.concat(m.f),N);let r=0;const a=SH[id];for(let k=0;k<N;k++)r=Math.max(r,Math.hypot(a[k*3],a[k*3+2]));SH[id].r=r}
+ // la maquette tourne : son plus grand rayon au sol doit tenir dans la largeur de l'écran
+ const a=SH[id],vh=2*cam.position.z*Math.tan(cam.fov*Math.PI/360),vw=vh*cam.aspect,k=Math.min(1.25,vw/2*.9/a.r),s=new Float32Array(N*3);for(let i=0;i<N*3;i++)s[i]=a[i]*k;return s}
+// l'image en points : une grille qui prend les couleurs du rendu
+const IMGS={};function loadImg(src){return IMGS[src]||(IMGS[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src}))}
+function imageShape(im,w,h){const ar=im.naturalWidth/im.naturalHeight,gw=Math.round(Math.sqrt(N*ar)),gh=Math.floor(N/gw);
+ const cv=document.createElement('canvas');cv.width=gw;cv.height=gh;const g=cv.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,gw,gh);const d=g.getImageData(0,0,gw,gh).data;
+ const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+ for(let k=0;k<N;k++){const q=k<gw*gh?k:Math.floor(rnd()*gw*gh),i=q%gw,j=Math.floor(q/gw);
+  pos[k*3]=(i/(gw-1)-.5)*w;pos[k*3+1]=(.5-j/(gh-1))*h;pos[k*3+2]=0;for(let c=0;c<3;c++)col[k*3+c]=Math.pow(d[q*4+c]/255,1.4)}
+ return{pos,col}}
+
+// ---------- WebGL ----------
+const cv=document.getElementById('gl'),R=new THREE.WebGLRenderer({canvas:cv,antialias:false,alpha:false,powerPreference:'high-performance'});
+R.setClearColor(0x0b0b0c,1);
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(32,1,.1,50);cam.position.set(0,0,6.4);
+const grp=new THREE.Group();scene.add(grp);
+const G=new THREE.BufferGeometry();
+const A0=new Float32Array(N*3),A1=new Float32Array(N*3),C0=new Float32Array(N*3).fill(.9),C1=new Float32Array(N*3).fill(.9),RN=new Float32Array(N),DV=new Float32Array(N*3);
+for(let k=0;k<N;k++){RN[k]=rnd();const u=rnd()*2-1,t=rnd()*6.283,s=Math.sqrt(1-u*u);DV[k*3]=s*Math.cos(t);DV[k*3+1]=u;DV[k*3+2]=s*Math.sin(t)}
+const at=(n,a,s=3)=>G.setAttribute(n,new THREE.BufferAttribute(a,s));
+at('position',A1);at('a0',A0);at('c0',C0);at('c1',C1);at('rn',RN,1);at('dv',DV);
+const U={t:{value:1},px:{value:1},sz:{value:1},alpha:{value:1},spread:{value:.9},tm:{value:0}};
+const M=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthTest:false,depthWrite:false,
+ vertexShader:`attribute vec3 a0;attribute vec3 c0;attribute vec3 c1;attribute float rn;attribute vec3 dv;
+ uniform float t,px,sz,spread,tm;varying vec3 vc;varying float va;
+ void main(){float k=clamp(t*1.55-rn*.55,0.,1.);k=k*k*(3.-2.*k);
+  vec3 p=mix(a0,position,k)+dv*sin(k*3.14159)*spread*(.35+rn*.65);
+  p+=dv*.004*sin(tm*1.3+rn*40.);
+  vc=mix(c0,c1,k);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+  gl_PointSize=sz*px*(2.3/-mv.z)*(1.+sin(k*3.14159)*.6);va=.55+.45*(1.-sin(k*3.14159)*.5);}`,
+ fragmentShader:`uniform float alpha;varying vec3 vc;varying float va;
+ void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d);if(r>.25)discard;gl_FragColor=vec4(vc,alpha*va*smoothstep(.25,.05,r));}`});
+const pts=new THREE.Points(G,M);grp.add(pts);
+A1.set(SH.globe);
+
+// ---------- état et transitions ----------
+let state='globe',cur=null,anim=null,rotY=-0.35,rotX=0.55,tgtX=0.55,spin=.0009,drag=null,velY=0;
+function morph(target,colors,opt={}){A0.set(G.attributes.position.array.length?currentPos():A1);C0.set(currentCol());
+ A1.set(target);C1.set(colors||C1.fill(.92));
+ for(const n of ['position','a0','c0','c1'])G.attributes[n].needsUpdate=true;
+ U.t.value=0;U.spread.value=opt.spread??.9;anim={t0:performance.now(),d:red?1:(opt.d||1700),end:opt.end};}
+// position réelle de chaque point au milieu d'une transition (pour enchaîner sans saut)
+function currentPos(){const t=U.t.value,o=new Float32Array(N*3);for(let k=0;k<N;k++){let q=Math.min(1,Math.max(0,t*1.55-RN[k]*.55));q=q*q*(3-2*q);
+ for(let c=0;c<3;c++)o[k*3+c]=A0[k*3+c]+(A1[k*3+c]-A0[k*3+c])*q}return o}
+function currentCol(){const t=U.t.value,o=new Float32Array(N*3);for(let k=0;k<N;k++){let q=Math.min(1,Math.max(0,t*1.55-RN[k]*.55));q=q*q*(3-2*q);
+ for(let c=0;c<3;c++)o[k*3+c]=C0[k*3+c]+(C1[k*3+c]-C0[k*3+c])*q}return o}
+const white=()=>new Float32Array(N*3).fill(.92);
+function tint(shape){const c=new Float32Array(N*3);for(let k=0;k<N;k++){const y=shape[k*3+1];const v=.62+.38*Math.min(1,Math.max(0,(y+.6)/1.6));c[k*3]=v;c[k*3+1]=v;c[k*3+2]=v*.98}return c}
+function globeTint(){const c=new Float32Array(N*3);const n1=Math.floor(N*.62);for(let k=0;k<N;k++){const v=k<n1?.95:.32;c.fill(v,k*3,k*3+3)}return c}
+C1.set(globeTint());G.attributes.c1.needsUpdate=true;C0.set(C1);
+
+// ---------- interface ----------
+const cap=document.getElementById('cap'),st=document.getElementById('st'),marks=document.getElementById('marks'),photo=document.getElementById('photo');
+const MK=IDS.map(id=>{const p=P[id],b=document.createElement('button');b.className='mk';b.innerHTML='<span>'+p.t+'</span>';b.onclick=()=>openP(id);marks.appendChild(b);
+ return{id,b,v:new THREE.Vector3(...toXYZ(p.ll[1],p.ll[0],1.02))}});
+function capGlobe(){cap.innerHTML=`<div class="k">${IDS.length} projets · études et concours</div><h1>Le globe.</h1><div class="hint">Touchez un point, ou tournez le globe.</div>`}
+function capProj(id){const p=P[id],i=IDS.indexOf(id);cap.innerHTML=`<div class="k">${({e:'Études',c:'Concours'})[p.fam]} · ${p.y} · ${i+1}/${IDS.length}</div><h1>${p.t}</h1><div class="ln">${p.line||''}</div>
+ <div class="bar"><button id="bImg">Le rendu</button><button id="bNext">Projet suivant</button><button id="bGlobe">Globe</button></div>`;
+ document.getElementById('bImg').onclick=()=>toImage(id);document.getElementById('bNext').onclick=()=>openP(IDS[(i+1)%IDS.length]);document.getElementById('bGlobe').onclick=toGlobe}
+function capImg(id){const p=P[id];cap.innerHTML=`<div class="k">${p.t} · le rendu</div><div class="bar"><button id="bBack">La maquette</button><button id="bNext">Projet suivant</button><button id="bGlobe">Globe</button></div>`;
+ document.getElementById('bBack').onclick=()=>openP(id,true);document.getElementById('bNext').onclick=()=>openP(IDS[(IDS.indexOf(id)+1)%IDS.length]);document.getElementById('bGlobe').onclick=toGlobe}
+function hidePhoto(){photo.style.opacity=0;U.alpha.value=1}
+function openP(id,fromImg){hidePhoto();cur=id;state='proj';st.textContent='MAQUETTE';const s=modelShape(id);morph(s,tint(s),{d:1900,spread:fromImg?.5:1.1});tgtX=.5;spin=.0016;capProj(id)}
+function toGlobe(){hidePhoto();state='globe';cur=null;st.textContent='GLOBE';morph(SH.globe,globeTint(),{d:1900,spread:1.1});tgtX=.55;spin=.0009;capGlobe()}
+// l'image : le nuage se met face à nous et se range en grille, aux couleurs du rendu ; puis la vraie image apparaît dessous
+async function toImage(id){const p=P[id],im=await loadImg(p.hero);if(!im||cur!==id)return;state='img';st.textContent='RENDU';
+ const vh=2*cam.position.z*Math.tan(cam.fov*Math.PI/360),vw=vh*cam.aspect,ar=im.naturalWidth/im.naturalHeight;
+ const top=70,bot=innerWidth<700?170:150,availH=(innerHeight-top-bot)/innerHeight*vh,availW=vw*.92;let w=availW,h=w/ar;if(h>availH){h=availH;w=h*ar}
+ const yOff=((bot-top)/2)/innerHeight*vh;
+ const S=imageShape(im,w,h);for(let k=0;k<N;k++)S.pos[k*3+1]+=yOff;
+ // la grille est dans le repère du groupe : on ramène le groupe face à la caméra pendant la métamorphose
+ rotTo={x:0,y:Math.round(rotY/(Math.PI*2))*Math.PI*2};
+ morph(S.pos,S.col,{d:1900,spread:.6,end:()=>{if(state!=='img')return;const pw=w/vw*innerWidth,phh=h/vh*innerHeight;
+  photo.src=p.hero;Object.assign(photo.style,{width:pw+'px',height:phh+'px',left:(innerWidth-pw)/2+'px',top:(innerHeight-phh)/2-yOff/vh*innerHeight+'px'});
+  requestAnimationFrame(()=>{photo.style.opacity=1;fadePts=performance.now()})}});
+ capImg(id)}
+let rotTo=null,fadePts=0;
+document.getElementById('home').onclick=toGlobe;
+
+// ---------- geste : tourner ----------
+cv.addEventListener('pointerdown',e=>{if(state==='img')return;drag={x:e.clientX,y:e.clientY,ry:rotY,rx:tgtX};velY=0});
+addEventListener('pointermove',e=>{if(!drag)return;const ny=drag.ry+(e.clientX-drag.x)*.006;velY=ny-rotY;rotY=ny;tgtX=Math.max(-.2,Math.min(1.2,drag.rx+(e.clientY-drag.y)*.004));rotX=tgtX});
+addEventListener('pointerup',()=>drag=null);
+
+// ---------- boucle ----------
+function size(){const w=innerWidth,h=innerHeight;R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.setSize(w,h,false);cam.aspect=w/h;
+ cam.position.z=w<700?8.6:6.4;cam.updateProjectionMatrix();U.px.value=R.getPixelRatio();U.sz.value=w<700?2.2:2.6}
+addEventListener('resize',size);size();
+const V=new THREE.Vector3();
+function frame(now){U.tm.value=now/1000;
+ if(anim){const t=Math.min(1,(now-anim.t0)/anim.d);U.t.value=t;if(t>=1){const e=anim.end;anim=null;e&&e()}}
+ if(fadePts&&state==='img'){U.alpha.value=Math.max(0,1-(now-fadePts)/700)}else if(state!=='img')fadePts=0;
+ if(rotTo&&state==='img'){rotY+=(rotTo.y-rotY)*.06;rotX+=(rotTo.x-rotX)*.06}
+ else{rotTo=null;if(!drag){velY*=.94;rotY+=spin+velY;rotX+=(tgtX-rotX)*.05}}
+ grp.rotation.set(rotX,rotY,0,'XYZ');
+ // les repères du globe suivent la rotation
+ const showM=state==='globe'&&!anim;grp.updateMatrixWorld();
+ for(const m of MK){V.copy(m.v).applyMatrix4(grp.matrixWorld);const front=V.z>.15;V.project(cam);
+  m.b.style.left=((V.x+1)/2*innerWidth)+'px';m.b.style.top=((1-V.y)/2*innerHeight)+'px';const on=showM&&front;m.b.style.opacity=on?1:0;m.b.style.pointerEvents=on?'auto':'none';m.sx=(V.x+1)/2*innerWidth;m.sy=(1-V.y)/2*innerHeight;m.on=on}
+ // noms qui se chevauchent : seul le premier reste écrit, les autres gardent leur point
+ const kept=[];for(const m of MK){let hit=false;if(m.on)for(const o of kept)if(Math.abs(o.sy-m.sy)<16&&m.sx<o.sx+o.w&&o.sx<m.sx+(m.w||=m.b.offsetWidth))hit=true;m.b.classList.toggle('nt',hit);if(m.on&&!hit){m.w||=m.b.offsetWidth;kept.push(m)}}
+ R.render(scene,cam);requestAnimationFrame(frame)}
+// au départ : le globe se forme à partir d'un nuage
+(function(){const s=new Float32Array(N*3);for(let k=0;k<N*3;k++)s[k]=DV[k]*(2.5+RN[Math.floor(k/3)]*2);G.attributes.position.array.set(s);A0.set(s);A1.set(SH.globe);
+ C0.fill(0);G.attributes.c0.needsUpdate=true;for(const n of ['position','a0'])G.attributes[n].needsUpdate=true;A1.set(SH.globe);G.attributes.position.array.set(SH.globe);G.attributes.position.needsUpdate=true;
+ U.t.value=0;anim={t0:performance.now()+200,d:red?1:2600};capGlobe()})();
+// orientation de départ : l'Europe face à nous
+rotY=-10*Math.PI/180;rotX=tgtX=46*Math.PI/180;
+const q=new URLSearchParams(location.search);if(q.get('p'))setTimeout(()=>openP(q.get('p')),2800);if(q.get('img')){setTimeout(()=>openP(q.get('img')),2800);setTimeout(()=>toImage(q.get('img')),5000)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
