@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <style>
-:root{--bg:#eeebe4;--ink:#171716;--mute:#8b867c;--line:#d6d0c4;--tile:#f7f5f0;
-  --a:#46525e;--c:#2f6e8c;--e:#b46a5a;--p:#b8a37e;--r:#6f8270;--m:#efece6;
+:root{--bg:#eeebe4;--ink:#171716;--mute:#8b867c;--line:#d6d0c4;--tile:#fbfaf7;
+  --a:#46525e;--c:#2f6e8c;--e:#b46a5a;--p:#b8a37e;--r:#6f8270;--m:#171716;
   --mono:"IBM Plex Mono",ui-monospace,monospace;--sans:"Jost",system-ui,sans-serif}
-body.nuit{--bg:#121212;--ink:#ecebe6;--mute:#8d8a83;--line:#33322f;--tile:#1c1c1b}
+body.nuit{--bg:#121212;--ink:#ecebe6;--mute:#8d8a83;--line:#33322f;--tile:#232322;--m:#ecebe6}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;transition:background .5s}
@@ -89,6 +89,18 @@ dd a{color:inherit}
 .links a{color:inherit;text-decoration:none;display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}
 .cr{font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-top:6px}
 @media (min-width:860px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero{aspect-ratio:16/9}#page{padding-top:110px}}
+/* galerie : titres posés sous les cubes */
+#gal{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
+body.gal #gal{display:block}
+body.gal #menu{opacity:0;pointer-events:none;transform:translateY(30px)}
+#galHead{position:absolute;left:18px;right:18px;top:calc(58px + env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:flex-end;pointer-events:auto;opacity:0;transition:opacity .5s .6s}
+body.gal.ready #galHead{opacity:1}
+#galHead h1{font-weight:300;font-size:clamp(36px,10vw,64px);line-height:.9;letter-spacing:-.02em}
+#galHead button{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:8px 0}
+#galHead p{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:right}
+#labels span{position:absolute;transform:translate(-50%,0);font-family:var(--mono);font-size:clamp(8px,2.3vw,10px);letter-spacing:.04em;text-transform:uppercase;text-align:center;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .4s}
+body.gal.ready #labels span{opacity:1}
+#labels span i{display:block;font-style:normal;color:var(--mute)}
 #lb{position:fixed;inset:0;background:#111;z-index:50;display:none}#lb.on{display:block}
 #lb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 #lb .x{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top));color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:2}
@@ -110,13 +122,13 @@ dd a{color:inherit}
 </nav>
 
 <section id="page" aria-label="Partie"></section>
+<div id="gal"><div id="galHead"><div><button id="galBack">← Cube</button><h1 id="galName"></h1></div><p id="galInfo"></p></div><div id="labels"></div></div>
 <section id="sheet" aria-label="Fiche"><div class="sh-top"><button id="shClose">↓ Fermer</button><span id="shN"></span></div><div class="sh-in" id="shIn"></div></section>
 <div id="lb"><span class="n" id="lbN"></span><button class="x" id="lbX">Fermer ×</button><img id="lbI" alt=""><button class="pv" id="lbP" aria-label="Précédente"></button><button class="nx" id="lbNx" aria-label="Suivante"></button></div>
 
 <script src="data.js"></script>
 <script type="module">
 import * as THREE from "three";
-import {RoundedBoxGeometry} from "./vendor/RoundedBoxGeometry.js";
 const $=id=>document.getElementById(id);
 const ALL=window.PROJ,PUB=window.PUB,CV=window.CV;
 const cssv=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
@@ -145,31 +157,36 @@ const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixe
 R.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();
 const cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);cam.position.set(10,8.2,10);cam.lookAt(0,0,0);
-scene.add(new THREE.HemisphereLight(0xffffff,0x8a8478,1.55));
-const sun=new THREE.DirectionalLight(0xffffff,1.6);sun.position.set(4,10,6);scene.add(sun);
-const fill=new THREE.DirectionalLight(0xffffff,.45);fill.position.set(-8,2,-3);scene.add(fill);
+// lumière de maquette : trois tons (dessus clair, côtés gris), ombre portée douce
+scene.add(new THREE.HemisphereLight(0xffffff,0xb9b4aa,1.9));
+const sun=new THREE.DirectionalLight(0xffffff,1.25);sun.position.set(3,10,5);scene.add(sun);
+sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:30});sun.shadow.radius=6;sun.shadow.bias=-.0008;
+R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.ShadowMaterial({opacity:.1}));ground.rotation.x=-Math.PI/2;ground.position.y=-2.2;ground.receiveShadow=true;scene.add(ground);
 const root=new THREE.Group();scene.add(root);      // orientation d'ensemble (glisser)
 const cube=new THREE.Group();root.add(cube);        // les 27 cubes
 
-const body=new THREE.MeshStandardMaterial({color:0x1d1d1c,roughness:.62,metalness:.05});
-const geo=new RoundedBoxGeometry(.95,.95,.95,4,.09);
-function stickerGeo(){const s=.78,r=.1,h=s/2,sh=new THREE.Shape();sh.moveTo(-h+r,-h);sh.lineTo(h-r,-h);sh.quadraticCurveTo(h,-h,h,-h+r);sh.lineTo(h,h-r);sh.quadraticCurveTo(h,h,h-r,h);sh.lineTo(-h+r,h);sh.quadraticCurveTo(-h,h,-h,h-r);sh.lineTo(-h,-h+r);sh.quadraticCurveTo(-h,-h,-h+r,-h);return new THREE.ShapeGeometry(sh,4)}
-const sg=stickerGeo();
-const mats=FACES.map(f=>new THREE.MeshStandardMaterial({color:new THREE.Color(cssv(f.col)),roughness:.48,metalness:0}));
+/* un cube = un volume de papier, ses arêtes au trait */
+const paper=new THREE.MeshLambertMaterial({color:new THREE.Color(cssv("--tile")),polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+const ink=new THREE.LineBasicMaterial({color:new THREE.Color(cssv("--ink"))});
+const geo=new THREE.BoxGeometry(.97,.97,.97);const edges=new THREE.EdgesGeometry(geo);
+// le repère de chaque face : un petit carré de couleur sur la case du centre, comme une pastille de légende
+const markG=new THREE.PlaneGeometry(.3,.3);
+const mats=FACES.map(f=>new THREE.MeshBasicMaterial({color:new THREE.Color(cssv(f.col))}));
 const cubies=[];
 for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
-  const g=new THREE.Group();g.add(new THREE.Mesh(geo,body));
-  FACES.forEach((f,i)=>{const n=new THREE.Vector3(...f.n);if(n.x&&n.x!=x||n.y&&n.y!=y||n.z&&n.z!=z)return;
-    const m=new THREE.Mesh(sg,mats[i]);m.position.copy(n).multiplyScalar(.477);m.lookAt(n.clone().multiplyScalar(2));m.userData.face=i;g.add(m)});
+  const g=new THREE.Group();const m=new THREE.Mesh(geo,paper);m.castShadow=true;m.receiveShadow=true;g.add(m);g.add(new THREE.LineSegments(edges,ink));
+  FACES.forEach((f,i)=>{const n=new THREE.Vector3(...f.n);if(!(n.x==x&&n.y==y&&n.z==z))return;
+    const k=new THREE.Mesh(markG,mats[i]);k.position.copy(n).multiplyScalar(.487);k.lookAt(n.clone().multiplyScalar(2));if(f.k=="m"){k.material=new THREE.MeshBasicMaterial({color:new THREE.Color(cssv("--ink"))})}g.add(k)});
   g.position.set(x,y,z);g.userData.home=new THREE.Vector3(x,y,z);cube.add(g);cubies.push(g)}
 
-function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);const a=w/h;
+const CAM={pos:new THREE.Vector3(10,8.2,10),look:new THREE.Vector3(),v:3.3};
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);const a=w/h;if(mode=="gal"){layoutGal(false);return}
   const v=w<700?(w/h<.6?4.6:3.9):3.3;   // demi-hauteur visible
-  cam.left=-v*a;cam.right=v*a;cam.top=v;cam.bottom=-v;
-  cam.position.set(10,8.2,10);cam.lookAt(0,0,0);
-  // le cube monte un peu au-dessus du menu
-  cam.position.y+= w<700?-1.4:-.6;cam.updateProjectionMatrix()}
-addEventListener("resize",resize);resize();
+  CAM.v=v;CAM.pos.set(10,8.2+(w<700?-1.4:-.6),10);CAM.look.set(0,0,0);CUBECAM={pos:CAM.pos.clone(),look:CAM.look.clone(),v}}
+let mode="cube",CUBECAM=null;
+function applyCam(){const a=innerWidth/innerHeight,v=CAM.v;cam.left=-v*a;cam.right=v*a;cam.top=v;cam.bottom=-v;cam.position.copy(CAM.pos);cam.lookAt(CAM.look);cam.updateProjectionMatrix()}
+addEventListener("resize",resize);
 
 /* ---------- petit moteur d'animation ---------- */
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
@@ -200,11 +217,12 @@ function faceTo(i){const n=new THREE.Vector3(...FACES[i].n);const qq=new THREE.Q
   if(Math.abs(n.y)>.5){qq.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),n.y>0?.55:-.55))}
   qT.copy(qq).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),0));lastTouch=performance.now()}
 cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now()};cv.setPointerCapture(e.pointerId);lastTouch=performance.now()});
-cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(mode=="gal"){galScroll(dy);return}
   const k=.0085;const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*k);
   const ax=new THREE.Vector3(1,0,-1).normalize();const qx=new THREE.Quaternion().setFromAxisAngle(ax,dy*k);
   qT.premultiply(qy).premultiply(qx);root.quaternion.copy(qT);lastTouch=performance.now()});
 cv.addEventListener("pointerup",e=>{if(!drag)return;const moved=Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0);drag=null;
+  if(mode=="gal"){if(moved<8)galPick(e);return}
   if(moved<8){const hit=pick(e);if(hit!=null){faceTo(hit);setTimeout(()=>openFace(hit),380)}return}
   faceTo(activeFace())});
 const ray=new THREE.Raycaster();
@@ -225,7 +243,7 @@ async function twist(){if(twisting||document.body.classList.contains("page"))ret
   await tween(650,t=>{piv.rotation[ax]=dir*Math.PI/2*(1-t)});
   sel.forEach(c=>{cube.attach(c);c.position.set(Math.round(c.position.x),Math.round(c.position.y),Math.round(c.position.z));c.rotation.set(0,0,0)});
   cube.remove(piv);twisting=false}
-setInterval(()=>{if(idleOn&&performance.now()-lastTouch>2500)twist()},4200);
+setInterval(()=>{if(idleOn&&mode=="cube"&&performance.now()-lastTouch>2500)twist()},4200);
 
 /* ---------- ouvrir une partie : le cube éclate, l'index monte ---------- */
 async function explode(on){await Promise.all(cubies.map(c=>{const h=c.position.clone();const a=c.userData.ex||(c.userData.ex=new THREE.Vector3((Math.random()-.5)*.6,(Math.random()-.5)*.6,(Math.random()-.5)*.6));
@@ -237,10 +255,10 @@ function setMenu(i){curFace=i;const f=FACES[i];$("goName").textContent=f.name;$(
 $("faces").innerHTML=FACES.map((f,i)=>`<button data-i="${i}"><i style="background:var(${f.col});${f.k=="m"?"box-shadow:inset 0 0 0 1px var(--ink)":""}"></i>${f.name}</button>`).join("");
 $("faces").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;faceTo(+b.dataset.i);setMenu(+b.dataset.i)});
 $("openBtn").onclick=()=>openFace(curFace);
-async function openFace(i){if(document.body.classList.contains("page"))return;setMenu(i);const f=FACES[i];
+async function openFace(i){if(document.body.classList.contains("page")||mode!="cube")return;if("ace".includes(FACES[i].k))return openGal(i);setMenu(i);const f=FACES[i];
   explode(true);setTimeout(()=>{renderPage(f);document.body.classList.add("page");$("page").scrollTop=0},260);history.pushState({f:i},"","#"+f.k)}
 async function closePage(){if(!document.body.classList.contains("page"))return;document.body.classList.remove("page");await explode(false)}
-addEventListener("popstate",()=>{closeSheet();closeLb();if(!location.hash)closePage()});
+addEventListener("popstate",()=>{closeSheet();closeLb();if(!location.hash){closePage();closeGal()}});
 
 function renderPage(f){const col=`var(${f.col})`;
   if(f.k=="m"){$("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>Profil</h1><p>Yves Micault<br>architecte HMONP</p></div>
@@ -274,7 +292,8 @@ function lbStep(d){lbI=(lbI+d+lbList.length)%lbList.length;showLb()}
 function closeLb(){$("lb").classList.remove("on")}
 $("lbX").onclick=closeLb;$("lbP").onclick=()=>lbStep(-1);$("lbNx").onclick=()=>lbStep(1);
 let lx=null;$("lb").addEventListener("touchstart",e=>lx=e.touches[0].clientX,{passive:true});$("lb").addEventListener("touchend",e=>{if(lx==null)return;const d=e.changedTouches[0].clientX-lx;lx=null;if(Math.abs(d)>50)lbStep(d<0?1:-1)},{passive:true});
-addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains("on"))return closeLb();if($("sheet").classList.contains("on"))return closeSheet();if(document.body.classList.contains("page"))return history.back()}
+addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains("on"))return closeLb();if($("sheet").classList.contains("on"))return closeSheet();if(document.body.classList.contains("page")||mode=="gal")return history.back()}
+  if(mode!="cube")return;
   if($("lb").classList.contains("on")){e.key=="ArrowRight"&&lbStep(1);e.key=="ArrowLeft"&&lbStep(-1);return}
   if(document.body.classList.contains("page"))return;
   if(e.key=="ArrowRight"||e.key=="ArrowLeft"){const order=[0,1,2,3];const k=order.indexOf(curFace);const n=order[((k<0?0:k)+(e.key=="ArrowRight"?1:3))%4];faceTo(n);setMenu(n)}
@@ -282,7 +301,71 @@ addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains
 
 /* nuit / jour : les couleurs des faces suivent */
 $("bgBtn").onclick=()=>{document.body.classList.toggle("nuit");$("bgBtn").textContent=document.body.classList.contains("nuit")?"Jour":"Nuit";
-  FACES.forEach((f,i)=>mats[i].color.set(cssv(f.col)))};
+  FACES.forEach((f,i)=>mats[i].color.set(cssv(f.col)));paper.color.set(cssv("--tile"));ink.color.set(cssv("--ink"))};
+
+/* ---------- galerie : le cube se défait, ses cubes se rangent en trame et portent les projets ---------- */
+let G=null;const loader=new THREE.TextureLoader();
+function glyphTex(id,col){const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");x.fillStyle=cssv("--tile");x.fillRect(0,0,256,256);
+  const b=bitsOf(id),s=256/3;x.fillStyle=col;x.strokeStyle=col;x.lineWidth=3;
+  for(let i=0;i<9;i++){const px=(i%3)*s+s*.2,py=(i/3|0)*s+s*.2,w=s*.6;if(b>>i&1)x.fillRect(px,py,w,w);else{x.globalAlpha=.35;x.strokeRect(px,py,w,w);x.globalAlpha=1}}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
+function layoutGal(anim){const w=innerWidth,h=innerHeight,a=w/h;const n=G.items.length,cols=w<700?3:w<1100?5:6,gap=1.18;G.cols=cols;
+  G.slots=G.items.map((p,i)=>new THREE.Vector3((i%cols-(cols-1)/2)*gap,0,(i/cols|0)*gap*1.42));
+  const rows=Math.ceil(n/cols);G.rows=rows;
+  // vue presque en plan : on lit les cases, mais les hauteurs restent visibles
+  const halfW=(cols*gap)/2+.35;G.v=Math.max(halfW/a,2.2);
+  G.top=(w<700?1.15:0.9)*G.v;          // la place du titre en haut de l'écran (en unités)
+  G.minZ=0;G.maxZ=Math.max(0,rows*gap*1.42-2*G.v+G.top+1.2);
+  if(!anim){CAM.v=G.v;setGalCam()}}
+function setGalCam(){const z=G.z-G.v+G.top;CAM.look.set(0,0,z+G.v-G.top);CAM.pos.set(0,14,CAM.look.z+4.2);CAM.v=G.v}
+function galScroll(dy){G.z=Math.min(G.maxZ,Math.max(G.minZ,G.z-dy*(2*G.v/innerHeight)));setGalCam()}
+addEventListener("wheel",e=>{if(mode=="gal"&&G){galScroll(-e.deltaY*.6)}},{passive:true});
+async function openGal(i){const f=FACES[i];mode="gal";idleOn=false;setMenu(i);history.pushState({f:i},"","#"+f.k);
+  while(twisting)await tween(60,()=>{});
+  G={f,items:f.items,z:0,caps:[]};layoutGal(true);tween(900,t=>{ground.position.y=-2.2+t*1.71},{delay:900});
+  $("galName").textContent=f.name;$("galInfo").innerHTML=`${count(f)}<br>${f.info}`;document.body.classList.add("gal");
+  $("labels").innerHTML=G.items.map(p=>`<span>${p.t}<i>${(p.c||"").split(",")[0]} · ${p.y}</i></span>`).join("");
+  // le cube se remet droit, puis la caméra passe en plan
+  qT.identity();
+  const c0={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};
+  // ordre : les cubes de la face choisie d'abord, puis les autres
+  const n=new THREE.Vector3(...f.n);
+  const ord=cubies.slice().sort((p,q)=>q.position.dot(n)-p.position.dot(n));
+  G.used=ord.slice(0,G.items.length);G.spare=ord.slice(G.items.length);
+  const col=cssv(f.col);
+  G.used.forEach((c,k)=>{const p=G.items[k];const m=new THREE.MeshBasicMaterial({map:p.th?loader.load(p.th,t=>{t.colorSpace=THREE.SRGBColorSpace}):glyphTex(p.id,col),transparent:true,opacity:0});
+    const cap=new THREE.Mesh(new THREE.PlaneGeometry(.86,.86),m);cap.rotation.x=-Math.PI/2;cap.position.y=.492;c.add(cap);c.userData.cap=cap;c.userData.item=p;G.caps.push(cap)});
+  // caméra : de l'axonométrie au plan, pendant que les cubes se dispersent
+  setGalCam();const c1={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};
+  tween(1300,t=>{CAM.pos.lerpVectors(c0.pos,c1.pos,t);CAM.look.lerpVectors(c0.look,c1.look,t);CAM.v=c0.v+(c1.v-c0.v)*t},{delay:150});
+  await tween(350,t=>{});
+  const qs=root.quaternion.clone();
+  tween(700,t=>{root.quaternion.slerpQuaternions(qs,new THREE.Quaternion(),t)});
+  G.spare.forEach((c,k)=>{const a=c.position.clone();tween(700,t=>{c.position.set(a.x*(1+t*2),a.y-t*6,a.z*(1+t*2));c.scale.setScalar(1-t*.999)},{delay:k*20,e:ease})});
+  await Promise.all(G.used.map((c,k)=>{const a=c.position.clone(),r0=c.rotation.clone(),b=G.slots[k];
+    return tween(1100,t=>{c.position.set(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t+Math.sin(t*Math.PI)*2.6,a.z+(b.z-a.z)*t);c.rotation.set(r0.x*(1-t),r0.y*(1-t)+Math.sin(t*Math.PI)*.0,r0.z*(1-t))},{delay:200+k*45,e:ease}).then(()=>
+      tween(450,t=>{c.userData.cap.material.opacity=t},{e:easeOut}))}));
+  document.body.classList.add("ready")}
+function galPick(e){const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
+  const hs=ray.intersectObjects(G.used,true);if(!hs.length)return;let o=hs[0].object;while(o&&!o.userData.item)o=o.parent;if(!o)return;
+  const c=o,y0=c.position.y;tween(260,t=>{c.position.y=y0+t*.7},{e:easeOut}).then(()=>{openSheet(c.userData.item);tween(400,t=>{c.position.y=y0+.7*(1-t)},{delay:500})})}
+async function closeGal(){if(mode!="gal"||!G)return;mode="back";document.body.classList.remove("ready");
+  G.caps.forEach(cp=>tween(300,t=>{cp.material.opacity=1-t}));
+  const c0={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};resize();const c1=CUBECAM;
+  tween(1100,t=>{CAM.pos.lerpVectors(c0.pos,c1.pos,t);CAM.look.lerpVectors(c0.look,c1.look,t);CAM.v=c0.v+(c1.v-c0.v)*t},{delay:200});
+  const all=[...G.used,...G.spare];
+  await Promise.all(all.map((c,k)=>{const a=c.position.clone(),b=c.userData.home,s0=c.scale.x;
+    return tween(1000,t=>{c.position.set(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t+Math.sin(t*Math.PI)*1.8,a.z+(b.z-a.z)*t);c.scale.setScalar(s0+(1-s0)*t)},{delay:250+k*22,e:ease})}));
+  G.caps.forEach(cp=>{cp.parent.remove(cp);cp.material.map&&cp.material.map.dispose();cp.material.dispose()});
+  cubies.forEach(c=>{c.userData.cap=null;c.userData.item=null;c.rotation.set(0,0,0)});
+  ground.position.y=-2.2;document.body.classList.remove("gal");G=null;mode="cube";faceTo(curFace);idleOn=true;lastTouch=performance.now()}
+$("galBack").onclick=()=>history.back();
+const pv=new THREE.Vector3();
+function placeLabels(now){if(!G||!document.body.classList.contains("ready"))return;const sp=$("labels").children;const W=innerWidth,H=innerHeight;
+  G.used.forEach((c,k)=>{// au repos, la trame ondule doucement : les cubes montent et descendent
+    c.position.y=Math.sin(now*.0016+k*.55)*.07;
+    pv.set(c.position.x,c.position.y-.5,c.position.z+.5).project(cam);const el=sp[k];if(!el)return;
+    const x=(pv.x+1)/2*W,y=(1-pv.y)/2*H+6;el.style.left=x+"px";el.style.maxWidth=(W/(2*G.v*W/H)*1.12)+"px";el.style.top=y+"px";el.style.visibility=y<120||y>H-10?"hidden":"visible"})}
 
 /* ---------- boucle ---------- */
 faceTo(0);setMenu(0);
@@ -290,14 +373,16 @@ const base=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),0);
 let t0=performance.now();
 function loop(now){requestAnimationFrame(loop);runTweens(now);
   const dt=Math.min(50,now-t0);t0=now;
-  if(!drag){
+  applyCam();placeLabels(now);
+  if(!drag&&mode=="cube"){
     // au repos : une lente dérive autour de la verticale
     if(idleOn&&now-lastTouch>2500)qT.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dt*.00018));
     root.quaternion.slerp(qT,1-Math.pow(.0025,dt/1000));
   }
-  const a=activeFace();if(a!=curFace&&!document.body.classList.contains("page"))setMenu(a);
+  if(mode!="cube"&&!drag)root.quaternion.slerp(qT,1-Math.pow(.0025,dt/1000));
+  if(mode=="cube"){const a=activeFace();if(a!=curFace&&!document.body.classList.contains("page"))setMenu(a)}
   R.render(scene,cam)}
-requestAnimationFrame(loop);
+resize();requestAnimationFrame(loop);
 intro();
 if(location.hash){const i=FACES.findIndex(f=>"#"+f.k==location.hash);if(i>=0)setTimeout(()=>openFace(i),2400)}
 </script>
