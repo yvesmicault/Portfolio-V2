@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Direction visuelle 02</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Plex;src:url(fonts/plexmono-400.woff2) format("woff2");font-weight:400}
+:root{--bg:#F4F3F1;--ink:#1A1A1F;--mute:#6C6A72;--hair:rgba(26,26,31,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:15px/1.5 Archivo,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:Plex,ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.wrap{max-width:1360px;margin:0 auto;padding:36px 16px 80px}
+@media(min-width:900px){.wrap{padding:52px 48px 100px}}
+.top{display:flex;justify-content:space-between;color:var(--mute);padding-bottom:12px;border-bottom:1px solid var(--hair)}
+h1{font-weight:560;font-size:clamp(28px,4vw,44px);letter-spacing:-.02em;line-height:1.05;margin:32px 0 10px}
+.lead{max-width:680px;color:#3e3d44}
+h2{font-weight:600;font-size:22px;letter-spacing:-.01em;margin:56px 0 4px}
+.sub{color:var(--mute);margin-bottom:18px;max-width:720px}
+.signs{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:900px){.signs{grid-template-columns:repeat(3,1fr)}}
+.sg{background:#fff;border-radius:20px;padding:18px}
+.sg .big{display:flex;justify-content:center;align-items:center;height:220px;cursor:pointer}
+.sg .big svg{width:150px;height:150px}
+.sg .sizes{display:flex;align-items:flex-end;gap:22px;padding:14px 0 12px;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.sg .sizes div{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--mute)}
+.sg h3{font-weight:600;font-size:19px;margin:12px 0 2px}
+.sg p{font-size:13.5px;color:#46454c}
+.sg .rec{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--ink);color:#fff;font-size:10px;vertical-align:3px}
+.phones{display:flex;flex-wrap:wrap;gap:36px}
+.ph .cap{margin-bottom:10px;color:var(--mute)}
+.scr{position:relative;width:390px;max-width:100%;height:844px;overflow:hidden;border-radius:28px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.08)}
+.scr .hd{position:absolute;top:0;left:0;right:0;height:60px;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.scr .hd b{font-weight:600;font-size:16px;letter-spacing:-.01em}
+.scr .hd span{font-size:12px}
+.scr .stage{position:absolute;top:96px;left:0;right:0;height:300px;display:flex;justify-content:center;align-items:center;cursor:pointer}
+.scr .stage svg{width:190px;height:190px;overflow:visible}
+.scr .hint{position:absolute;top:400px;left:0;right:0;text-align:center;font-size:12px}
+.scr .intro{position:absolute;left:20px;right:20px;top:450px;font-size:19px;line-height:1.35;font-weight:450;letter-spacing:-.005em}
+.scr .ent{position:absolute;left:12px;right:12px;bottom:56px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scr .ent a{height:76px;border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;text-decoration:none;cursor:pointer}
+.scr .ent a b{font-weight:600;font-size:18px;letter-spacing:-.01em}
+.scr .ent a i{font-style:normal;font-size:11.5px}
+.scr .ft{position:absolute;left:20px;right:20px;bottom:18px;display:flex;justify-content:space-between;font-size:11px}
+.pal{display:flex;gap:6px;margin-top:12px}
+.pal div{flex:1;height:44px;border-radius:10px;padding:6px 8px;font-size:9.5px}
+.notes{max-width:820px}
+.notes li{margin:0 0 8px 18px;font-size:14.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top mono"><span>Portfolio V2 · direction visuelle 02</span><span>Yves Micault</span></div>
+  <h1>Un signe, puis deux lumières</h1>
+  <p class="lead">Le carré est le cadre, la limite, la mesure, le point de départ. Le pixel est l’unité qui permet de le composer et de le transformer. Le cube en révèle la profondeur. Ici, rien n’est écrit sur le site : le signe le fait sentir, au repos puis au toucher.</p>
+
+  <h2>1. Le signe</h2>
+  <p class="sub">Trois pistes, testées en monochrome à 96, 48 et 24 px. Au repos, un signe plat. Touchez le grand signe : la profondeur n’apparaît qu’à l’action.</p>
+  <div class="signs" id="signs"></div>
+
+  <h2>2. Deux lumières, même accueil</h2>
+  <p class="sub">Même composition, même signe : seule la palette change. Touchez le signe dans chaque écran.</p>
+  <div class="phones" id="phones"></div>
+
+  <h2>Ce qui change par rapport à la 01</h2>
+  <ul class="notes">
+    <li>Plus de maquette en trois faces ombrées, plus de contours ni de joints : un signe plat, net, lisible à 24 px.</li>
+    <li>Plus de boucle automatique : le signe est immobile au repos, il se transforme quand on le touche ou quand on entre quelque part.</li>
+    <li>Plus de slogan affiché ; une phrase de présentation simple.</li>
+    <li>Les quatre opérations restent une grammaire commune, sans être attribuées une à une aux rubriques.</li>
+    <li>Typographie adoucie : Archivo en largeur normale, plus de capitales étendues. On garde la photo entière et la lisibilité des fiches.</li>
+  </ul>
+</div>
+<script>
+(()=>{
+const ez=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+// ---- les trois signes : t = 0 repos, 1 ouvert ; c = {ink, mid, soft, bg}
+// l'épaisseur d'un pixel qui sort vers le haut à droite : face du dessus + face de droite
+const ext=(x,y,p,e,c)=>`<path d="M${x+2} ${y}H${x+p-2}L${x+p-2+e} ${y-e}H${x+2+e}Z" fill="${c.soft}"/><path d="M${x+p} ${y+2}V${y+p-2}L${x+p+e} ${y+p-2-e}V${y+2-e}Z" fill="${c.mid}"/>`;
+const S={
+ // A : le pixel levé — un carré de 2×2 dont un pixel se soulève
+ A:(t,c)=>{const g=6,s=40,o=8,e=6+16*t,X=o+s+g,Y=o;
+   const px=(x,y)=>`<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="7" fill="${c.ink}"/>`;
+   return px(o,o+s+g)+px(o+s+g,o+s+g)+px(o,o)+ext(X,Y,s,e,c)+`<rect x="${X+e}" y="${Y-e}" width="${s}" height="${s}" rx="7" fill="${c.ink}"/>`},
+ // B : le carré qui s'épaissit — un carré dont la profondeur naît d'un angle
+ B:(t,c)=>{const d=8+16*t,s=70,x=10,y=20;
+   return `<path d="M${x+10} ${y}L${x+10+d} ${y-d}H${x+s+d-10}Q${x+s+d} ${y-d} ${x+s+d} ${y-d+10}V${y+s-d-10}L${x+s-0} ${y+s-10}V${y+10}Q${x+s} ${y} ${x+s-10} ${y}Z" fill="${c.mid}"/>`+
+   `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="12" fill="${c.ink}"/>`},
+ // C : le pixel creusé — un carré plein d'où un pixel se retire et sort en cube
+ C:(t,c)=>{const s=84,o=8,p=30,hx=o+s-p-12,hy=o+12,e=t*30,dep=6;
+   let v=`<rect x="${o}" y="${o}" width="${s}" height="${s}" rx="14" fill="${c.ink}"/>`+
+   `<rect x="${hx}" y="${hy}" width="${p}" height="${p}" rx="3" fill="${c.bg}"/>`+
+   `<path d="M${hx} ${hy}H${hx+p}V${hy+p}H${hx+p-dep}V${hy+dep}H${hx}Z" fill="${c.soft}"/>`;
+   if(t>.01)v+=ext(hx,hy,p,e,c)+`<rect x="${hx+e}" y="${hy-e}" width="${p}" height="${p}" rx="3" fill="${c.ink}"/>`;
+   return v}};
+const MONO={ink:'#1A1A1F',mid:'#7B7A82',soft:'#C9C8CE',bg:'#ffffff'};
+const svg=(k,t,c,sz)=>`<svg viewBox="-6 -26 112 132" width="${sz||''}" height="${sz||''}">${S[k](t,c)}</svg>`;
+const INFO={A:['A · Le pixel levé','Un carré de quatre pixels ; l’un se soulève et révèle le cube. Lecture immédiate « pixel ».'],
+ B:['B · Le carré épais','Un carré plein dont l’épaisseur naît d’un angle. Très logo, mais plus proche d’un cube générique.'],
+ C:['C · Le pixel creusé','Un carré plein, un pixel en retrait. Au toucher, le pixel sort du cadre en cube : la liberté naît du cadre.']};
+const signs=document.getElementById('signs');
+signs.innerHTML=Object.keys(S).map(k=>`<div class="sg"><div class="big" data-k="${k}">${svg(k,0,MONO)}</div>
+ <div class="sizes">${[96,48,24].map(z=>`<div>${svg(k,0,{ink:'#1A1A1F',mid:'#1A1A1F',soft:'#fff',bg:'#fff'},z)}<span class="mono">${z}</span></div>`).join('')}</div>
+ <h3>${INFO[k][0]}${k=='C'?'<span class="rec mono">recommandé</span>':''}</h3><p>${INFO[k][1]}</p></div>`).join('');
+
+// ---- deux palettes, même accueil
+const PAL=[{n:'Fraîche',bg:'#EEF2F7',card:'#FFFFFF',ink:'#18213A',mute:'#5D6680',mid:'#7D8BEA',soft:'#C9D0F6',acc:'#6F7FE8',accT:'#fff',sw:[['Fond','#EEF2F7'],['Encre','#18213A'],['Pervenche','#7D8BEA'],['Pervenche pâle','#C9D0F6']]},
+ {n:'Chaleureuse',bg:'#FBF1EE',card:'#FFFFFF',ink:'#3A1E33',mute:'#7A6274',mid:'#F2A07A',soft:'#F8D3C2',acc:'#F2A07A',accT:'#3A1E33',sw:[['Fond','#FBF1EE'],['Prune','#3A1E33'],['Pêche','#F2A07A'],['Pêche pâle','#F8D3C2']]}];
+const phones=document.getElementById('phones');
+phones.innerHTML=PAL.map((p,i)=>`<div class="ph"><div class="cap mono">${p.n}</div>
+ <div class="scr" style="background:${p.bg};color:${p.ink}">
+  <div class="hd"><b>Yves Micault</b><span style="color:${p.mute}">FR · EN</span></div>
+  <div class="stage" data-p="${i}">${svg('C',0,{ink:p.ink,mid:p.mid,soft:p.soft,bg:p.bg})}</div>
+  <div class="hint mono" style="color:${p.mute}">Touchez le signe</div>
+  <div class="intro">Architecte HMONP. Projets d’agence, concours et études, de 2013 à aujourd’hui.</div>
+  <div class="ent">${[['Découvrir','un projet à la fois'],['Tous les projets','trier, chercher'],['Carte','le territoire'],['Profil','parcours, CV']].map((e,k)=>
+   `<a style="background:${k==0?p.acc:p.card};color:${k==0?p.accT:p.ink}"><b>${e[0]}</b><i style="color:${k==0?p.accT:p.mute};opacity:${k==0?.85:1}">${e[1]}</i></a>`).join('')}</div>
+  <div class="ft mono" style="color:${p.mute}"><span>31 projets</span><span>2013–2026</span></div>
+ </div>
+ <div class="pal">${p.sw.map(s=>`<div class="mono" style="background:${s[1]};color:${parseInt(s[1].slice(1,3),16)>150?'#222':'#fff'}">${s[0]}<br>${s[1]}</div>`).join('')}</div></div>`).join('');
+
+// ---- interaction : toucher ouvre, toucher referme (aucune boucle automatique)
+const anim=(el,draw)=>{let t=0,to=0,raf=0;const step=()=>{t+=(to-t)*.12;if(Math.abs(to-t)<.002)t=to;el.innerHTML=draw(ez(t));if(t!=to)raf=requestAnimationFrame(step)};
+  el.addEventListener('click',()=>{to=to?0:1;cancelAnimationFrame(raf);step()});
+  el.open=()=>{to=1;step()}};
+signs.querySelectorAll('.big').forEach(el=>anim(el,t=>svg(el.dataset.k,t,MONO)));
+phones.querySelectorAll('.stage').forEach(el=>{const p=PAL[+el.dataset.p];anim(el,t=>svg('C',t,{ink:p.ink,mid:p.mid,soft:p.soft,bg:p.bg}))});
+if(location.hash=='#open')document.querySelectorAll('.big,.stage').forEach(e=>e.open());
+})();
+</script>
+</body>
+</html>
