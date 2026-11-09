@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Cube en pixels</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--bg:#f2f1ed;--ink:#1d1d1b;--mut:#8a8a83}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
+header{position:fixed;top:0;left:0;right:0;padding:18px 16px;display:flex;justify-content:space-between;align-items:baseline;pointer-events:none;z-index:2}
+header b{font-weight:600;font-size:14px;font-stretch:92%}
+header span{font-family:Mono;font-size:10.5px;color:var(--mut)}
+.lab{position:fixed;z-index:2;transform:translate(-50%,-50%);font-size:14.5px;font-stretch:92%;padding:8px 6px;cursor:pointer;background:none;border:0;color:var(--ink);font-family:inherit;white-space:nowrap;transition:opacity .4s}
+.lab small{display:block;font-family:Mono;font-size:9.5px;color:var(--mut);text-align:center;margin-top:1px}
+.lab[aria-pressed=true]{text-decoration:underline;text-underline-offset:4px}
+#cap{position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:2;min-height:54px}
+#cap .t{font-weight:600;font-size:17px;font-stretch:90%}
+#cap .m{font-family:Mono;font-size:10.5px;color:var(--mut);margin-top:4px}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Le cube du portfolio, fait de pixels"></canvas>
+<header><b>Yves Micault</b><span id="st">accueil</span></header>
+<button class="lab" id="lDisc">Découvrir<small>galerie</small></button>
+<button class="lab" id="lProj">Projets<small>organisation</small></button>
+<button class="lab" id="lCarte">Carte<small>lieux</small></button>
+<button class="lab" id="lProf">Profil</button>
+<div id="cap" aria-live="polite"></div>
+<script src="data.js"></script>
+<script src="emp.js"></script>
+<script>
+// Un cube de N×N×N pixels. Trois faces, trois langages :
+// devant = galerie (l'image tramée), droite = organisation (un pixel par projet), dessus = lieux.
+// Un projet se CREUSE dans le dessus : sa silhouette monte en colonnes de pixels.
+const N=20,R0=2,F=9,INK='#1d1d1b';
+const T={top:'#ecebe5',fr:'#e2e1da',ri:'#d3d2ca'};
+const PR=window.PROJ,EMP=window.EMP||{},FAM={e:'Études',c:'Concours',a:'Agence'};
+const DISC=PR.filter(p=>p.hero);
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const Q=Math.PI/4,ISO=Math.atan(1/Math.SQRT2),ca=Math.cos(Q),sa=Math.sin(Q),cp=Math.cos(ISO),sp=Math.sin(ISO);
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const L=(a,b,t)=>a+(b-a)*t,ease=t=>t<=0?0:t>=1?1:t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+let W,H,dpr,u,ox,oy;
+function P(x,y,z){x-=N/2;y-=N/2;z-=N/2;const X=x*ca-z*sa,Z=x*sa+z*ca;return[ox+X*u,oy-(y*cp-Z*sp)*u]}
+function quad(a,b,c,d,col){g.fillStyle=col;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.lineTo(c[0],c[1]);g.lineTo(d[0],d[1]);g.closePath();g.fill()}
+// boîte : on ne dessine que les trois faces tournées vers nous
+function box(x0,x1,y0,y1,z0,z1,ct,cf,cr){
+ quad(P(x0,y0,z1),P(x1,y0,z1),P(x1,y1,z1),P(x0,y1,z1),cf);
+ quad(P(x1,y0,z1),P(x1,y0,z0),P(x1,y1,z0),P(x1,y1,z1),cr);
+ quad(P(x0,y1,z0),P(x1,y1,z0),P(x1,y1,z1),P(x0,y1,z1),ct)}
+
+// ---------- tweens par pixel : chaque valeur glisse vers sa cible avec un léger décalage ----------
+function tw(v){return{a:v,b:v,t0:0,d:0}}
+function set(o,v,delay,now){o.a=val(o,now);o.b=v;o.t0=now+delay;o.d=red?1:620}
+function val(o,now){if(now<o.t0)return o.a;const t=Math.min(1,(now-o.t0)/o.d);return L(o.a,o.b,ease(t))}
+
+// ---------- données des faces ----------
+const FR=[],RI=[],COL=[];
+for(let j=0;j<N;j++)for(let i=0;i<N;i++)FR.push({i,j,s:tw(.12),e:0,et:0});
+for(let i=0;i<N;i++)for(let k=0;k<N;k++)COL.push({i,k,y:tw(N),s:tw(.12),e:0,et:0,ink:tw(0)});
+// la face droite : un pixel par projet, posés en pile (par année ou par famille)
+const DOTS=PR.map(p=>({p,x:tw(0),y:tw(0)}));let orderBy='year';
+function organise(now){
+ let cols;if(orderBy==='year'){const ys=[...new Set(PR.map(p=>p.y))].sort((a,b)=>a-b);cols=ys.map(y=>PR.filter(p=>p.y===y))}
+ else cols=['e','c','a'].map(f=>PR.filter(p=>p.fam===f));
+ const step=orderBy==='year'?Math.max(1,Math.floor((N-2)/cols.length)):5,per=orderBy==='year'?99:4;
+ let c0=orderBy==='year'?1:2;
+ cols.forEach((list,ci)=>list.forEach((p,n)=>{const d=DOTS.find(o=>o.p===p),col=Math.floor(n/per),row=n%per;
+  set(d.x,c0+ci*step+(orderBy==='year'?0:col),ci*40+n*15,now);set(d.y,1+(orderBy==='year'?n:row),ci*40+n*15,now)}))}
+// le dessus : les lieux, en projection azimutale resserrée autour de la France
+function mapCells(){const s=new Map();for(const p of PR){if(!p.ll)continue;const [la,lo]=p.ll,dx=(lo-3)*Math.cos(46*Math.PI/180),dy=la-46,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),rr=Math.sqrt(r)*1.55;
+ const i=Math.max(0,Math.min(N-1,Math.round(N/2+Math.cos(a)*rr))),k=Math.max(0,Math.min(N-1,Math.round(N/2-Math.sin(a)*rr)));s.set(i+','+k,(s.get(i+','+k)||[]).concat(p))}return s}
+const MAP=mapCells();
+// trame d'image : la luminance devient la taille du pixel
+const OFF=document.createElement('canvas');OFF.width=OFF.height=N;const og=OFF.getContext('2d',{willReadFrequently:true});
+function halftone(im){const s=Math.max(N/im.naturalWidth,N/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;
+ og.clearRect(0,0,N,N);og.drawImage(im,(N-w)/2,(N-h)/2,w,h);const d=og.getImageData(0,0,N,N).data,out=[];
+ for(let j=0;j<N;j++)for(let i=0;i<N;i++){const q=((N-1-j)*N+i)*4,l=(.3*d[q]+.59*d[q+1]+.11*d[q+2])/255;out.push(Math.max(.1,Math.min(.95,(1-l)*1.15)))}return out}
+const IMG={};const load=src=>IMG[src]||(IMG[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src}));
+// silhouette d'un projet : l'emprise extrudée, ou une figure symétrique tirée de son nom
+function rng(seed){return()=>(seed=(seed*1664525+1013904223)>>>0)/4294967296}
+function silhouette(p){const n=N-2*R0,out=new Array(n*n).fill(0),e=EMP[p.id];
+ if(e){const mx=Math.max(...e.h)||1;for(let j=0;j<n;j++)for(let i=0;i<n;i++){const h=e.h[Math.floor(j*e.n/n)*e.n+Math.floor(i*e.n/n)];out[j*n+i]=h>0?1+Math.round(h/mx*7):0}return out}
+ let s=0;for(const c of p.id)s=(s*31+c.charCodeAt(0))>>>0;const r=rng(s);
+ for(let b=0;b<5;b++){const w=2+Math.floor(r()*5),d=2+Math.floor(r()*6),x=Math.floor(r()*(n/2-w+1)),z=Math.floor(r()*(n-d)),h=1+Math.floor(r()*7);
+  for(let k=z;k<z+d;k++)for(let i=x;i<x+w;i++){out[k*n+i]=Math.max(out[k*n+i],h);out[k*n+(n-1-i)]=Math.max(out[k*n+(n-1-i)],h)}}
+ return out}
+
+// ---------- états ----------
+let mode='home',di=0,pi=0;const cap=document.getElementById('cap'),st=document.getElementById('st');
+function wave(i,k){return(i+k)*14}
+async function showImage(src,now){const im=await load(src);if(!im)return;const v=halftone(im);now=performance.now();FR.forEach((f,n)=>set(f.s,v[n],wave(f.i,N-f.j)*.8,now))}
+function homeTop(now){COL.forEach(c=>{const m=MAP.get(c.i+','+c.k);set(c.y,N,wave(c.i,c.k),now);set(c.s,m?.85:.12,wave(c.i,c.k)+200,now);set(c.ink,0,0,now)})}
+function carve(p,now){const sil=silhouette(p),n=N-2*R0;
+ COL.forEach(c=>{const inn=c.i>=R0&&c.i<N-R0&&c.k>=R0&&c.k<N-R0;if(!inn){set(c.y,N,0,now);set(c.s,.12,0,now);return}
+  const h=sil[(c.k-R0)*n+(c.i-R0)];set(c.y,F+h,wave(c.i,c.k)*1.2,now);set(c.s,h?.8:.12,wave(c.i,c.k)*1.2+250,now);set(c.ink,h?1:0,wave(c.i,c.k)*1.2,now)})}
+function capt(p,hint){cap.innerHTML=p?`<div class="t">${p.t}</div><div class="m">${FAM[p.fam]} · ${p.line||p.y}${hint?' · '+hint:''}</div>`:''}
+function goHome(){const now=performance.now();mode='home';homeTop(now);showImage(DISC[di].hero,now);orderBy='year';organise(now);capt(null);st.textContent='accueil';pressed(null)}
+function goDisc(){const now=performance.now();if(mode==='disc')di=(di+1)%DISC.length;mode='disc';showImage(DISC[di].hero,now);capt(DISC[di],'toucher : image suivante');st.textContent=`découvrir ${di+1}/${DISC.length}`;homeTop(now);pressed('lDisc')}
+function goProj(){const now=performance.now();if(mode==='proj')pi=(pi+1)%PR.length;mode='proj';const p=PR[pi];carve(p,now);if(p.hero)showImage(p.hero,now);
+ orderBy=orderBy;highlight=p;capt(p,'toucher le creux : projet suivant');st.textContent=`projet ${pi+1}/${PR.length}`;pressed('lProj')}
+function goOrg(){const now=performance.now();orderBy=orderBy==='year'?'fam':'year';organise(now);st.textContent=orderBy==='year'?'rangés par année':'rangés par famille'}
+function goCarte(){const now=performance.now();mode='carte';homeTop(now);COL.forEach(c=>{const m=MAP.get(c.i+','+c.k);if(m){set(c.y,N+1+m.length*.8,wave(c.i,c.k),now);set(c.ink,1,wave(c.i,c.k),now)}});
+ capt(null);st.textContent='lieux';pressed('lCarte')}
+async function goProf(){const now=performance.now();mode='prof';homeTop(now);await showImage('img/yves_cv.jpg',now);
+ cap.innerHTML='<div class="t">Yves Micault</div><div class="m">Architecte HMONP · chef de projet chez Hamonic+Masson &amp; Associés depuis 2017</div>';st.textContent='profil';pressed('lProf')}
+let highlight=null;
+function pressed(id){document.querySelectorAll('.lab').forEach(b=>b.setAttribute('aria-pressed',b.id===id))}
+
+// ---------- dessin ----------
+let px=-1e4,py=-1e4;
+function layout(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;
+ u=Math.min(W*.86/(1.414*N),(H-210)/(1.75*N));ox=W/2;oy=56+(H-210)/2+N*u*.1;
+ const c=(x,y,z)=>P(x,y,z),lb=(id,p,dx=0,dy=0)=>{const e=document.getElementById(id);e.style.left=(p[0]+dx)+'px';e.style.top=(p[1]+dy)+'px'};
+ lb('lDisc',c(N/2,0,N),-u*2,22);lb('lProj',c(N,0,N/2),u*2,22);lb('lCarte',c(0,N+1,0),0,-24);lb('lProf',c(N,0,N),0,62)}
+function frame(now){
+ g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+ // colonnes du dessus (dont le creux), de l'arrière vers l'avant
+ const cols=COL.slice().sort((a,b)=>(a.i+a.k)-(b.i+b.k));
+ for(const c of cols){c.e+=(c.et-c.e)*.18;const y1=val(c.y,now)+c.e,ink=val(c.ink,now),s=val(c.s,now);
+  const y0=Math.min(F,y1-.01);
+  if(ink>.02){const m=t=>t;box(c.i+.04,c.i+.96,y0,y1,c.k+.04,c.k+.96,mix(T.top,'#3a3a37',ink),mix(T.fr,'#1d1d1b',ink),mix(T.ri,'#55554f',ink))}
+  else box(c.i,c.i+1,y0,y1,c.k,c.k+1,T.top,T.fr,T.ri);
+  if(s>.02){const h=s/2,cx=c.i+.5,cz=c.k+.5;quad(P(cx-h,y1,cz-h),P(cx+h,y1,cz-h),P(cx+h,y1,cz+h),P(cx-h,y1,cz+h),ink>.5?'#f2f1ed':INK)}}
+ // face avant : la galerie
+ quad(P(0,0,N),P(N,0,N),P(N,N,N),P(0,N,N),T.fr);
+ for(const f of FR){f.e+=(f.et-f.e)*.18;const s=val(f.s,now),h=s/2,cx=f.i+.5,cy=f.j+.5;
+  if(f.e>.04)box(cx-h,cx+h,cy-h,cy+h,N,N+f.e,'#3a3a37',INK,'#55554f');
+  else quad(P(cx-h,cy-h,N),P(cx+h,cy-h,N),P(cx+h,cy+h,N),P(cx-h,cy+h,N),INK)}
+ // face droite : l'organisation
+ quad(P(N,0,N),P(N,0,0),P(N,N,0),P(N,N,N),T.ri);
+ for(let k=0;k<N;k++)for(let j=0;j<N;j++){const h=.06;quad(P(N,j+.5-h,N-k-.5+h),P(N,j+.5-h,N-k-.5-h),P(N,j+.5+h,N-k-.5-h),P(N,j+.5+h,N-k-.5+h),'#b9b8b0')}
+ for(const d of DOTS){const x=val(d.x,now),y=val(d.y,now),on=highlight===d.p&&mode==='proj',h=on?.5:.36,e=on?1.2:0;
+  const zc=N-x-.5,yc=y+.5;if(e)box(N,N+e,yc-h,yc+h,zc-h,zc+h,'#3a3a37','#55554f',INK);else quad(P(N,yc-h,zc+h),P(N,yc-h,zc-h),P(N,yc+h,zc-h),P(N,yc+h,zc+h),INK)}
+ requestAnimationFrame(frame)}
+const hexc={};function mix(a,b,t){const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16),r=Math.round(L(A>>16,B>>16,t)),gg=Math.round(L(A>>8&255,B>>8&255,t)),bb=Math.round(L(A&255,B&255,t));return`rgb(${r},${gg},${bb})`}
+
+// ---------- interaction : le doigt soulève les pixels ----------
+function hover(x,y){px=x;py=y;const R=Math.max(26,u*2.6);
+ for(const f of FR){const q=P(f.i+.5,f.j+.5,N),d=Math.hypot(q[0]-x,q[1]-y);f.et=d<R*1.6?1.6*Math.exp(-d*d/(2*R*R/2.2)):0}
+ for(const c of COL){const q=P(c.i+.5,N,c.k+.5),d=Math.hypot(q[0]-x,q[1]-y);c.et=d<R*1.6?1.4*Math.exp(-d*d/(2*R*R/2.2)):0}}
+function face(x,y){const inq=(pts)=>{let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+ if(inq([P(0,N,0),P(N,N,0),P(N,N,N),P(0,N,N)]))return'top';if(inq([P(0,0,N),P(N,0,N),P(N,N,N),P(0,N,N)]))return'fr';if(inq([P(N,0,N),P(N,0,0),P(N,N,0),P(N,N,N)]))return'ri';return null}
+let down=null;
+cv.addEventListener('pointermove',e=>{hover(e.clientX,e.clientY)});
+cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};hover(e.clientX,e.clientY)});
+cv.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')setTimeout(()=>hover(-1e4,-1e4),350);if(!down)return;const m=Math.hypot(e.clientX-down.x,e.clientY-down.y)>10;down=null;if(m)return;
+ const f=face(e.clientX,e.clientY);if(f==='fr')goDisc();else if(f==='ri'){if(mode==='proj')goOrg();else goOrg()}else if(f==='top'){if(mode==='carte'||mode==='proj')goProj();else goCarte()}});
+cv.addEventListener('pointerleave',()=>hover(-1e4,-1e4));
+document.getElementById('lDisc').onclick=goDisc;document.getElementById('lProj').onclick=()=>{if(mode==='proj')goProj();else{goProj()}};
+document.getElementById('lCarte').onclick=goCarte;document.getElementById('lProf').onclick=goProf;
+document.querySelector('header b').style.pointerEvents='auto';document.querySelector('header b').onclick=goHome;
+addEventListener('resize',layout);
+layout();organise(performance.now());goHome();requestAnimationFrame(frame);
+const q=new URLSearchParams(location.search).get('m');if(q)setTimeout(()=>({disc:goDisc,proj:goProj,carte:goCarte,prof:goProf,org:goOrg})[q](),300);
+</script>
+</body>
+</html>
