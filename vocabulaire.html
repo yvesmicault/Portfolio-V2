@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Vocabulaire, deux carrés</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--bg:#f2f1ed;--ink:#1d1d1b;--mut:#8a8a83;--hair:#dcdbd4}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:28px 0 50px}
+.top{max-width:1300px;margin:0 auto 22px;padding:0 16px}
+h1{font-family:Mono;font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.top p{font-size:clamp(16px,2vw,20px);line-height:1.4;max-width:760px;margin-top:10px;font-stretch:94%}
+.row{display:flex;gap:22px;overflow-x:auto;padding:4px 16px 14px;scroll-snap-type:x mandatory;max-width:1300px;margin:0 auto}
+figure{flex:0 0 270px;scroll-snap-align:start}
+.ph{width:270px;height:540px;border:1px solid var(--hair);border-radius:26px;background:var(--bg);overflow:hidden;position:relative}
+.ph canvas{width:100%;height:100%;display:block}
+figcaption{font-size:13px;line-height:1.4;margin-top:10px;color:#3c3c39}
+figcaption b{display:block;font-weight:600;font-size:14px;color:var(--ink);margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="top">
+ <h1>Vocabulaire · deux carrés et un décalage</h1>
+ <p>Un carré, c'est le cadre. Le même carré, décalé, et l'œil voit un cube : la profondeur naît d'un seul geste. La direction du décalage oriente (quatre directions, quatre espaces) et le recouvrement des deux carrés devient la fenêtre où l'image apparaît.</p>
+</div>
+<div class="row">
+ <figure><div class="ph"><canvas data-s="vocab"></canvas></div><figcaption><b>1 · Vocabulaire</b>Carré, pixel, décalage, recouvrement. Rien d'autre.</figcaption></figure>
+ <figure><div class="ph"><canvas data-s="entree"></canvas></div><figcaption><b>2 · Entrée</b>Le carré se trace, son double s'en détache : le cube apparaît. « Entrer ». Puis il revient à sa place.</figcaption></figure>
+ <figure><div class="ph"><canvas data-s="menu"></canvas></div><figcaption><b>3 · Quatre espaces</b>Le double glisse vers un coin : chaque direction est un espace. Galerie, Bibliothèque, Observatoire, Profil.</figcaption></figure>
+ <figure><div class="ph"><canvas data-s="biblio"></canvas></div><figcaption><b>4 · Bibliothèque</b>Chaque projet est un petit signe : la direction du décalage dit son cadre (études, concours, agence), sans couleur. Rangés par année, puis par cadre.</figcaption></figure>
+ <figure><div class="ph"><canvas data-s="galerie"></canvas></div><figcaption><b>5 · Galerie</b>On fait glisser le double : l'image n'existe que dans le recouvrement. Superposés, l'image est entière.</figcaption></figure>
+</div>
+<script src="data.js"></script>
+<script>
+const INK='#1d1d1b',MUT='#8a8a83',BG='#f2f1ed',HAIR='#cfcec7';
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const L=(a,b,t)=>a+(b-a)*t,ease=t=>t<=0?0:t>=1?1:t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,ph=(t,a,b)=>ease((t-a)/(b-a));
+const PR=window.PROJ,IMG={};
+const im=src=>{if(!IMG[src]){const i=new Image();i.src=src;IMG[src]=i}return IMG[src]};
+const PICS=['varese','terminus','elle','crank','synergies','siberian','agri','equilibrium','ventres'].map(id=>PR.find(p=>p.id===id));
+PICS.forEach(p=>im('img/c/'+p.id+'.jpg'));
+// ---- le signe : carré A, double B décalé de (dx,dy), arêtes qui relient les coins, recouvrement ----
+function sign(g,x,y,s,dx,dy,o={}){const lw=o.lw??1.4,lk=o.link??1;g.lineWidth=lw;g.strokeStyle=o.col||INK;
+ const ox=Math.max(x,x+dx),oy=Math.max(y,y+dy),ow=s-Math.abs(dx),oh=s-Math.abs(dy);
+ if(ow>0&&oh>0){if(o.img){const i=o.img;if(i.naturalWidth){g.save();g.beginPath();g.rect(ox,oy,ow,oh);g.clip();const k=Math.max(s/i.naturalWidth,s/i.naturalHeight);g.drawImage(i,x+(s-i.naturalWidth*k)/2,y+(s-i.naturalHeight*k)/2,i.naturalWidth*k,i.naturalHeight*k);g.restore()}}
+  else if(o.fill>0){g.globalAlpha=o.fill;g.fillStyle=o.col||INK;g.fillRect(ox,oy,ow,oh);g.globalAlpha=1}}
+ if(o.a!==0)g.strokeRect(x,y,s,s);
+ if(Math.abs(dx)+Math.abs(dy)>.5){g.strokeRect(x+dx,y+dy,s,s);
+  if(lk>0){g.globalAlpha=lk;g.lineWidth=lw*.6;g.beginPath();for(const [cx,cy] of [[0,0],[s,0],[s,s],[0,s]]){g.moveTo(x+cx,y+cy);g.lineTo(x+cx+dx,y+cy+dy)}g.stroke();g.globalAlpha=1}}}
+function txt(g,t,x,y,o={}){g.fillStyle=o.col||INK;g.font=o.f||'14px Archivo';g.textAlign=o.al||'left';g.textBaseline='middle';g.fillText(t,x,y)}
+const DIRS={ne:[1,-1],se:[1,1],sw:[-1,1],nw:[-1,-1]},FAMD={e:'ne',c:'se',a:'sw'};
+const S={
+ vocab(g,w,h,t){let y=56;txt(g,'Vocabulaire',20,30,{f:'600 15px Archivo'});
+  const rows=[['Carré','le cadre, la mesure',(x,y)=>sign(g,x,y,34,0,0)],
+   ['Pixel','l’unité qui compose',(x,y)=>{g.fillStyle=INK;g.fillRect(x+11,y+11,12,12)}],
+   ['Décalage','la profondeur',(x,y)=>{const d=10*ph(t%4,0,1)*(1-ph(t%4,3,4));sign(g,x,y+6,28,d,-d)}],
+   ['Recouvrement','le vide partagé',(x,y)=>sign(g,x,y+6,28,10,-10,{fill:1})],
+   ['Direction','un espace par coin',(x,y)=>{sign(g,x+2,y+4,14,5,-5,{lw:1});sign(g,x+22,y+4,14,5,5,{lw:1});sign(g,x+2,y+22,14,-5,5,{lw:1});sign(g,x+22,y+22,14,-5,-5,{lw:1})}]];
+  rows.forEach(([a,b,f],i)=>{const yy=y+i*84;g.fillStyle=HAIR;g.fillRect(20,yy,w-40,1);f(w-74,yy+22);txt(g,a,20,yy+30,{f:'500 15px Archivo'});txt(g,b,20,yy+50,{f:'10.5px Mono',col:MUT})})},
+ entree(g,w,h,t){const T=t%7,s=96,x=(w-s)/2-12,y=h*.4-s/2+12;
+  const k=ph(T,0,1.1),d=24*ph(T,1.2,2.2)*(1-ph(T,5,6.2));
+  if(k<1){g.strokeStyle=INK;g.lineWidth=1.6;const P=4*s;g.setLineDash([P*k,P]);g.strokeRect(x,y,s,s);g.setLineDash([])}
+  else sign(g,x,y,s,d,-d,{lw:1.6,link:Math.min(1,d/12),fill:ph(T,2.2,2.8)*(1-ph(T,4.8,5.4))});
+  const a=ph(T,2.6,3.2)*(1-ph(T,4.8,5.3));g.globalAlpha=a;txt(g,'Entrer',w/2,h*.4+s*.9,{f:'500 17px Archivo',al:'center'});
+  g.fillRect(w/2-26,h*.4+s*.9+14,52,1);g.globalAlpha=1;txt(g,'Yves Micault',20,30,{f:'600 13px Archivo'})},
+ menu(g,w,h,t){const s=86,x=(w-s)/2,y=(h-s)/2-10,ord=['ne','se','sw','nw'],NAMES={ne:'Galerie',se:'Observatoire',sw:'Profil',nw:'Bibliothèque'};
+  const i=Math.floor(t/1.8)%4,f=ph(t%1.8,0,.7),a=DIRS[ord[(i+3)%4]],b=DIRS[ord[i]],d=22;
+  sign(g,x,y,s,L(a[0],b[0],f)*d,L(a[1],b[1],f)*d,{lw:1.6,fill:1});
+  const pos={ne:[w-20,y-40,'right'],nw:[20,y-40,'left'],se:[w-20,y+s+46,'right'],sw:[20,y+s+46,'left']};
+  for(const k of ord){const on=k===ord[i];txt(g,NAMES[k],pos[k][0],pos[k][1],{al:pos[k][2],f:(on?'600 ':'')+'15px Archivo',col:on?INK:MUT})}
+  txt(g,'Yves Micault',20,30,{f:'600 13px Archivo'})},
+ biblio(g,w,h,t){txt(g,'Bibliothèque',20,30,{f:'600 15px Archivo'});const T=t%10,byCat=T>5;
+  txt(g,byCat?'par cadre':'par année',w-20,30,{f:'10.5px Mono',col:MUT,al:'right'});
+  const ps=PR.slice(0,24),order=byCat?ps.slice().sort((a,b)=>'eca'.indexOf(a.fam)-'eca'.indexOf(b.fam)||b.y-a.y):ps.slice().sort((a,b)=>b.y-a.y);
+  const s=26,gx=58,gy=62,cols=4,x0=(w-cols*gx)/2+(gx-s)/2;const k=ph(T%5,0,1.1),prev=byCat?ps.slice().sort((a,b)=>b.y-a.y):ps.slice().sort((a,b)=>'eca'.indexOf(a.fam)-'eca'.indexOf(b.fam)||b.y-a.y);
+  const hov=PICS[Math.floor(t/2.5)%PICS.length].id;
+  ps.forEach(p=>{const i0=prev.indexOf(p),i1=order.indexOf(p),xA=x0+(i0%cols)*gx,yA=70+Math.floor(i0/cols)*gy,xB=x0+(i1%cols)*gx,yB=70+Math.floor(i1/cols)*gy;
+   const x=L(xA,xB,k),y=L(yA,yB,k),dir=DIRS[FAMD[p.fam]],on=p.id===hov;
+   g.globalAlpha=on||!hov?1:.55;sign(g,x,y,s,dir[0]*7,dir[1]*7,{lw:1.1,link:.8,fill:on?0:1,img:on?im('img/c/'+p.id+'.jpg'):null});g.globalAlpha=1;
+   if(on)txt(g,p.t,w/2,h-64,{al:'center',f:'500 14px Archivo'})});
+  const ly=h-34;[['e','études'],['c','concours'],['a','agence']].forEach(([f,n],i)=>{const d=DIRS[FAMD[f]],x=24+i*80;sign(g,x,ly-7,13,d[0]*4,d[1]*4,{lw:1,fill:1,link:.7});txt(g,n,x+22,ly,{f:'10px Mono',col:MUT})})},
+ galerie(g,w,h,t){txt(g,'Galerie',20,30,{f:'600 15px Archivo'});const T=t%3.2,n=Math.floor(t/3.2)%PICS.length,p=PICS[n],s=w-56,x=28,y=110;
+  const dx=T<1.2?L(s,0,ph(T,0,1.2)):T<2.2?0:L(0,-s,ph(T,2.2,3.2));
+  g.strokeStyle=HAIR;g.lineWidth=1;g.strokeRect(x,y,s,s);
+  sign(g,x,y,s,dx,0,{img:im('img/c/'+p.id+'.jpg'),lw:1.2,link:0,a:0});
+  g.strokeStyle=INK;g.lineWidth=1.2;g.strokeRect(x+dx,y,s,s);
+  txt(g,p.t,x,y+s+28,{f:'600 16px Archivo'});txt(g,`${p.y} · ${({e:'études',c:'concours',a:'agence'})[p.fam]}`,x,y+s+48,{f:'10.5px Mono',col:MUT});
+  txt(g,'‹  glisser  ›',w/2,h-40,{al:'center',f:'10.5px Mono',col:MUT})}
+};
+const cells=[...document.querySelectorAll('canvas')].map(c=>({c,s:c.dataset.s}));
+function size(){const d=Math.min(2,devicePixelRatio||1);cells.forEach(x=>{const r=x.c.getBoundingClientRect();x.w=r.width;x.h=r.height;x.c.width=r.width*d;x.c.height=r.height*d;x.d=d})}
+function frame(now){const t=red?2.5:now/1000;for(const x of cells){const g=x.c.getContext('2d');g.setTransform(x.d,0,0,x.d,0,0);g.clearRect(0,0,x.w,x.h);S[x.s](g,x.w,x.h,t)}requestAnimationFrame(frame)}
+addEventListener('resize',size);size();document.fonts.ready.then(()=>requestAnimationFrame(frame));
+</script>
+</body>
+</html>
