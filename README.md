@@ -1,6 +1,4 @@
-# Portfolio V2 — explorations
+# Portfolio V2 (explorations)
 
-Espace d'essai pour la refonte du portfolio d'Yves Micault. Le site en ligne reste https://yvesmicault.com (dépôt `Portfolio`).
-
-- `index.html` — exploration A « Le meuble à plans » : tous les projets dans un seul flux qu'on fait glisser, maquettes en stop motion, tiroirs pour filtrer et trier, vue « Plan ».
-- `data.js` — données tirées du site actuel (projets perso + projets d'agence ayant une fiche Hamonic+Masson).
+- index.html : le site comme sandbox du carré. Un carré = un pixel ; vu de biais, c'est un cube. Dessiner, extruder, gommer, changer la densité ; vues carré, losange, cube. Projets et portrait sont faits des mêmes pixels.
+- explo-a.html, explo-b.html, explo-c.html, explo-d.html, identite.html : essais précédents.

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Yves Micault — Cube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<style>
+:root{--bg:#0b0b0b;--ink:#f2efe8;--mute:#75726c;--line:#2a2927;--acc:#d0745f;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;--sans:"Jost",system-ui,sans-serif}
+body.jour{--bg:#eeebe4;--ink:#141414;--mute:#8b867c;--line:#d6d0c4;--acc:#b46a5a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;transition:background .5s,color .5s}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#gl,#ov{position:fixed;inset:0;width:100%;height:100%;display:block}
+#gl{touch-action:none}#ov{pointer-events:none;z-index:2}
+body.page #gl,body.page #ov,body.page #home{opacity:0;transition:opacity .5s;pointer-events:none}
+
+header{position:fixed;inset:0 0 auto;padding:calc(16px + env(safe-area-inset-top)) 18px 0;display:flex;justify-content:space-between;align-items:flex-start;z-index:20}
+.brand b{display:block;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.16em}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.08em}
+#modeBtn{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+
+/* accueil : la liste des catégories, le titre qui défile */
+#home{position:fixed;inset:0;z-index:5;pointer-events:none;transition:opacity .6s}
+body.intro #home{opacity:0}
+#cats{position:absolute;left:18px;top:calc(90px + env(safe-area-inset-top));list-style:none;pointer-events:auto}
+#cats li button{display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:5px 0;transition:color .3s}
+#cats li button i{width:14px;height:1px;background:currentColor;transition:width .4s}
+#cats li button.on{color:var(--ink)}#cats li button.on i{width:30px;background:var(--acc)}
+#marq{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));overflow:hidden;white-space:nowrap;pointer-events:none}
+#marq div{display:inline-block;font-weight:200;font-size:clamp(40px,11vw,110px);line-height:1;letter-spacing:-.02em;animation:mq 22s linear infinite;padding-left:2vw}
+#marq div span{color:var(--mute);font-weight:200}
+@keyframes mq{to{transform:translateX(-50%)}}
+#marq.sw div{animation:mq 22s linear infinite,sw .5s steps(2)}
+@keyframes sw{0%{clip-path:inset(0 0 60% 0)}50%{clip-path:inset(40% 0 0 0)}}
+#foot{position:absolute;left:18px;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+#foot p{font-family:var(--mono);font-size:9.5px;color:var(--mute);letter-spacing:.06em}
+#enter{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;display:flex;gap:10px;align-items:center}
+#enter em{font-style:normal;width:34px;height:34px;border:1px solid var(--acc);display:grid;place-items:center;color:var(--acc);transition:background .3s,color .3s}
+#enter:hover em{background:var(--acc);color:var(--bg)}
+@media (max-width:700px){#cats{top:auto;bottom:calc(200px + env(safe-area-inset-bottom))}#foot p{display:none}}
+
+/* une catégorie */
+#page{position:fixed;inset:0;z-index:15;overflow-y:auto;padding:calc(84px + env(safe-area-inset-top)) 18px 50px;visibility:hidden}
+body.page #page{visibility:visible}
+.pin{max-width:900px;margin:0 auto}
+.back{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:22px}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--ink);padding-bottom:12px}
+.ph h1{font-weight:200;font-size:clamp(48px,14vw,110px);line-height:.88;letter-spacing:-.02em}
+.ph p{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:right}
+.list{list-style:none}.list li{border-bottom:1px solid var(--line)}
+.list button{width:100%;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 0;text-align:left}
+.list .t{font-size:clamp(20px,5.4vw,28px);font-weight:300;line-height:1.1;transition:transform .35s}
+.list .t small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:5px}
+.list .y{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.list button:hover .t{transform:translateX(8px)}
+body.page .list li{animation:li .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.2s + var(--i)*40ms)}
+@keyframes li{from{opacity:0;transform:translateY(16px)}}
+.prof p{font-size:16px;line-height:1.6;margin-top:16px;text-align:justify;hyphens:auto}
+dl div{display:grid;grid-template-columns:7.5em 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.4}
+dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+dd a{color:inherit}
+
+#sheet{position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;transform:translateY(100%);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+#sheet.on{transform:none}
+.sh-top{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 18px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.sh-top button,.sh-top span{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 0}
+.sh-in{max-width:1080px;margin:0 auto;padding:18px 18px 70px}
+.hero{aspect-ratio:4/3;background:var(--line);overflow:hidden}.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.fam{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:18px}
+.sh-in h2{font-weight:200;font-size:clamp(38px,10vw,68px);line-height:.95;margin:10px 0 8px}
+.ln{font-size:15px;color:var(--mute)}
+.sh-in dl{margin-top:20px;border-top:1px solid var(--ink)}
+.txt{font-size:16px;line-height:1.6;margin-top:20px;text-align:justify;hyphens:auto}
+.sec{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:28px 0 10px;display:flex;justify-content:space-between}
+.pl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.pl button{aspect-ratio:1;overflow:hidden;background:var(--line)}.pl img{width:100%;height:100%;object-fit:cover;display:block}
+.links{display:flex;flex-direction:column;margin-top:24px;border-top:1px solid var(--ink)}
+.links a{color:inherit;text-decoration:none;display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}
+.cr{font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-top:6px}
+@media (min-width:860px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero{aspect-ratio:16/9}}
+#lb{position:fixed;inset:0;background:#000;z-index:50;display:none}#lb.on{display:block}
+#lb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#lb .x{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top));color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;z-index:2}
+#lb .n{position:absolute;left:16px;top:calc(14px + env(safe-area-inset-top));color:#aaa;font-family:var(--mono);font-size:11px}
+#lb .pv,#lb .nx{position:absolute;top:0;bottom:0;width:35%;z-index:1}#lb .pv{left:0}#lb .nx{right:0}
+</style>
+</head>
+<body class="intro">
+<canvas id="gl"></canvas><canvas id="ov"></canvas>
+<header><div class="brand"><b>YVES MICAULT</b><span>architecte HMONP</span></div><button id="modeBtn">Jour</button></header>
+<div id="home">
+  <ul id="cats"></ul>
+  <div id="marq"><div id="mqT"></div></div>
+  <div id="foot"><p>Faites tourner le carré : c’est un cube. La face posée dans le cadre choisit la catégorie</p><button id="enter"><span>Entrer</span><em>→</em></button></div>
+</div>
+<section id="page"></section>
+<section id="sheet"><div class="sh-top"><button id="shClose">↓ Fermer</button><span id="shN"></span></div><div class="sh-in" id="shIn"></div></section>
+<div id="lb"><span class="n" id="lbN"></span><button class="x" id="lbX">Fermer ×</button><img id="lbI" alt=""><button class="pv" id="lbP" aria-label="Précédente"></button><button class="nx" id="lbNx" aria-label="Suivante"></button></div>
+
+<script src="data.js"></script>
+<script type="module">
+import * as THREE from "three";
+const $=id=>document.getElementById(id);
+const ALL=window.PROJ,PUB=window.PUB,CV=window.CV;
+const cssv=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
+const byFam=f=>ALL.filter(p=>p.fam==f).sort((a,b)=>b.y-a.y);
+
+/* six catégories = six faces ; chacune porte un motif graphique */
+const CATS=[
+ {k:"a",name:"Agence",n:[0,0,1],pat:"stripes",items:byFam("a"),info:"Hamonic+Masson · depuis 2017"},
+ {k:"c",name:"Concours",n:[1,0,0],pat:"squares",items:byFam("c"),info:"Concours d’idées, Europan"},
+ {k:"e",name:"Études",n:[0,1,0],pat:"diag",items:byFam("e"),info:"ENSA Clermont-Ferrand"},
+ {k:"p",name:"Publications",n:[0,-1,0],pat:"dots",items:PUB.map(b=>({id:b.id,t:b.t,c:`${b.pages.length} pages`,y:b.y,pub:b})),info:"Books et documents"},
+ {k:"r",name:"Parcours",n:[-1,0,0],pat:"steps",items:CV.map((s,i)=>({id:"cv"+i,t:`CV 2026 · page ${i+1}`,c:"Curriculum",y:"",cv:i})),info:"CV 2026"},
+ {k:"m",name:"Profil",n:[0,0,-1],pat:"frame",items:[],info:"Marseille · disponible janvier 2027"}];
+
+/* ---------- motifs vectoriels (canvas), le noir du fond dessine les arêtes ---------- */
+function patTex(kind){const N=512,c=document.createElement("canvas");c.width=c.height=N;const x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,N,N);x.fillStyle="#0b0b0b";x.strokeStyle="#0b0b0b";
+  if(kind=="stripes")for(let i=0;i<8;i++)x.fillRect(0,i*64+44,N,20);
+  if(kind=="diag"){x.lineWidth=18;for(let i=-N;i<2*N;i+=64){x.beginPath();x.moveTo(i,0);x.lineTo(i+N,N);x.stroke()}}
+  if(kind=="dots")for(let i=0;i<8;i++)for(let j=0;j<8;j++){x.beginPath();x.arc(32+i*64,32+j*64,10,0,7);x.fill()}
+  if(kind=="steps"){x.lineWidth=16;for(let k=-1;k<5;k++){x.beginPath();let px=0,py=k*128+120;x.moveTo(px,py);for(let s=0;s<8;s++){px+=64;x.lineTo(px,py);py-=0;x.lineTo(px,py-0)}}
+    for(let k=0;k<8;k++){x.beginPath();x.moveTo(k*64,0);x.lineTo(k*64+64,64);x.lineTo(k*64+128,0);x.stroke()}for(let r=1;r<8;r++){x.save();x.translate(0,r*64);x.beginPath();for(let k=-1;k<8;k++){x.moveTo(k*64,0);x.lineTo(k*64+32,32);x.lineTo(k*64+64,0)}x.stroke();x.restore()}}
+  if(kind=="squares"){x.lineWidth=16;for(let r=40;r<=240;r+=50)x.strokeRect(N/2-r,N/2-r,2*r,2*r);x.fillRect(N/2-14,N/2-14,28,28)}
+  if(kind=="frame"){x.fillRect(96,96,320,320);x.fillStyle="#fff";x.fillRect(124,124,264,264);x.fillStyle="#0b0b0b";x.fillRect(196,170,120,120);x.fillRect(156,316,200,72)}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t}
+
+/* ---------- scène isométrique ---------- */
+const cv=$("gl"),ov=$("ov"),ox=ov.getContext("2d");
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();const cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const cube=new THREE.Group();scene.add(cube);
+const faces=CATS.map((c,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.94,1.94),new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
+  const n=new THREE.Vector3(...c.n);m.position.copy(n);m.lookAt(n.clone().multiplyScalar(2));m.userData.cat=i;cube.add(m);return m});
+let S=1,DPR=1,W=1,H=1;
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(2,devicePixelRatio);R.setSize(W,H,false);ov.width=W*DPR;ov.height=H*DPR;
+  const a=W/H,v=W<700?6.2:6.6;cam.left=-v*a;cam.right=v*a;cam.top=v;cam.bottom=-v;cam.position.set(0,W<700?-.9:-.2,10);cam.lookAt(0,W<700?-.9:-.2,0);cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+const scr=v=>{const p=v.clone().project(cam);return [(p.x+1)/2*W,(1-p.y)/2*H]};
+
+/* ---------- petit moteur d'animation ---------- */
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,4);
+let tw=[];const tween=(d,fn,o={})=>new Promise(res=>tw.push({t0:performance.now()+(o.delay||0),d,fn,e:o.e||ease,res}));
+function runTw(now){tw=tw.filter(a=>{if(now<a.t0)return true;const t=Math.min(1,(now-a.t0)/a.d);a.fn(a.e(t));if(t>=1){a.res();return false}return true})}
+
+/* ---------- l'ouverture : le trait dessine le contour, puis le cube se remplit ---------- */
+let introK=0,fillK=0,frameK=0;
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+function drawIntro(){const q=[V(-1,1,1),V(1,1,1),V(1,-1,1),V(-1,-1,1)].map(scr);
+  ox.lineWidth=1.4*DPR;ox.strokeStyle=cssv("--ink");ox.globalAlpha=1-fillK;const k=introK*4;ox.beginPath();ox.moveTo(q[0][0]*DPR,q[0][1]*DPR);
+  for(let i=0;i<4;i++){const a=q[i],b=q[(i+1)%4],f=Math.max(0,Math.min(1,k-i));if(f<=0)break;ox.lineTo((a[0]+(b[0]-a[0])*f)*DPR,(a[1]+(b[1]-a[1])*f)*DPR)}ox.stroke();ox.globalAlpha=1}
+async function intro(){await tween(1300,t=>introK=t,{e:t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2});await tween(450,t=>{fillK=t;faces.forEach(f=>f.material.opacity=t)});
+  // un léger pivot montre que le carré est un cube, puis il revient de face
+  const q0=cube.quaternion.clone(),q1=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.42,.62,0));
+  await tween(1100,t=>cube.quaternion.slerpQuaternions(q0,q1,t));await tween(1100,t=>cube.quaternion.slerpQuaternions(q1,q0,t));qT.copy(q0);
+  document.body.classList.remove("intro");await tween(700,t=>frameK=t,{e:easeOut});ready=true}
+let ready=false;
+
+/* ---------- le cadre fixe : quatre repères d'angle autour du carré ---------- */
+let flash=0;
+function drawFrame(){if(frameK<=0)return;const q=[V(-1,1,1),V(1,1,1),V(1,-1,1),V(-1,-1,1)].map(scr);
+  const c=[(q[0][0]+q[2][0])/2,(q[0][1]+q[2][1])/2];const k=1.3,L=(q[1][0]-q[0][0])*.16*frameK;
+  ox.strokeStyle=cssv("--acc");ox.lineWidth=1.5*DPR;
+  for(const p of q){const x=(c[0]+(p[0]-c[0])*k)*DPR,y=(c[1]+(p[1]-c[1])*k)*DPR,sx=Math.sign(p[0]-c[0]),sy=Math.sign(p[1]-c[1]);
+    ox.beginPath();ox.moveTo(x-sx*L*DPR,y);ox.lineTo(x,y);ox.lineTo(x,y-sy*L*DPR);ox.stroke()}
+  if(flash>0){ox.globalAlpha=flash*.6;ox.strokeRect((c[0]+(q[0][0]-c[0])*k)*DPR,(c[1]+(q[0][1]-c[1])*k)*DPR,(q[1][0]-q[0][0])*k*DPR,(q[2][1]-q[1][1])*k*DPR);ox.globalAlpha=1}}
+/* ---------- tourner le cube : glisser, puis il se cale sur une orientation droite ---------- */
+let qT=new THREE.Quaternion(),drag=null,cur=0;
+const UP=V(0,1,0),SCRX=V(1,0,0);
+cv.addEventListener("pointerdown",e=>{if(!ready)return;drag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;const k=.009;
+  cube.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(UP,dx*k)).premultiply(new THREE.Quaternion().setFromAxisAngle(SCRX,dy*k));qT.copy(cube.quaternion)});
+cv.addEventListener("pointerup",e=>{if(!drag)return;const mv=Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0);drag=null;
+  if(mv<8){const i=pick(e);if(i==null)return;if(i==cur)return enter();return bring(i)}snap()});
+function snap(){const m=new THREE.Matrix4().makeRotationFromQuaternion(cube.quaternion).elements;
+  // chaque axe du cube est ramené sur l'axe du monde le plus proche
+  const cols=[[m[0],m[1],m[2]],[m[4],m[5],m[6]]],out=[],used=new Set();
+  for(const c of cols){let b=-1,bv=-1;for(let a=0;a<3;a++){if(used.has(a))continue;if(Math.abs(c[a])>bv){bv=Math.abs(c[a]);b=a}}used.add(b);const v=[0,0,0];v[b]=Math.sign(c[b]);out.push(V(...v))}
+  const z=new THREE.Vector3().crossVectors(out[0],out[1]);qT.setFromRotationMatrix(new THREE.Matrix4().makeBasis(out[0],out[1],z))}
+function bring(i){const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);qT.copy(new THREE.Quaternion().setFromUnitVectors(n,V(0,0,1)).multiply(cube.quaternion));
+  const m=new THREE.Quaternion().copy(cube.quaternion);cube.quaternion.copy(qT);snap();cube.quaternion.copy(m)}
+const ray=new THREE.Raycaster();
+function pick(e){ray.setFromCamera(new THREE.Vector2(e.clientX/W*2-1,-e.clientY/H*2+1),cam);const h=ray.intersectObjects(faces);return h.length?h[0].object.userData.cat:null}
+function topFace(){let b=0,bv=-9;faces.forEach((f,i)=>{const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);if(n.z>bv){bv=n.z;b=i}});return b}
+
+/* ---------- catégories, titre qui défile ---------- */
+$("cats").innerHTML=CATS.map((c,i)=>`<li><button data-i="${i}"><i></i>${c.name}</button></li>`).join("");
+$("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(b&&ready)bring(+b.dataset.i)});
+function setCat(i){cur=i;const c=CATS[i];[...$("cats").querySelectorAll("button")].forEach((b,j)=>b.classList.toggle("on",j==i));
+  const s=`${c.name} <span>/</span> `;$("mqT").innerHTML=s.repeat(8);const m=$("marq");m.classList.remove("sw");void m.offsetWidth;m.classList.add("sw");
+  $("enter").querySelector("span").textContent="Entrer · "+c.name;flash=1}
+setCat(0);
+addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains("on"))return closeLb();if($("sheet").classList.contains("on"))return closeSheet();if(document.body.classList.contains("page"))return history.back()}
+  if($("lb").classList.contains("on")){e.key=="ArrowRight"&&lbStep(1);e.key=="ArrowLeft"&&lbStep(-1);return}
+  if(document.body.classList.contains("page")||!ready)return;
+  const q=a=>{qT.premultiply(new THREE.Quaternion().setFromAxisAngle(a.axis,a.ang))};
+  if(e.key=="ArrowLeft")q({axis:UP,ang:-Math.PI/2});if(e.key=="ArrowRight")q({axis:UP,ang:Math.PI/2});
+  if(e.key=="ArrowUp")q({axis:V(1,0,0),ang:-Math.PI/2});if(e.key=="ArrowDown")q({axis:V(1,0,0),ang:Math.PI/2});if(e.key=="Enter")enter()});
+
+/* ---------- entrer dans une catégorie ---------- */
+$("enter").onclick=()=>ready&&enter();
+async function enter(){const c=CATS[cur];flash=1;
+  await tween(380,t=>{cube.scale.setScalar(1+t*.25);faces.forEach(f=>f.material.opacity=1-t)},{e:easeOut});
+  renderPage(c);document.body.classList.add("page");$("page").scrollTop=0;history.pushState({c:cur},"","#"+c.k)}
+function leave(){if(!document.body.classList.contains("page"))return;document.body.classList.remove("page");
+  tween(500,t=>{cube.scale.setScalar(1.25-t*.25);faces.forEach(f=>f.material.opacity=t)})}
+addEventListener("popstate",()=>{closeSheet();closeLb();if(!location.hash)leave()});
+function renderPage(c){
+  if(c.k=="m"){$("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>Profil</h1><p>Yves Micault<br>architecte HMONP</p></div><div class="prof"><dl>
+    <div><dt>Courriel</dt><dd><a href="mailto:ymicault@gmail.com">ymicault@gmail.com</a></dd></div><div><dt>Téléphone</dt><dd>+33 7 60 86 66 62</dd></div><div><dt>Ville</dt><dd>Marseille, France</dd></div><div><dt>En agence</dt><dd>Hamonic + Masson</dd></div><div><dt>Disponible</dt><dd>À partir de janvier 2027</dd></div><div><dt>CV</dt><dd><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV 2026 ↓</a></dd></div></dl>
+    <p>« L’architecture ne se résume pas à ce que l’on construit, mais à ce que l’on rend possible. »</p>
+    <p>Mon parcours s’est construit entre Reims, Clermont-Ferrand et Moscou, au fil d’une formation qui m’a progressivement amené à considérer l’architecture au-delà du seul acte de bâtir. Le master EVAN, consacré aux relations entre ville, architecture et nature, a notamment nourri une réflexion sur les territoires, leurs transformations et les liens parfois fragiles qui unissent le paysage, le bâti et les usages.</p>
+    <p>Depuis 2017, cette approche s’est enrichie d’une pratique professionnelle au sein de l’agence Hamonic + Masson, à Paris puis à Marseille. De la conception aux phases de développement technique, à travers des projets de logements, d’équipements et d’opérations urbaines, j’ai appris à confronter l’intention architecturale à la complexité du réel.</p></div></div>`;return}
+  $("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>${c.name}</h1><p>${c.items.length} ${c.k=="p"?"documents":c.k=="r"?"pages":"projets"}<br>${c.info}</p></div>
+   <ul class="list">${c.items.map((p,j)=>`<li style="--i:${Math.min(j,16)}"><button data-id="${p.id}"><span class="t">${p.t}<small>${p.fam=="a"?p.role+" · ":""}${(p.c||"").split(",")[0]}</small></span><span class="y">${p.y||""}</span></button></li>`).join("")}</ul></div>`}
+$("page").addEventListener("click",e=>{if(e.target.closest("[data-back]"))return history.back();const b=e.target.closest("[data-id]");if(!b)return;
+  const it=CATS[cur].items.find(p=>p.id==b.dataset.id);if(!it)return;if(it.pub){lbList=it.pub.pages;return openLb(0)}if(it.cv!=null){lbList=CV;return openLb(it.cv)}openSheet(it)});
+
+/* ---------- fiche projet, visionneuse ---------- */
+let lbList=[],lbI=0;
+function openSheet(p){const rows=(p.fiche||[]).filter(r=>r[1]&&r[1]!="—").map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("");const pl=(p.pl||[]).filter(x=>x!=p.hero);
+  const links=[p.url?`<a href="${p.url}" target="_blank" rel="noopener">Fiche du projet chez Hamonic+Masson <span>↗</span></a>`:"",p.fam!="a"?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
+  $("shIn").innerHTML=`${p.hero?`<div class="hero"><img src="${p.hero}" alt="${p.t}"></div>`:""}${p.cr?`<p class="cr">${p.cr}</p>`:""}<div class="cols"><div><p class="fam">${{a:"Agence",c:"Concours",e:"Études"}[p.fam]} · ${p.role}</p><h2>${p.t}</h2><p class="ln">${p.line||p.c+" · "+p.y}</p><dl>${rows}</dl>${links?`<div class="links">${links}</div>`:""}</div>
+   <div>${p.txt?`<p class="txt">${p.txt}</p>`:""}${pl.length?`<div class="sec"><span>Planches et images</span><span>${pl.length}</span></div><div class="pl">${pl.map((s,i)=>`<button data-lb="${i}"><img loading="lazy" src="${s}" alt="${p.t}, image ${i+1}"></button>`).join("")}</div>`:""}</div></div>`;
+  lbList=pl;$("shN").textContent=p.y;$("sheet").scrollTop=0;$("sheet").classList.add("on")}
+function closeSheet(){$("sheet").classList.remove("on")}
+$("shClose").onclick=closeSheet;$("shIn").addEventListener("click",e=>{const b=e.target.closest("[data-lb]");b&&openLb(+b.dataset.lb)});
+function openLb(i){lbI=i;$("lb").classList.add("on");showLb()}function showLb(){$("lbI").src=lbList[lbI];$("lbN").textContent=`${lbI+1} / ${lbList.length}`}
+function lbStep(d){lbI=(lbI+d+lbList.length)%lbList.length;showLb()}function closeLb(){$("lb").classList.remove("on")}
+$("lbX").onclick=closeLb;$("lbP").onclick=()=>lbStep(-1);$("lbNx").onclick=()=>lbStep(1);
+let lx=null;$("lb").addEventListener("touchstart",e=>lx=e.touches[0].clientX,{passive:true});$("lb").addEventListener("touchend",e=>{if(lx==null)return;const d=e.changedTouches[0].clientX-lx;lx=null;if(Math.abs(d)>50)lbStep(d<0?1:-1)},{passive:true});
+
+/* jour / nuit */
+$("modeBtn").onclick=()=>{document.body.classList.toggle("jour");$("modeBtn").textContent=document.body.classList.contains("jour")?"Nuit":"Jour"};
+
+/* ---------- boucle : tons à plat selon l'orientation, motifs qui glissent comme une projection ---------- */
+const TONE=n=>{const j=document.body.classList.contains("jour");const top=Math.max(0,n.y),rt=Math.max(0,n.x);
+  const fr=Math.max(0,n.z),v=.96*fr+.42*top+.18*rt+.12*Math.max(0,-n.x)+.05;return j?Math.min(.95,v*.92):Math.min(.96,v)};
+let t0=performance.now();
+function loop(now){requestAnimationFrame(loop);runTw(now);const dt=Math.min(50,now-t0);t0=now;
+  if(!drag)cube.quaternion.slerp(qT,1-Math.pow(.002,dt/1000));
+  faces.forEach((f,i)=>{const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);const v=TONE(n);f.material.color.setScalar(v);
+    // projection : les motifs défilent lentement sur les faces
+});
+  if(ready){const t=topFace();if(t!=cur)setCat(t)}
+  flash=Math.max(0,flash-dt/600);
+  R.render(scene,cam);ox.clearRect(0,0,ov.width,ov.height);if(introK<1||fillK<1)drawIntro();drawFrame()}
+requestAnimationFrame(loop);intro();
+</script>
+</body>
+</html>
