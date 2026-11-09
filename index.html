@@ -6,124 +6,100 @@
 <meta name="robots" content="noindex">
 <title>Yves Micault — Cube</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <style>
-:root{--bg:#eeebe4;--ink:#171716;--mute:#8b867c;--line:#d6d0c4;--tile:#fbfaf7;
-  --a:#46525e;--c:#2f6e8c;--e:#b46a5a;--p:#b8a37e;--r:#6f8270;--m:#171716;
+:root{--bg:#0b0b0b;--ink:#f2efe8;--mute:#75726c;--line:#2a2927;--acc:#d0745f;
   --mono:"IBM Plex Mono",ui-monospace,monospace;--sans:"Jost",system-ui,sans-serif}
-body.nuit{--bg:#121212;--ink:#ecebe6;--mute:#8d8a83;--line:#33322f;--tile:#232322;--m:#ecebe6}
+body.jour{--bg:#eeebe4;--ink:#141414;--mute:#8b867c;--line:#d6d0c4;--acc:#b46a5a}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;transition:background .5s}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;transition:background .5s,color .5s}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;transition:opacity .6s,filter .6s}
-body.page canvas#gl{opacity:.1;filter:blur(2px);pointer-events:none}
+#gl,#ov{position:fixed;inset:0;width:100%;height:100%;display:block}
+#gl{touch-action:none}#ov{pointer-events:none;z-index:2}
+body.page #gl,body.page #ov,body.page #home{opacity:0;transition:opacity .5s;pointer-events:none}
 
-header{position:fixed;inset:0 0 auto;padding:calc(16px + env(safe-area-inset-top)) 18px 0;display:flex;justify-content:space-between;align-items:flex-start;z-index:20;pointer-events:none}
-header>*{pointer-events:auto}
-.brand b{display:block;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.14em}
-.brand span{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.06em}
-#bgBtn{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 0}
+header{position:fixed;inset:0 0 auto;padding:calc(16px + env(safe-area-inset-top)) 18px 0;display:flex;justify-content:space-between;align-items:flex-start;z-index:20}
+.brand b{display:block;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.16em}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.08em}
+#modeBtn{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
 
-/* le menu : les six faces */
-#menu{position:fixed;left:0;right:0;bottom:0;padding:0 18px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:16px;z-index:10;transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1)}
-body.page #menu{opacity:0;transform:translateY(30px);pointer-events:none}
-body.intro #menu{opacity:0}
-#faces{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-#faces button{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:6px;padding:4px 0;transition:color .3s}
-#faces button i{width:7px;height:7px;display:inline-block;transition:transform .3s}
-#faces button.on{color:var(--ink)}#faces button.on i{transform:scale(1.5)}
-#go{display:flex;align-items:baseline;gap:14px}
-#go b{font-weight:300;font-size:clamp(30px,8vw,44px);letter-spacing:-.01em;line-height:1}
-#go span{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
-#openBtn{display:flex;align-items:center;gap:12px}
-#openBtn em{font-style:normal;width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:16px;transition:transform .3s}
-#openBtn:hover em{transform:translateX(4px)}
-.hint{font-family:var(--mono);font-size:9.5px;color:var(--mute);letter-spacing:.05em}
+/* accueil : la liste des catégories, le titre qui défile */
+#home{position:fixed;inset:0;z-index:5;pointer-events:none;transition:opacity .6s}
+body.intro #home{opacity:0}
+#cats{position:absolute;left:18px;top:calc(90px + env(safe-area-inset-top));list-style:none;pointer-events:auto}
+#cats li button{display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:5px 0;transition:color .3s}
+#cats li button i{width:14px;height:1px;background:currentColor;transition:width .4s}
+#cats li button.on{color:var(--ink)}#cats li button.on i{width:30px;background:var(--acc)}
+#marq{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));overflow:hidden;white-space:nowrap;pointer-events:none}
+#marq div{display:inline-block;font-weight:200;font-size:clamp(56px,16vw,150px);line-height:1;letter-spacing:-.02em;animation:mq 22s linear infinite;padding-left:2vw}
+#marq div span{color:var(--mute);font-weight:200}
+@keyframes mq{to{transform:translateX(-50%)}}
+#marq.sw div{animation:mq 22s linear infinite,sw .5s steps(2)}
+@keyframes sw{0%{clip-path:inset(0 0 60% 0)}50%{clip-path:inset(40% 0 0 0)}}
+#foot{position:absolute;left:18px;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+#foot p{font-family:var(--mono);font-size:9.5px;color:var(--mute);letter-spacing:.06em}
+#enter{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;display:flex;gap:10px;align-items:center}
+#enter em{font-style:normal;width:34px;height:34px;border:1px solid var(--acc);display:grid;place-items:center;color:var(--acc);transition:background .3s,color .3s}
+#enter:hover em{background:var(--acc);color:var(--bg)}
+@media (max-width:700px){#cats{top:auto;bottom:calc(200px + env(safe-area-inset-bottom))}#foot p{display:none}}
 
-/* une partie : index éditorial */
-#page{position:fixed;inset:0;z-index:15;overflow-y:auto;padding:calc(70px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));visibility:hidden}
+/* une catégorie */
+#page{position:fixed;inset:0;z-index:15;overflow-y:auto;padding:calc(84px + env(safe-area-inset-top)) 18px 50px;visibility:hidden}
 body.page #page{visibility:visible}
-.pin{max-width:880px;margin:0 auto}
+.pin{max-width:900px;margin:0 auto}
+.back{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:22px}
 .ph{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--ink);padding-bottom:12px}
-.ph h1{font-weight:300;font-size:clamp(44px,13vw,96px);line-height:.9;letter-spacing:-.02em}
-.ph p{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:right}
-.back{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:8px}
-.list{list-style:none}
-.list li{border-bottom:1px solid var(--line)}
-.list button{width:100%;display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 0;text-align:left}
-.list svg{width:26px;height:26px}
-.list .t{font-size:clamp(19px,5vw,26px);line-height:1.1;font-weight:400}
-.list .t small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-top:4px}
+.ph h1{font-weight:200;font-size:clamp(48px,14vw,110px);line-height:.88;letter-spacing:-.02em}
+.ph p{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:right}
+.list{list-style:none}.list li{border-bottom:1px solid var(--line)}
+.list button{width:100%;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 0;text-align:left}
+.list .t{font-size:clamp(20px,5.4vw,28px);font-weight:300;line-height:1.1;transition:transform .35s}
+.list .t small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:5px}
 .list .y{font-family:var(--mono);font-size:11px;color:var(--mute)}
-.list button:hover .t{transform:translateX(6px)}.list .t{transition:transform .3s}
-body.page .list li{animation:li .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.25s + var(--i)*45ms)}
-body.page .ph,body.page .back{animation:li .6s cubic-bezier(.2,.8,.2,1) both .1s}
-@keyframes li{from{opacity:0;transform:translateY(18px)}}
+.list button:hover .t{transform:translateX(8px)}
+body.page .list li{animation:li .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.2s + var(--i)*40ms)}
+@keyframes li{from{opacity:0;transform:translateY(16px)}}
 .prof p{font-size:16px;line-height:1.6;margin-top:16px;text-align:justify;hyphens:auto}
-.prof dl{margin-top:20px}
 dl div{display:grid;grid-template-columns:7.5em 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.4}
-dt{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding-top:3px}
 dd a{color:inherit}
 
-/* fiche projet */
 #sheet{position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;transform:translateY(100%);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
 #sheet.on{transform:none}
 .sh-top{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 18px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
-.sh-top button,.sh-top span{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:6px 0}
+.sh-top button,.sh-top span{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 0}
 .sh-in{max-width:1080px;margin:0 auto;padding:18px 18px 70px}
-.hero{aspect-ratio:4/3;background:var(--tile);overflow:hidden;position:relative}
-.hero img{width:100%;height:100%;object-fit:cover;display:block}
-.hero svg{position:absolute;inset:25%;width:50%;height:50%}
-.fam{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-top:18px}
-.fam svg{width:14px;height:14px}
-.sh-in h2{font-weight:300;font-size:clamp(36px,10vw,64px);line-height:.95;letter-spacing:-.01em;margin:10px 0 8px}
+.hero{aspect-ratio:4/3;background:var(--line);overflow:hidden}.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.fam{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:18px}
+.sh-in h2{font-weight:200;font-size:clamp(38px,10vw,68px);line-height:.95;margin:10px 0 8px}
 .ln{font-size:15px;color:var(--mute)}
 .sh-in dl{margin-top:20px;border-top:1px solid var(--ink)}
 .txt{font-size:16px;line-height:1.6;margin-top:20px;text-align:justify;hyphens:auto}
-.sec{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:28px 0 10px;display:flex;justify-content:space-between}
-.pl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.pl button{aspect-ratio:1;background:var(--tile);overflow:hidden}.pl img{width:100%;height:100%;object-fit:cover;display:block}
+.sec{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:28px 0 10px;display:flex;justify-content:space-between}
+.pl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.pl button{aspect-ratio:1;overflow:hidden;background:var(--line)}.pl img{width:100%;height:100%;object-fit:cover;display:block}
 .links{display:flex;flex-direction:column;margin-top:24px;border-top:1px solid var(--ink)}
 .links a{color:inherit;text-decoration:none;display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}
 .cr{font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-top:6px}
-@media (min-width:860px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero{aspect-ratio:16/9}#page{padding-top:110px}}
-/* galerie : titres posés sous les cubes */
-#gal{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
-body.gal #gal{display:block}
-body.gal #menu{opacity:0;pointer-events:none;transform:translateY(30px)}
-#galHead{position:absolute;left:18px;right:18px;top:calc(58px + env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:flex-end;pointer-events:auto;opacity:0;transition:opacity .5s .6s}
-body.gal.ready #galHead{opacity:1}
-#galHead h1{font-weight:300;font-size:clamp(36px,10vw,64px);line-height:.9;letter-spacing:-.02em}
-#galHead button{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:8px 0}
-#galHead p{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:right}
-#labels span{position:absolute;transform:translate(-50%,0);font-family:var(--mono);font-size:clamp(8px,2.3vw,10px);letter-spacing:.04em;text-transform:uppercase;text-align:center;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .4s}
-body.gal.ready #labels span{opacity:1}
-#labels span i{display:block;font-style:normal;color:var(--mute)}
-#lb{position:fixed;inset:0;background:#111;z-index:50;display:none}#lb.on{display:block}
+@media (min-width:860px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero{aspect-ratio:16/9}}
+#lb{position:fixed;inset:0;background:#000;z-index:50;display:none}#lb.on{display:block}
 #lb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-#lb .x{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top));color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:2}
+#lb .x{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top));color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;z-index:2}
 #lb .n{position:absolute;left:16px;top:calc(14px + env(safe-area-inset-top));color:#aaa;font-family:var(--mono);font-size:11px}
 #lb .pv,#lb .nx{position:absolute;top:0;bottom:0;width:35%;z-index:1}#lb .pv{left:0}#lb .nx{right:0}
 </style>
 </head>
 <body class="intro">
-<canvas id="gl"></canvas>
-<header>
-  <div class="brand"><b>YVES MICAULT</b><span>architecte HMONP</span></div>
-  <button id="bgBtn">Nuit</button>
-</header>
-
-<nav id="menu">
-  <div id="faces"></div>
-  <button id="openBtn" aria-label="Ouvrir la partie"><span id="go"><b id="goName"></b><span id="goInfo"></span></span><em>→</em></button>
-  <p class="hint">Faites tourner le cube · touchez une face pour l’ouvrir</p>
-</nav>
-
-<section id="page" aria-label="Partie"></section>
-<div id="gal"><div id="galHead"><div><button id="galBack">← Cube</button><h1 id="galName"></h1></div><p id="galInfo"></p></div><div id="labels"></div></div>
-<section id="sheet" aria-label="Fiche"><div class="sh-top"><button id="shClose">↓ Fermer</button><span id="shN"></span></div><div class="sh-in" id="shIn"></div></section>
+<canvas id="gl"></canvas><canvas id="ov"></canvas>
+<header><div class="brand"><b>YVES MICAULT</b><span>architecte HMONP</span></div><button id="modeBtn">Jour</button></header>
+<div id="home">
+  <ul id="cats"></ul>
+  <div id="marq"><div id="mqT"></div></div>
+  <div id="foot"><p>Tournez le cube : la face posée dans le cadre choisit la catégorie</p><button id="enter"><span>Entrer</span><em>→</em></button></div>
+</div>
+<section id="page"></section>
+<section id="sheet"><div class="sh-top"><button id="shClose">↓ Fermer</button><span id="shN"></span></div><div class="sh-in" id="shIn"></div></section>
 <div id="lb"><span class="n" id="lbN"></span><button class="x" id="lbX">Fermer ×</button><img id="lbI" alt=""><button class="pv" id="lbP" aria-label="Précédente"></button><button class="nx" id="lbNx" aria-label="Suivante"></button></div>
 
 <script src="data.js"></script>
@@ -132,259 +108,157 @@ import * as THREE from "three";
 const $=id=>document.getElementById(id);
 const ALL=window.PROJ,PUB=window.PUB,CV=window.CV;
 const cssv=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
-
-/* ---------- les six parties = les six faces ---------- */
 const byFam=f=>ALL.filter(p=>p.fam==f).sort((a,b)=>b.y-a.y);
-const FACES=[
- {k:"a",name:"Agence",col:"--a",n:[0,0,1],items:byFam("a"),info:"Hamonic+Masson · depuis 2017"},
- {k:"c",name:"Concours",col:"--c",n:[1,0,0],items:byFam("c"),info:"Concours d’idées, Europan"},
- {k:"e",name:"Études",col:"--e",n:[0,0,-1],items:byFam("e"),info:"ENSA Clermont-Ferrand"},
- {k:"p",name:"Publications",col:"--p",n:[-1,0,0],items:PUB.map(b=>({id:b.id,t:b.t,c:`${b.pages.length} pages`,y:b.y,pub:b})),info:"Books et documents"},
- {k:"m",name:"Profil",col:"--m",n:[0,1,0],items:[],info:"Marseille · disponible janvier 2027"},
- {k:"r",name:"Parcours",col:"--r",n:[0,-1,0],items:CV.map((s,i)=>({id:"cv"+i,t:`CV 2026 · page ${i+1}`,c:"Curriculum",y:"",cv:i})),info:"CV 2026"}];
-const count=f=>f.k=="m"?f.info:`${f.items.length} ${f.k=="p"?"documents":f.k=="r"?"pages":"projets"}`;
 
-/* ---------- glyphe 3×3 propre à chaque projet ---------- */
-function bitsOf(id){let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0}
-  for(let k=0;k<40;k++){const b=(h>>>(k%23))&511;const n=b.toString(2).split("1").length-1;if(n>=4&&n<=6)return b;h=Math.imul(h^k,2654435761)>>>0}return 0b101010101}
-function glyph(id,col){const b=bitsOf(id);let r="";for(let i=0;i<9;i++){const x=i%3,y=i/3|0;
-  r+=b>>i&1?`<rect x="${x+.08}" y="${y+.08}" width=".84" height=".84" rx=".12" fill="${col}"/>`:`<rect x="${x+.08}" y="${y+.08}" width=".84" height=".84" rx=".12" fill="none" stroke="${col}" stroke-width=".06" opacity=".45"/>`}
-  return `<svg viewBox="0 0 3 3" aria-hidden="true">${r}</svg>`}
+/* six catégories = six faces ; chacune porte un motif graphique */
+const CATS=[
+ {k:"a",name:"Agence",n:[0,1,0],pat:"stripes",items:byFam("a"),info:"Hamonic+Masson · depuis 2017"},
+ {k:"c",name:"Concours",n:[1,0,0],pat:"squares",items:byFam("c"),info:"Concours d’idées, Europan"},
+ {k:"e",name:"Études",n:[0,0,1],pat:"diag",items:byFam("e"),info:"ENSA Clermont-Ferrand"},
+ {k:"p",name:"Publications",n:[0,-1,0],pat:"dots",items:PUB.map(b=>({id:b.id,t:b.t,c:`${b.pages.length} pages`,y:b.y,pub:b})),info:"Books et documents"},
+ {k:"r",name:"Parcours",n:[-1,0,0],pat:"steps",items:CV.map((s,i)=>({id:"cv"+i,t:`CV 2026 · page ${i+1}`,c:"Curriculum",y:"",cv:i})),info:"CV 2026"},
+ {k:"m",name:"Profil",n:[0,0,-1],pat:"frame",items:[],info:"Marseille · disponible janvier 2027"}];
 
-/* ---------- scène : axonométrie (caméra orthographique) ---------- */
-const cv=$("gl");
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio));
-R.outputColorSpace=THREE.SRGBColorSpace;
-const scene=new THREE.Scene();
-const cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);cam.position.set(10,8.2,10);cam.lookAt(0,0,0);
-// lumière de maquette : trois tons (dessus clair, côtés gris), ombre portée douce
-scene.add(new THREE.HemisphereLight(0xffffff,0xb9b4aa,1.9));
-const sun=new THREE.DirectionalLight(0xffffff,1.25);sun.position.set(3,10,5);scene.add(sun);
-sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:30});sun.shadow.radius=6;sun.shadow.bias=-.0008;
-R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.ShadowMaterial({opacity:.1}));ground.rotation.x=-Math.PI/2;ground.position.y=-2.2;ground.receiveShadow=true;scene.add(ground);
-const root=new THREE.Group();scene.add(root);      // orientation d'ensemble (glisser)
-const cube=new THREE.Group();root.add(cube);        // les 27 cubes
+/* ---------- motifs vectoriels (canvas), le noir du fond dessine les arêtes ---------- */
+function patTex(kind){const N=512,c=document.createElement("canvas");c.width=c.height=N;const x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,N,N);x.fillStyle="#0b0b0b";x.strokeStyle="#0b0b0b";
+  if(kind=="stripes")for(let i=0;i<8;i++)x.fillRect(0,i*64+44,N,20);
+  if(kind=="diag"){x.lineWidth=18;for(let i=-N;i<2*N;i+=64){x.beginPath();x.moveTo(i,0);x.lineTo(i+N,N);x.stroke()}}
+  if(kind=="dots")for(let i=0;i<8;i++)for(let j=0;j<8;j++){x.beginPath();x.arc(32+i*64,32+j*64,10,0,7);x.fill()}
+  if(kind=="steps"){x.lineWidth=16;for(let k=-1;k<5;k++){x.beginPath();let px=0,py=k*128+120;x.moveTo(px,py);for(let s=0;s<8;s++){px+=64;x.lineTo(px,py);py-=0;x.lineTo(px,py-0)}}
+    for(let k=0;k<8;k++){x.beginPath();x.moveTo(k*64,0);x.lineTo(k*64+64,64);x.lineTo(k*64+128,0);x.stroke()}for(let r=1;r<8;r++){x.save();x.translate(0,r*64);x.beginPath();for(let k=-1;k<8;k++){x.moveTo(k*64,0);x.lineTo(k*64+32,32);x.lineTo(k*64+64,0)}x.stroke();x.restore()}}
+  if(kind=="squares"){x.lineWidth=16;for(let r=40;r<=240;r+=50)x.strokeRect(N/2-r,N/2-r,2*r,2*r);x.fillRect(N/2-14,N/2-14,28,28)}
+  if(kind=="frame"){x.fillRect(96,96,320,320);x.fillStyle="#fff";x.fillRect(124,124,264,264);x.fillStyle="#0b0b0b";x.fillRect(196,170,120,120);x.fillRect(156,316,200,72)}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t}
 
-/* un cube = un volume de papier, ses arêtes au trait */
-const paper=new THREE.MeshLambertMaterial({color:new THREE.Color(cssv("--tile")),polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
-const ink=new THREE.LineBasicMaterial({color:new THREE.Color(cssv("--ink"))});
-const geo=new THREE.BoxGeometry(.97,.97,.97);const edges=new THREE.EdgesGeometry(geo);
-// le repère de chaque face : un petit carré de couleur sur la case du centre, comme une pastille de légende
-const markG=new THREE.PlaneGeometry(.3,.3);
-const mats=FACES.map(f=>new THREE.MeshBasicMaterial({color:new THREE.Color(cssv(f.col))}));
-const cubies=[];
-for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
-  const g=new THREE.Group();const m=new THREE.Mesh(geo,paper);m.castShadow=true;m.receiveShadow=true;g.add(m);g.add(new THREE.LineSegments(edges,ink));
-  FACES.forEach((f,i)=>{const n=new THREE.Vector3(...f.n);if(!(n.x==x&&n.y==y&&n.z==z))return;
-    const k=new THREE.Mesh(markG,mats[i]);k.position.copy(n).multiplyScalar(.487);k.lookAt(n.clone().multiplyScalar(2));if(f.k=="m"){k.material=new THREE.MeshBasicMaterial({color:new THREE.Color(cssv("--ink"))})}g.add(k)});
-  g.position.set(x,y,z);g.userData.home=new THREE.Vector3(x,y,z);cube.add(g);cubies.push(g)}
-
-const CAM={pos:new THREE.Vector3(10,8.2,10),look:new THREE.Vector3(),v:3.3};
-function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);const a=w/h;if(mode=="gal"){layoutGal(false);return}
-  const v=w<700?(w/h<.6?4.6:3.9):3.3;   // demi-hauteur visible
-  CAM.v=v;CAM.pos.set(10,8.2+(w<700?-1.4:-.6),10);CAM.look.set(0,0,0);CUBECAM={pos:CAM.pos.clone(),look:CAM.look.clone(),v}}
-let mode="cube",CUBECAM=null;
-function applyCam(){const a=innerWidth/innerHeight,v=CAM.v;cam.left=-v*a;cam.right=v*a;cam.top=v;cam.bottom=-v;cam.position.copy(CAM.pos);cam.lookAt(CAM.look);cam.updateProjectionMatrix()}
-addEventListener("resize",resize);
+/* ---------- scène isométrique ---------- */
+const cv=$("gl"),ov=$("ov"),ox=ov.getContext("2d");
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();const cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const cube=new THREE.Group();scene.add(cube);
+const faces=CATS.map((c,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.86,1.86),new THREE.MeshBasicMaterial({map:patTex(c.pat),transparent:true,opacity:0}));
+  const n=new THREE.Vector3(...c.n);m.position.copy(n);m.lookAt(n.clone().multiplyScalar(2));m.userData.cat=i;cube.add(m);return m});
+let S=1,DPR=1,W=1,H=1;
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(2,devicePixelRatio);R.setSize(W,H,false);ov.width=W*DPR;ov.height=H*DPR;
+  const a=W/H,v=W<700?3.6:3.2;cam.left=-v*a;cam.right=v*a;cam.top=v;cam.bottom=-v;cam.position.set(10,10,10);cam.lookAt(0,0,0);
+  cam.position.y+=W<700?-1.6:-.4;cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+const scr=v=>{const p=v.clone().project(cam);return [(p.x+1)/2*W,(1-p.y)/2*H]};
 
 /* ---------- petit moteur d'animation ---------- */
-const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const easeOut=t=>1-Math.pow(1-t,4);
-let tweens=[];function tween(d,fn,{delay=0,e=ease,done}={}){return new Promise(res=>tweens.push({t0:performance.now()+delay,d,fn,e,done:()=>{done&&done();res()}}))}
-function runTweens(now){tweens=tweens.filter(tw=>{const t=Math.min(1,Math.max(0,(now-tw.t0)/tw.d));if(now<tw.t0)return true;tw.fn(tw.e(t));if(t>=1){tw.done();return false}return true})}
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,4);
+let tw=[];const tween=(d,fn,o={})=>new Promise(res=>tw.push({t0:performance.now()+(o.delay||0),d,fn,e:o.e||ease,res}));
+function runTw(now){tw=tw.filter(a=>{if(now<a.t0)return true;const t=Math.min(1,(now-a.t0)/a.d);a.fn(a.e(t));if(t>=1){a.res();return false}return true})}
 
-/* ---------- ouverture : le plan se lève et s'assemble ---------- */
-async function intro(){
-  // 1. trois plans posés les uns au-dessus des autres (axonométrie éclatée des étages), qui se dessinent case par case
-  cubies.forEach(c=>{const h=c.userData.home;c.position.set(h.x*1.08,h.y*2.1-.3,h.z*1.08);c.scale.set(.001,.04,.001)});
-  await Promise.all(cubies.map(c=>{const h=c.userData.home;
-    return tween(520,t=>{c.scale.set(t,.04,t)},{delay:(1-h.y)*260+((h.x+1)+(h.z+1)*3)*34,e:easeOut})}));
-  await tween(250,()=>{});
-  // 2. les plans s'extrudent et se resserrent : le cube se forme
-  await Promise.all(cubies.map(c=>{const h=c.userData.home;const a=c.position.clone();
-    return tween(1000,t=>{c.position.set(a.x+(h.x-a.x)*t,a.y+(h.y-a.y)*t,a.z+(h.z-a.z)*t);c.scale.set(1,.04+.96*t,1)},{delay:(h.y+1)*90,e:ease})}));
-  document.body.classList.remove("intro");idleOn=true;
-}
+/* ---------- l'ouverture : le trait dessine le contour, puis le cube se remplit ---------- */
+let introK=0,fillK=0,frameK=0;
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+function drawIntro(){const h=[V(-1,1,-1),V(1,1,-1),V(1,-1,-1),V(1,-1,1),V(-1,-1,1),V(-1,1,1)].map(scr);
+  const inner=[[V(1,1,1),V(-1,1,1)],[V(1,1,1),V(1,1,-1)],[V(1,1,1),V(1,-1,1)]].map(p=>p.map(scr));
+  ox.lineWidth=1.4*DPR;ox.strokeStyle=cssv("--ink");ox.globalAlpha=1-fillK;
+  // contour : six segments, l'un après l'autre
+  const k=introK*7;ox.beginPath();ox.moveTo(h[0][0]*DPR,h[0][1]*DPR);
+  for(let i=0;i<6;i++){const a=h[i],b=h[(i+1)%6],f=Math.max(0,Math.min(1,k-i));if(f<=0)break;ox.lineTo((a[0]+(b[0]-a[0])*f)*DPR,(a[1]+(b[1]-a[1])*f)*DPR)}ox.stroke();
+  const f2=Math.max(0,Math.min(1,k-6));if(f2>0){ox.beginPath();for(const [a,b] of inner){ox.moveTo(a[0]*DPR,a[1]*DPR);ox.lineTo((a[0]+(b[0]-a[0])*f2)*DPR,(a[1]+(b[1]-a[1])*f2)*DPR)}ox.stroke()}
+  ox.globalAlpha=1}
+async function intro(){await tween(1500,t=>introK=t,{e:t=>t});await tween(500,t=>{fillK=t;faces.forEach(f=>f.material.opacity=t)});
+  document.body.classList.remove("intro");await tween(700,t=>frameK=t,{e:easeOut});ready=true}
+let ready=false;
 
-/* ---------- orientation : glisser pour tourner, puis le cube se cale sur une face ---------- */
-let q=new THREE.Quaternion(),qT=new THREE.Quaternion(),spin=0,drag=null,last=0,idleOn=false,lastTouch=0;
-const camDir=()=>new THREE.Vector3().subVectors(cam.position,new THREE.Vector3()).normalize();
-function activeFace(){const cd=new THREE.Vector3(1,.35,1).normalize();let b=0,bv=-9;
-  FACES.forEach((f,i)=>{const n=new THREE.Vector3(...f.n).applyQuaternion(root.quaternion);const v=n.dot(new THREE.Vector3(0,0,1))*0.6+n.dot(cd)*0.4;if(v>bv){bv=v;b=i}});return b}
-// mettre une face « devant » : sa normale vers +z (face avant gauche de l'axonométrie)
-function faceTo(i){const n=new THREE.Vector3(...FACES[i].n);const qq=new THREE.Quaternion().setFromUnitVectors(n,new THREE.Vector3(0,0,1));
-  if(Math.abs(n.y)>.5){qq.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),n.y>0?.55:-.55))}
-  qT.copy(qq).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),0));lastTouch=performance.now()}
-cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now()};cv.setPointerCapture(e.pointerId);lastTouch=performance.now()});
-cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(mode=="gal"){galScroll(dy);return}
-  const k=.0085;const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*k);
-  const ax=new THREE.Vector3(1,0,-1).normalize();const qx=new THREE.Quaternion().setFromAxisAngle(ax,dy*k);
-  qT.premultiply(qy).premultiply(qx);root.quaternion.copy(qT);lastTouch=performance.now()});
-cv.addEventListener("pointerup",e=>{if(!drag)return;const moved=Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0);drag=null;
-  if(mode=="gal"){if(moved<8)galPick(e);return}
-  if(moved<8){const hit=pick(e);if(hit!=null){faceTo(hit);setTimeout(()=>openFace(hit),380)}return}
-  faceTo(activeFace())});
+/* ---------- le cadre fixe : la forme dans laquelle on pose une face ---------- */
+let flash=0;
+function drawFrame(){if(frameK<=0)return;const top=[V(-1,1,-1),V(1,1,-1),V(1,1,1),V(-1,1,1)].map(scr);
+  const c=top.reduce((a,p)=>[a[0]+p[0]/4,a[1]+p[1]/4],[0,0]);const k=1.16+.0*frameK,lift=-(W<700?14:18);
+  const p=top.map(q=>[(c[0]+(q[0]-c[0])*k)*DPR,(c[1]+(q[1]-c[1])*k+lift*frameK)*DPR]);
+  ox.strokeStyle=cssv("--acc");ox.lineWidth=1.6*DPR;ox.setLineDash([10*DPR,6*DPR]);ox.lineDashOffset=-performance.now()*.02*DPR;
+  // le cadre se dessine
+  ox.beginPath();const per=frameK*4;ox.moveTo(...p[0]);for(let i=0;i<4;i++){const a=p[i],b=p[(i+1)%4],f=Math.max(0,Math.min(1,per-i));if(f<=0)break;ox.lineTo(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f)}ox.stroke();ox.setLineDash([]);
+  // repères d'angle, comme des traits de coupe
+  ox.lineWidth=1*DPR;ox.globalAlpha=frameK*.7;for(const q of p){ox.beginPath();ox.arc(q[0],q[1],3*DPR,0,7);ox.stroke()}ox.globalAlpha=1;
+  if(flash>0){ox.fillStyle=cssv("--acc");ox.globalAlpha=flash*.35;ox.beginPath();ox.moveTo(...p[0]);p.slice(1).forEach(q=>ox.lineTo(...q));ox.closePath();ox.fill();ox.globalAlpha=1}}
+
+/* ---------- tourner le cube : glisser, puis il se cale sur une orientation droite ---------- */
+let qT=new THREE.Quaternion(),drag=null,cur=0;
+const UP=V(0,1,0),SCRX=V(1,0,-1).normalize();
+cv.addEventListener("pointerdown",e=>{if(!ready)return;drag={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;const k=.009;
+  cube.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(UP,dx*k)).premultiply(new THREE.Quaternion().setFromAxisAngle(SCRX,dy*k));qT.copy(cube.quaternion)});
+cv.addEventListener("pointerup",e=>{if(!drag)return;const mv=Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0);drag=null;
+  if(mv<8){const i=pick(e);if(i==null)return;if(i==cur)return enter();return bring(i)}snap()});
+function snap(){const m=new THREE.Matrix4().makeRotationFromQuaternion(cube.quaternion).elements;
+  // chaque axe du cube est ramené sur l'axe du monde le plus proche
+  const cols=[[m[0],m[1],m[2]],[m[4],m[5],m[6]]],out=[],used=new Set();
+  for(const c of cols){let b=-1,bv=-1;for(let a=0;a<3;a++){if(used.has(a))continue;if(Math.abs(c[a])>bv){bv=Math.abs(c[a]);b=a}}used.add(b);const v=[0,0,0];v[b]=Math.sign(c[b]);out.push(V(...v))}
+  const z=new THREE.Vector3().crossVectors(out[0],out[1]);qT.setFromRotationMatrix(new THREE.Matrix4().makeBasis(out[0],out[1],z))}
+function bring(i){const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);qT.copy(new THREE.Quaternion().setFromUnitVectors(n,UP).multiply(cube.quaternion));
+  const m=new THREE.Quaternion().copy(cube.quaternion);cube.quaternion.copy(qT);snap();cube.quaternion.copy(m)}
 const ray=new THREE.Raycaster();
-function pick(e){const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
-  const hs=ray.intersectObjects(cube.children,true);if(!hs.length)return null;
-  // la face touchée : la normale du point le plus proche, ramenée au cube
-  const n=hs[0].face.normal.clone().transformDirection(hs[0].object.matrixWorld).applyQuaternion(root.quaternion.clone().invert());
-  let b=0,bv=-9;FACES.forEach((f,i)=>{const v=n.dot(new THREE.Vector3(...f.n));if(v>bv){bv=v;b=i}});return b}
+function pick(e){ray.setFromCamera(new THREE.Vector2(e.clientX/W*2-1,-e.clientY/H*2+1),cam);const h=ray.intersectObjects(faces);return h.length?h[0].object.userData.cat:null}
+function topFace(){let b=0,bv=-9;faces.forEach((f,i)=>{const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);if(n.y>bv){bv=n.y;b=i}});return b}
 
-/* ---------- au repos : le cube tourne lentement, et de temps en temps une couronne pivote puis revient ---------- */
-let twisting=false;
-async function twist(){if(twisting||document.body.classList.contains("page"))return;twisting=true;
-  const axes=["x","y","z"],ax=axes[Math.random()*3|0],layer=[-1,1][Math.random()*2|0],dir=Math.random()<.5?1:-1;
-  const sel=cubies.filter(c=>Math.round(c.position[ax])==layer);
-  const piv=new THREE.Group();cube.add(piv);sel.forEach(c=>piv.attach(c));
-  await tween(650,t=>{piv.rotation[ax]=dir*Math.PI/2*t});
-  await tween(500,()=>{},{});   // pause
-  await tween(650,t=>{piv.rotation[ax]=dir*Math.PI/2*(1-t)});
-  sel.forEach(c=>{cube.attach(c);c.position.set(Math.round(c.position.x),Math.round(c.position.y),Math.round(c.position.z));c.rotation.set(0,0,0)});
-  cube.remove(piv);twisting=false}
-setInterval(()=>{if(idleOn&&mode=="cube"&&performance.now()-lastTouch>2500)twist()},4200);
+/* ---------- catégories, titre qui défile ---------- */
+$("cats").innerHTML=CATS.map((c,i)=>`<li><button data-i="${i}"><i></i>${c.name}</button></li>`).join("");
+$("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(b&&ready)bring(+b.dataset.i)});
+function setCat(i){cur=i;const c=CATS[i];[...$("cats").querySelectorAll("button")].forEach((b,j)=>b.classList.toggle("on",j==i));
+  const s=`${c.name} <span>/</span> `;$("mqT").innerHTML=s.repeat(8);const m=$("marq");m.classList.remove("sw");void m.offsetWidth;m.classList.add("sw");
+  $("enter").querySelector("span").textContent="Entrer · "+c.name;flash=1}
+setCat(0);
+addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains("on"))return closeLb();if($("sheet").classList.contains("on"))return closeSheet();if(document.body.classList.contains("page"))return history.back()}
+  if($("lb").classList.contains("on")){e.key=="ArrowRight"&&lbStep(1);e.key=="ArrowLeft"&&lbStep(-1);return}
+  if(document.body.classList.contains("page")||!ready)return;
+  const q=a=>{qT.premultiply(new THREE.Quaternion().setFromAxisAngle(a.axis,a.ang))};
+  if(e.key=="ArrowLeft")q({axis:UP,ang:-Math.PI/2});if(e.key=="ArrowRight")q({axis:UP,ang:Math.PI/2});
+  if(e.key=="ArrowUp")q({axis:V(1,0,0),ang:-Math.PI/2});if(e.key=="ArrowDown")q({axis:V(1,0,0),ang:Math.PI/2});if(e.key=="Enter")enter()});
 
-/* ---------- ouvrir une partie : le cube éclate, l'index monte ---------- */
-async function explode(on){await Promise.all(cubies.map(c=>{const h=c.position.clone();const a=c.userData.ex||(c.userData.ex=new THREE.Vector3((Math.random()-.5)*.6,(Math.random()-.5)*.6,(Math.random()-.5)*.6));
-  const s=on?1:0;return tween(on?700:800,t=>{const k=on?t:1-t;c.position.copy(c.userData.homePos||h);c.userData.homePos=c.userData.homePos||h.clone();
-    c.position.copy(c.userData.homePos).multiplyScalar(1+k*1.15).add(a.clone().multiplyScalar(k));c.rotation.set(a.x*k*3,a.y*k*3,a.z*k*3)},{e:on?easeOut:ease,done:()=>{if(!on){c.position.copy(c.userData.homePos);c.rotation.set(0,0,0);c.userData.homePos=null}}})}))}
-let curFace=0;
-function setMenu(i){curFace=i;const f=FACES[i];$("goName").textContent=f.name;$("goInfo").textContent=count(f);
-  [...$("faces").children].forEach((b,j)=>b.classList.toggle("on",j==i))}
-$("faces").innerHTML=FACES.map((f,i)=>`<button data-i="${i}"><i style="background:var(${f.col});${f.k=="m"?"box-shadow:inset 0 0 0 1px var(--ink)":""}"></i>${f.name}</button>`).join("");
-$("faces").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;faceTo(+b.dataset.i);setMenu(+b.dataset.i)});
-$("openBtn").onclick=()=>openFace(curFace);
-async function openFace(i){if(document.body.classList.contains("page")||mode!="cube")return;if("ace".includes(FACES[i].k))return openGal(i);setMenu(i);const f=FACES[i];
-  explode(true);setTimeout(()=>{renderPage(f);document.body.classList.add("page");$("page").scrollTop=0},260);history.pushState({f:i},"","#"+f.k)}
-async function closePage(){if(!document.body.classList.contains("page"))return;document.body.classList.remove("page");await explode(false)}
-addEventListener("popstate",()=>{closeSheet();closeLb();if(!location.hash){closePage();closeGal()}});
-
-function renderPage(f){const col=`var(${f.col})`;
-  if(f.k=="m"){$("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>Profil</h1><p>Yves Micault<br>architecte HMONP</p></div>
-    <div class="prof"><dl><div><dt>Courriel</dt><dd><a href="mailto:ymicault@gmail.com">ymicault@gmail.com</a></dd></div><div><dt>Téléphone</dt><dd>+33 7 60 86 66 62</dd></div><div><dt>Ville</dt><dd>Marseille, France</dd></div><div><dt>En agence</dt><dd>Hamonic + Masson</dd></div><div><dt>Disponible</dt><dd>À partir de janvier 2027</dd></div><div><dt>CV</dt><dd><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV 2026 ↓</a></dd></div></dl>
+/* ---------- entrer dans une catégorie ---------- */
+$("enter").onclick=()=>ready&&enter();
+async function enter(){const c=CATS[cur];flash=1;
+  await tween(380,t=>{cube.scale.setScalar(1+t*.25);faces.forEach(f=>f.material.opacity=1-t)},{e:easeOut});
+  renderPage(c);document.body.classList.add("page");$("page").scrollTop=0;history.pushState({c:cur},"","#"+c.k)}
+function leave(){if(!document.body.classList.contains("page"))return;document.body.classList.remove("page");
+  tween(500,t=>{cube.scale.setScalar(1.25-t*.25);faces.forEach(f=>f.material.opacity=t)})}
+addEventListener("popstate",()=>{closeSheet();closeLb();if(!location.hash)leave()});
+function renderPage(c){
+  if(c.k=="m"){$("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>Profil</h1><p>Yves Micault<br>architecte HMONP</p></div><div class="prof"><dl>
+    <div><dt>Courriel</dt><dd><a href="mailto:ymicault@gmail.com">ymicault@gmail.com</a></dd></div><div><dt>Téléphone</dt><dd>+33 7 60 86 66 62</dd></div><div><dt>Ville</dt><dd>Marseille, France</dd></div><div><dt>En agence</dt><dd>Hamonic + Masson</dd></div><div><dt>Disponible</dt><dd>À partir de janvier 2027</dd></div><div><dt>CV</dt><dd><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV 2026 ↓</a></dd></div></dl>
     <p>« L’architecture ne se résume pas à ce que l’on construit, mais à ce que l’on rend possible. »</p>
     <p>Mon parcours s’est construit entre Reims, Clermont-Ferrand et Moscou, au fil d’une formation qui m’a progressivement amené à considérer l’architecture au-delà du seul acte de bâtir. Le master EVAN, consacré aux relations entre ville, architecture et nature, a notamment nourri une réflexion sur les territoires, leurs transformations et les liens parfois fragiles qui unissent le paysage, le bâti et les usages.</p>
     <p>Depuis 2017, cette approche s’est enrichie d’une pratique professionnelle au sein de l’agence Hamonic + Masson, à Paris puis à Marseille. De la conception aux phases de développement technique, à travers des projets de logements, d’équipements et d’opérations urbaines, j’ai appris à confronter l’intention architecturale à la complexité du réel.</p></div></div>`;return}
-  $("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>${f.name}</h1><p>${count(f)}<br>${f.info}</p></div>
-   <ul class="list">${f.items.map((p,j)=>`<li style="--i:${Math.min(j,16)}"><button data-id="${p.id}">${glyph(p.id,col)}<span class="t">${p.t}<small>${p.fam=="a"?p.role+" · ":""}${(p.c||"").split(",")[0]}</small></span><span class="y">${p.y||""}</span></button></li>`).join("")}</ul>
-   ${f.k=="r"?`<p style="margin-top:22px"><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener" style="color:inherit;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">Télécharger le CV 2026 ↓</a></p>`:""}</div>`}
+  $("page").innerHTML=`<div class="pin"><button class="back" data-back>← Cube</button><div class="ph"><h1>${c.name}</h1><p>${c.items.length} ${c.k=="p"?"documents":c.k=="r"?"pages":"projets"}<br>${c.info}</p></div>
+   <ul class="list">${c.items.map((p,j)=>`<li style="--i:${Math.min(j,16)}"><button data-id="${p.id}"><span class="t">${p.t}<small>${p.fam=="a"?p.role+" · ":""}${(p.c||"").split(",")[0]}</small></span><span class="y">${p.y||""}</span></button></li>`).join("")}</ul></div>`}
 $("page").addEventListener("click",e=>{if(e.target.closest("[data-back]"))return history.back();const b=e.target.closest("[data-id]");if(!b)return;
-  const f=FACES[curFace],it=f.items.find(p=>p.id==b.dataset.id);if(!it)return;
-  if(it.pub){lbList=it.pub.pages;return openLb(0)}if(it.cv!=null){lbList=CV;return openLb(it.cv)}openSheet(it)});
+  const it=CATS[cur].items.find(p=>p.id==b.dataset.id);if(!it)return;if(it.pub){lbList=it.pub.pages;return openLb(0)}if(it.cv!=null){lbList=CV;return openLb(it.cv)}openSheet(it)});
 
-/* ---------- fiche projet ---------- */
+/* ---------- fiche projet, visionneuse ---------- */
 let lbList=[],lbI=0;
-function openSheet(p){const col=`var(--${p.fam})`;
-  const rows=(p.fiche||[]).filter(r=>r[1]&&r[1]!="—").map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("");
-  const pl=(p.pl||[]).filter(x=>x!=p.hero);
-  const links=[p.url?`<a href="${p.url}" target="_blank" rel="noopener">Fiche du projet chez Hamonic+Masson <span>↗</span></a>`:"",
-    p.fam!="a"?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
-  $("shIn").innerHTML=`<div class="hero">${p.hero?`<img src="${p.hero}" alt="${p.t}">`:glyph(p.id,col)}</div>${p.cr?`<p class="cr">${p.cr}</p>`:""}
-   <div class="cols"><div><div class="fam">${glyph(p.id,col)}${{a:"Agence",c:"Concours",e:"Études"}[p.fam]} · ${p.role}</div><h2>${p.t}</h2><p class="ln">${p.line||p.c+" · "+p.y}</p><dl>${rows}</dl>${links?`<div class="links">${links}</div>`:""}</div>
+function openSheet(p){const rows=(p.fiche||[]).filter(r=>r[1]&&r[1]!="—").map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("");const pl=(p.pl||[]).filter(x=>x!=p.hero);
+  const links=[p.url?`<a href="${p.url}" target="_blank" rel="noopener">Fiche du projet chez Hamonic+Masson <span>↗</span></a>`:"",p.fam!="a"?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
+  $("shIn").innerHTML=`${p.hero?`<div class="hero"><img src="${p.hero}" alt="${p.t}"></div>`:""}${p.cr?`<p class="cr">${p.cr}</p>`:""}<div class="cols"><div><p class="fam">${{a:"Agence",c:"Concours",e:"Études"}[p.fam]} · ${p.role}</p><h2>${p.t}</h2><p class="ln">${p.line||p.c+" · "+p.y}</p><dl>${rows}</dl>${links?`<div class="links">${links}</div>`:""}</div>
    <div>${p.txt?`<p class="txt">${p.txt}</p>`:""}${pl.length?`<div class="sec"><span>Planches et images</span><span>${pl.length}</span></div><div class="pl">${pl.map((s,i)=>`<button data-lb="${i}"><img loading="lazy" src="${s}" alt="${p.t}, image ${i+1}"></button>`).join("")}</div>`:""}</div></div>`;
   lbList=pl;$("shN").textContent=p.y;$("sheet").scrollTop=0;$("sheet").classList.add("on")}
 function closeSheet(){$("sheet").classList.remove("on")}
 $("shClose").onclick=closeSheet;$("shIn").addEventListener("click",e=>{const b=e.target.closest("[data-lb]");b&&openLb(+b.dataset.lb)});
-function openLb(i){lbI=i;$("lb").classList.add("on");showLb()}
-function showLb(){$("lbI").src=lbList[lbI];$("lbN").textContent=`${lbI+1} / ${lbList.length}`}
-function lbStep(d){lbI=(lbI+d+lbList.length)%lbList.length;showLb()}
-function closeLb(){$("lb").classList.remove("on")}
+function openLb(i){lbI=i;$("lb").classList.add("on");showLb()}function showLb(){$("lbI").src=lbList[lbI];$("lbN").textContent=`${lbI+1} / ${lbList.length}`}
+function lbStep(d){lbI=(lbI+d+lbList.length)%lbList.length;showLb()}function closeLb(){$("lb").classList.remove("on")}
 $("lbX").onclick=closeLb;$("lbP").onclick=()=>lbStep(-1);$("lbNx").onclick=()=>lbStep(1);
 let lx=null;$("lb").addEventListener("touchstart",e=>lx=e.touches[0].clientX,{passive:true});$("lb").addEventListener("touchend",e=>{if(lx==null)return;const d=e.changedTouches[0].clientX-lx;lx=null;if(Math.abs(d)>50)lbStep(d<0?1:-1)},{passive:true});
-addEventListener("keydown",e=>{if(e.key=="Escape"){if($("lb").classList.contains("on"))return closeLb();if($("sheet").classList.contains("on"))return closeSheet();if(document.body.classList.contains("page")||mode=="gal")return history.back()}
-  if(mode!="cube")return;
-  if($("lb").classList.contains("on")){e.key=="ArrowRight"&&lbStep(1);e.key=="ArrowLeft"&&lbStep(-1);return}
-  if(document.body.classList.contains("page"))return;
-  if(e.key=="ArrowRight"||e.key=="ArrowLeft"){const order=[0,1,2,3];const k=order.indexOf(curFace);const n=order[((k<0?0:k)+(e.key=="ArrowRight"?1:3))%4];faceTo(n);setMenu(n)}
-  if(e.key=="ArrowUp"){faceTo(4);setMenu(4)}if(e.key=="ArrowDown"){faceTo(5);setMenu(5)}if(e.key=="Enter")openFace(curFace)});
 
-/* nuit / jour : les couleurs des faces suivent */
-$("bgBtn").onclick=()=>{document.body.classList.toggle("nuit");$("bgBtn").textContent=document.body.classList.contains("nuit")?"Jour":"Nuit";
-  FACES.forEach((f,i)=>mats[i].color.set(cssv(f.col)));paper.color.set(cssv("--tile"));ink.color.set(cssv("--ink"))};
+/* jour / nuit */
+$("modeBtn").onclick=()=>{document.body.classList.toggle("jour");$("modeBtn").textContent=document.body.classList.contains("jour")?"Nuit":"Jour"};
 
-/* ---------- galerie : le cube se défait, ses cubes se rangent en trame et portent les projets ---------- */
-let G=null;const loader=new THREE.TextureLoader();
-function glyphTex(id,col){const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");x.fillStyle=cssv("--tile");x.fillRect(0,0,256,256);
-  const b=bitsOf(id),s=256/3;x.fillStyle=col;x.strokeStyle=col;x.lineWidth=3;
-  for(let i=0;i<9;i++){const px=(i%3)*s+s*.2,py=(i/3|0)*s+s*.2,w=s*.6;if(b>>i&1)x.fillRect(px,py,w,w);else{x.globalAlpha=.35;x.strokeRect(px,py,w,w);x.globalAlpha=1}}
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
-function layoutGal(anim){const w=innerWidth,h=innerHeight,a=w/h;const n=G.items.length,cols=w<700?3:w<1100?5:6,gap=1.18;G.cols=cols;
-  G.slots=G.items.map((p,i)=>new THREE.Vector3((i%cols-(cols-1)/2)*gap,0,(i/cols|0)*gap*1.42));
-  const rows=Math.ceil(n/cols);G.rows=rows;
-  // vue presque en plan : on lit les cases, mais les hauteurs restent visibles
-  const halfW=(cols*gap)/2+.35;G.v=Math.max(halfW/a,2.2);
-  G.top=(w<700?1.15:0.9)*G.v;          // la place du titre en haut de l'écran (en unités)
-  G.minZ=0;G.maxZ=Math.max(0,rows*gap*1.42-2*G.v+G.top+1.2);
-  if(!anim){CAM.v=G.v;setGalCam()}}
-function setGalCam(){const z=G.z-G.v+G.top;CAM.look.set(0,0,z+G.v-G.top);CAM.pos.set(0,14,CAM.look.z+4.2);CAM.v=G.v}
-function galScroll(dy){G.z=Math.min(G.maxZ,Math.max(G.minZ,G.z-dy*(2*G.v/innerHeight)));setGalCam()}
-addEventListener("wheel",e=>{if(mode=="gal"&&G){galScroll(-e.deltaY*.6)}},{passive:true});
-async function openGal(i){const f=FACES[i];mode="gal";idleOn=false;setMenu(i);history.pushState({f:i},"","#"+f.k);
-  while(twisting)await tween(60,()=>{});
-  G={f,items:f.items,z:0,caps:[]};layoutGal(true);tween(900,t=>{ground.position.y=-2.2+t*1.71},{delay:900});
-  $("galName").textContent=f.name;$("galInfo").innerHTML=`${count(f)}<br>${f.info}`;document.body.classList.add("gal");
-  $("labels").innerHTML=G.items.map(p=>`<span>${p.t}<i>${(p.c||"").split(",")[0]} · ${p.y}</i></span>`).join("");
-  // le cube se remet droit, puis la caméra passe en plan
-  qT.identity();
-  const c0={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};
-  // ordre : les cubes de la face choisie d'abord, puis les autres
-  const n=new THREE.Vector3(...f.n);
-  const ord=cubies.slice().sort((p,q)=>q.position.dot(n)-p.position.dot(n));
-  G.used=ord.slice(0,G.items.length);G.spare=ord.slice(G.items.length);
-  const col=cssv(f.col);
-  G.used.forEach((c,k)=>{const p=G.items[k];const m=new THREE.MeshBasicMaterial({map:p.th?loader.load(p.th,t=>{t.colorSpace=THREE.SRGBColorSpace}):glyphTex(p.id,col),transparent:true,opacity:0});
-    const cap=new THREE.Mesh(new THREE.PlaneGeometry(.86,.86),m);cap.rotation.x=-Math.PI/2;cap.position.y=.492;c.add(cap);c.userData.cap=cap;c.userData.item=p;G.caps.push(cap)});
-  // caméra : de l'axonométrie au plan, pendant que les cubes se dispersent
-  setGalCam();const c1={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};
-  tween(1300,t=>{CAM.pos.lerpVectors(c0.pos,c1.pos,t);CAM.look.lerpVectors(c0.look,c1.look,t);CAM.v=c0.v+(c1.v-c0.v)*t},{delay:150});
-  await tween(350,t=>{});
-  const qs=root.quaternion.clone();
-  tween(700,t=>{root.quaternion.slerpQuaternions(qs,new THREE.Quaternion(),t)});
-  G.spare.forEach((c,k)=>{const a=c.position.clone();tween(700,t=>{c.position.set(a.x*(1+t*2),a.y-t*6,a.z*(1+t*2));c.scale.setScalar(1-t*.999)},{delay:k*20,e:ease})});
-  await Promise.all(G.used.map((c,k)=>{const a=c.position.clone(),r0=c.rotation.clone(),b=G.slots[k];
-    return tween(1100,t=>{c.position.set(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t+Math.sin(t*Math.PI)*2.6,a.z+(b.z-a.z)*t);c.rotation.set(r0.x*(1-t),r0.y*(1-t)+Math.sin(t*Math.PI)*.0,r0.z*(1-t))},{delay:200+k*45,e:ease}).then(()=>
-      tween(450,t=>{c.userData.cap.material.opacity=t},{e:easeOut}))}));
-  document.body.classList.add("ready")}
-function galPick(e){const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
-  const hs=ray.intersectObjects(G.used,true);if(!hs.length)return;let o=hs[0].object;while(o&&!o.userData.item)o=o.parent;if(!o)return;
-  const c=o,y0=c.position.y;tween(260,t=>{c.position.y=y0+t*.7},{e:easeOut}).then(()=>{openSheet(c.userData.item);tween(400,t=>{c.position.y=y0+.7*(1-t)},{delay:500})})}
-async function closeGal(){if(mode!="gal"||!G)return;mode="back";document.body.classList.remove("ready");
-  G.caps.forEach(cp=>tween(300,t=>{cp.material.opacity=1-t}));
-  const c0={pos:CAM.pos.clone(),look:CAM.look.clone(),v:CAM.v};resize();const c1=CUBECAM;
-  tween(1100,t=>{CAM.pos.lerpVectors(c0.pos,c1.pos,t);CAM.look.lerpVectors(c0.look,c1.look,t);CAM.v=c0.v+(c1.v-c0.v)*t},{delay:200});
-  const all=[...G.used,...G.spare];
-  await Promise.all(all.map((c,k)=>{const a=c.position.clone(),b=c.userData.home,s0=c.scale.x;
-    return tween(1000,t=>{c.position.set(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t+Math.sin(t*Math.PI)*1.8,a.z+(b.z-a.z)*t);c.scale.setScalar(s0+(1-s0)*t)},{delay:250+k*22,e:ease})}));
-  G.caps.forEach(cp=>{cp.parent.remove(cp);cp.material.map&&cp.material.map.dispose();cp.material.dispose()});
-  cubies.forEach(c=>{c.userData.cap=null;c.userData.item=null;c.rotation.set(0,0,0)});
-  ground.position.y=-2.2;document.body.classList.remove("gal");G=null;mode="cube";faceTo(curFace);idleOn=true;lastTouch=performance.now()}
-$("galBack").onclick=()=>history.back();
-const pv=new THREE.Vector3();
-function placeLabels(now){if(!G||!document.body.classList.contains("ready"))return;const sp=$("labels").children;const W=innerWidth,H=innerHeight;
-  G.used.forEach((c,k)=>{// au repos, la trame ondule doucement : les cubes montent et descendent
-    c.position.y=Math.sin(now*.0016+k*.55)*.07;
-    pv.set(c.position.x,c.position.y-.5,c.position.z+.5).project(cam);const el=sp[k];if(!el)return;
-    const x=(pv.x+1)/2*W,y=(1-pv.y)/2*H+6;el.style.left=x+"px";el.style.maxWidth=(W/(2*G.v*W/H)*1.12)+"px";el.style.top=y+"px";el.style.visibility=y<120||y>H-10?"hidden":"visible"})}
-
-/* ---------- boucle ---------- */
-faceTo(0);setMenu(0);
-const base=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),0);
+/* ---------- boucle : tons à plat selon l'orientation, motifs qui glissent comme une projection ---------- */
+const TONE=n=>{const j=document.body.classList.contains("jour");const top=Math.max(0,n.y),lf=Math.max(0,n.z),rt=Math.max(0,n.x);
+  const v=.16*rt+.52*lf+.97*top+.02;return j?Math.min(1,v*.9+.06):Math.min(1,v)};
 let t0=performance.now();
-function loop(now){requestAnimationFrame(loop);runTweens(now);
-  const dt=Math.min(50,now-t0);t0=now;
-  applyCam();placeLabels(now);
-  if(!drag&&mode=="cube"){
-    // au repos : une lente dérive autour de la verticale
-    if(idleOn&&now-lastTouch>2500)qT.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dt*.00018));
-    root.quaternion.slerp(qT,1-Math.pow(.0025,dt/1000));
-  }
-  if(mode!="cube"&&!drag)root.quaternion.slerp(qT,1-Math.pow(.0025,dt/1000));
-  if(mode=="cube"){const a=activeFace();if(a!=curFace&&!document.body.classList.contains("page"))setMenu(a)}
-  R.render(scene,cam)}
-resize();requestAnimationFrame(loop);
-intro();
-if(location.hash){const i=FACES.findIndex(f=>"#"+f.k==location.hash);if(i>=0)setTimeout(()=>openFace(i),2400)}
+function loop(now){requestAnimationFrame(loop);runTw(now);const dt=Math.min(50,now-t0);t0=now;
+  if(!drag)cube.quaternion.slerp(qT,1-Math.pow(.002,dt/1000));
+  faces.forEach((f,i)=>{const n=V(...CATS[i].n).applyQuaternion(cube.quaternion);const v=TONE(n);f.material.color.setScalar(v);
+    // projection : les motifs défilent lentement sur les faces
+    const p=CATS[i].pat;if(p=="stripes")f.material.map.offset.y=now*.00005;if(p=="diag")f.material.map.offset.x=now*.00007;if(p=="dots")f.material.map.offset.set(now*.00004,now*.00004);if(p=="steps")f.material.map.offset.x=-now*.00005});
+  if(ready){const t=topFace();if(t!=cur)setCat(t)}
+  flash=Math.max(0,flash-dt/600);
+  R.render(scene,cam);ox.clearRect(0,0,ov.width,ov.height);if(introK<1||fillK<1)drawIntro();drawFrame()}
+requestAnimationFrame(loop);intro();
 </script>
 </body>
 </html>
