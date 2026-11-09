@@ -68,6 +68,7 @@ nav a.on{color:var(--fg)}nav a.on::before{background:var(--fg);opacity:1}
 <div id="prof" class="hide"><h1>Yves Micault</h1><p>Architecte HMONP</p><a href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV (PDF)</a><a id="sbx" class="sbx">▪ jouer avec les pixels</a></div>
 <div id="sheet"><div class="in" id="sin"></div></div>
 <script src="data.js"></script>
+<script src="emp.js"></script>
 <script>
 (()=>{
 const cv=document.getElementById('c'),g=cv.getContext('2d');
@@ -178,12 +179,13 @@ async function layoutProj(keep){
   const cw=(W-32)/cols,rh=cw*.92+34;Ct=cw/(T*1.55);
   tiles=list.map((p,n)=>({p,ax:16+cw*(n%cols+.5),ay:96+cw*.42+Math.floor(n/cols)*rh,r:cw*.46}));
   maxPan=Math.max(0,96+Math.ceil(list.length/cols)*rh-(H-80));
-  const L=await Promise.all(tiles.map(t=>t.p.th?sample(t.p.th,T,T):null));
-  if(mode!=tok)return;
-  const out=[];
-  tiles.forEach((t,n)=>{const l=L[n]||glyph(t.p.id,T);
-    for(let j=0;j<T;j++)for(let i=0;i<T;i++){const v=L[n]?1-l[j*T+i]:l[j*T+i];
-      out.push({x:i-T/2,y:j-T/2,ax:t.ax,ay:t.ay,sc:1,s:.18+.82*v,h:.4+v*3,tile:n,d:keep?0:n*30+(i+j)*8})}});
+  // chaque projet = son empreinte : plan masse en pixels, extrudé selon les hauteurs
+  const EM=window.EMP||{},out=[];
+  tiles.forEach((t,n)=>{const e=EM[t.p.id];
+    if(e){const m=e.n,u=T/m;for(let j=0;j<m;j++)for(let i=0;i<m;i++){const h=e.h[j*m+i];if(!h)continue;
+      out.push({x:(i-m/2)*u-.5+u/2,y:(j-m/2)*u-.5+u/2,ax:t.ax,ay:t.ay,sc:1,s:.9*u,h:h*u*1.6,tile:n,d:keep?0:n*30+(i+j)*4})}}
+    else{for(let j=2;j<6;j++)for(let i=2;i<6;i++) // empreinte pas encore dessinée : un carré neutre
+      out.push({x:i-T/2,y:j-T/2,ax:t.ax,ay:t.ay,sc:1,s:.86,h:.6,tile:n,d:keep?0:n*30+(i+j)*8})}});
   setField(out);
 }
 // ---------- profil ----------
@@ -207,7 +209,8 @@ function buildBar(){
   bar.innerHTML=(isP()?['all','a','c','e'].map(f=>`<button data-f="${f}">${f=='all'?'Tous':FAM[f]}</button>`).join('')+'<span class="sep"></span>':'')+(mode=='sand'?`<button data-t="sq">${I.sq}Carré</button><button data-t="cu">${I.cu}Cube</button><button data-t="er">${I.er}Gomme</button><span class="sep"></span><button data-a="clr">Effacer</button><span class="sep"></span>`:'')+views();sync()}
 function sync(){bar.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t==tool&&mode=='sand'||b.dataset.v==AX||b.dataset.f==mode));
   document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.m==mode))}
-function turn(d){q+=d;if(mode=='home')hint.style.opacity=0}
+let lastAct=0;
+function turn(d){q+=d;lastAct=performance.now();if(mode=='home')hint.style.opacity=0}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.t){tool=b.dataset.t;if(tool=='cu')AX=1}
   if(b.dataset.v)AX=+b.dataset.v;
@@ -245,7 +248,7 @@ function openP(p){const src=p.hero||p.th;
   if(c){const im=new Image();im.onload=()=>{const x=c.getContext('2d'),r=Math.max(24/im.width,16/im.height);x.drawImage(im,(24-im.width*r)/2,(16-im.height*r)/2,im.width*r,im.height*r);setTimeout(()=>c.style.opacity=0,350)};im.src=src}}
 
 // ---------- pointeur ----------
-cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);Object.assign(ptr,{down:true,moved:0,sx:e.clientX,sy:e.clientY,p0:panT,last:null,x:e.clientX,y:e.clientY,turned:0});
+cv.addEventListener('pointerdown',e=>{lastAct=performance.now();cv.setPointerCapture(e.pointerId);Object.assign(ptr,{down:true,moved:0,sx:e.clientX,sy:e.clientY,p0:panT,last:null,x:e.clientX,y:e.clientY,turned:0});
   if(mode=='sand')paint(e.clientX,e.clientY)});
 cv.addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.inside=true;if(!ptr.down)return;
   const dx=e.clientX-ptr.sx,dy=e.clientY-ptr.sy;ptr.moved=Math.max(ptr.moved,Math.hypot(dx,dy));
@@ -254,7 +257,10 @@ cv.addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.inside
   if(isP())panT=Math.max(0,Math.min(maxPan,ptr.p0-dy))});
 cv.addEventListener('pointerup',e=>{ptr.down=false;if(e.pointerType!='mouse')ptr.x=ptr.y=-1e4;
   if(ptr.moved<8){if(isP()){const t=tileAt(e.clientX,e.clientY);if(t>=0)openP(tiles[t].p)}
-    if(mode=='home'&&Math.hypot(e.clientX-home.ax,e.clientY-home.ay)<N*C)go(CATS[curF].id)}});
+    if(mode=='home'){const L=labelAt(e.clientX,e.clientY);if(L>=0){go(CATS[L].id);return}
+      if(Math.hypot(e.clientX-home.ax,e.clientY-home.ay)<N*C)go(CATS[curF].id)}}});
+// les libellés posés autour du cube en plan sont cliquables
+function labelAt(sx,sy){if(hz>.5)return -1;const o=N/2+1.1;for(let s=0;s<4;s++){const [nx,ny]=faceN(s),pt=lp(home,nx*o,ny*o,0);if(Math.abs(sx-pt[0])<48&&Math.abs(sy-pt[1])<18)return s}return -1}
 cv.addEventListener('pointerleave',()=>{ptr.inside=false;ptr.x=ptr.y=-1e4});
 cv.addEventListener('wheel',e=>{if(isP()){panT=Math.max(0,Math.min(maxPan,panT+e.deltaY));e.preventDefault()}},{passive:false});
 function tileAt(sx,sy){return tiles.findIndex(t=>Math.abs(sx-t.ax)<t.r&&Math.abs(sy+pan-t.ay)<t.r)}
@@ -269,7 +275,8 @@ function frame(now){
   const dt=Math.min(50,now-last);last=now;
   const f=1-Math.pow(.004,dt/1000),fs=1-Math.pow(.0006,dt/1000);
   const tAng=AX||mode=='home'||mode=='sand'?q*Math.PI/2+(AX?Math.PI/4:0):Math.round(q/4)*Math.PI*2; // en plan, images et portrait restent à l'endroit
-  ang+=(tAng-ang)*f;hz+=(AX-hz)*f;C+=(Ct-C)*f;pan+=(panT-pan)*fs;setView();
+  const sway=mode=='home'&&intro>=1&&!ptr.down?.08*Math.sin(now/850)*Math.min(1,Math.max(0,(now-lastAct-1500)/2000)):0; // le cube se balance au repos : il invite à le tourner
+  ang+=(tAng+sway-ang)*f;hz+=(AX-hz)*f;C+=(Ct-C)*f;pan+=(panT-pan)*fs;setView();
   const AK=mode=='home'?(curF>=0?CATS[curF].id:'home'):ambK,A=AMB[AK]||AMB.home;
   for(const k of ['bg','b1','b2'])amb[k]=mix(amb[k],mode=='home'&&k=='bg'?mix(A.bg,AMB.home.bg,.4):A[k],f*.5);
   drawBg(now);
@@ -282,7 +289,7 @@ function frame(now){
   for(const p of P){if(now<p.d)continue;
     p.x+=(p.tx-p.x)*f;p.y+=(p.ty-p.y)*f;p.ax+=(p.tax-p.ax)*f;p.ay+=(p.tay-p.ay)*f;
     let ts=p.ts,th2=p.thh,tt=p.tt;
-    if(p.tile>=0&&p.tile==hoverTile){ts=1;th2=p.thh+2}
+    if(p.tile>=0&&p.tile==hoverTile){th2=p.thh*1.35+.6}
     if(mode=='prof'){const d=Math.hypot(p.tx+.5-mx,p.ty+.5-my);if(d<6){const k=1-d/6;ts=Math.min(1,p.ts+k*.6);th2=p.thh+k*8}}
     if(mode=='home')tt=p.face==af?1:0;
     p.s+=(ts-p.s)*f;p.h+=(th2-p.h)*f;p.tone+=(tt-p.tone)*f}
