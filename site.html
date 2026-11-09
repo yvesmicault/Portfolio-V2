@@ -47,8 +47,10 @@ header>*{pointer-events:auto}
 .it canvas{width:72px;height:72px;display:block}
 .it .n{font-size:11.5px;line-height:1.2;font-stretch:90%;max-width:92px}
 .it .y{font-family:Mono;font-size:9.5px;color:var(--mut)}
-#sel{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--hair);padding:12px 16px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
-#sel.on{transform:none}
+#sel,.sheet{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--hair);padding:12px 16px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+#sel.on,.sheet.on{transform:none}
+.zm{position:absolute;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;gap:6px}
+.zm button{width:40px;height:40px;display:grid;place-items:center;font-size:20px;border:1px solid var(--hair);border-radius:50%}
 /* projet */
 #proj{padding:64px 16px 80px}
 #proj .hero{width:100%;display:block;aspect-ratio:var(--ar,1.5);background:transparent}
@@ -65,10 +67,10 @@ header>*{pointer-events:auto}
 .blk .hd button[aria-pressed=true]{color:var(--ink);border-color:var(--ink)}
 #emp{width:100%;height:240px;display:block;margin-top:8px}
 .pl{margin-top:14px}
-.pl img{width:100%;display:block;clip-path:polygon(50% calc(50% - 46px),calc(50% + 40px) calc(50% - 23px),calc(50% + 40px) calc(50% + 23px),50% calc(50% + 46px),calc(50% - 40px) calc(50% + 23px),calc(50% - 40px) calc(50% - 23px));transition:clip-path 1s cubic-bezier(.6,0,.2,1)}
-.pl img.in{clip-path:polygon(50% 0%,100% 0%,100% 100%,50% 100%,0% 100%,0% 0%)}
+.pl img{width:100%;display:block;clip-path:polygon(50% calc(50% - 30px),calc(50% + 52px) 50%,50% calc(50% + 30px),calc(50% - 52px) 50%);transition:clip-path 1s cubic-bezier(.6,0,.2,1)}
+.pl img.in{clip-path:polygon(50% -100%,200% 50%,50% 200%,-100% 50%)}
 /* profil, carte */
-#prof .cap,#carte .cap{position:absolute;left:16px;right:16px}
+#prof .cap{position:absolute;left:16px;right:16px}
 #prof a{color:var(--ink)}
 @media (min-width:760px){
  #index,#proj{padding-left:max(40px,calc(50% - 440px));padding-right:max(40px,calc(50% - 440px))}
@@ -108,9 +110,10 @@ header>*{pointer-events:auto}
  <a class="go" href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Le CV (PDF)</a>
 </div></section>
 
-<section id="carte" class="view" aria-label="Carte"><div class="cap" id="ccap">
- <div class="t">Carte</div><div class="l">Le globe du site actuel se branchera ici : chaque projet y sera posé en petit hexagone.</div>
-</div></section>
+<section id="carte" class="view" aria-label="Carte" style="touch-action:none">
+ <div class="zm"><button id="zout" aria-label="Dézoomer">−</button><button id="zin" aria-label="Zoomer">+</button></div>
+</section>
+<div id="gsel" class="cap sheet" aria-live="polite"></div>
 
 <script src="data.js"></script>
 <script src="emp.js"></script>
@@ -173,46 +176,50 @@ const PR=window.PROJ,EMP=window.EMP||{},FAM={e:'Études',c:'Concours',a:'Agence'
 const IM={};function img(src){if(!src)return null;if(!IM[src]){const i=new Image();i.decoding='async';i.src=src;IM[src]=i}return IM[src]}
 const ready=i=>!i||i.complete?Promise.resolve():new Promise(r=>{i.onload=i.onerror=r});
 const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
-// le signe d'un projet : son emprise en pixels sur le dessus, la famille sur les côtés
+// le signe d'un projet : son emprise en pixels sur le dessus (le plan), la famille sur les côtés
 function motif(p){const h=hash(p.id),e=EMP[p.id];
  return{top:[e?{k:'pix',e}:{k:'hat',d:h%2?'u':'v',sp:.06+(h%5)*.012}],
   fr:[{k:'hat',d:'v',sp:p.fam==='e'?.13:.08}],
   ri:[p.fam==='a'?{k:'ink'}:{k:'hat',d:'u',sp:p.fam==='c'?.06:.11}],bk:[{k:'ink'}],le:[{k:'ink'}]}}
-function photo(p,r){const i=img(p.hero);const L1=i?[{k:'img',im:i,r}]:null;
- return L1?{fr:L1,ri:L1,top:L1,bk:L1,le:L1}:motif(p)}
+const all=L1=>({fr:L1,ri:L1,top:L1,bk:L1,le:L1});
+function photo(p,r){const i=img(p.hero);return i?all([{k:'img',im:i,r}]):motif(p)}
 const DISC=PR.filter(p=>p.hero);let di=0;
 const PORT=img('img/yves_cv.jpg');
-function homeC(){const p=DISC[di];const ph=[{k:'img',im:img(p.hero)}];
- return{fr:ph,ri:[{k:'hat',d:'u',sp:.07}],top:[{k:'dot',n:7}],bk:[{k:'img',im:PORT}],le:[{k:'ink'}]}}
-const INKC={fr:[{k:'ink'}],ri:[{k:'ink'}],top:[{k:'ink'}],bk:[{k:'ink'}],le:[{k:'ink'}]};
+const INKC=all([{k:'ink'}]);
 
 // =============== scène ===============
 const fx=document.getElementById('fx'),g=fx.getContext('2d');
 let W,H,dpr,view='home',anim=null,still=null,dirty=true;
-function fit(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;fx.width=W*dpr;fx.height=H*dpr;dirty=true;placeHome();if(view==='disc')still=discStill();if(view==='prof')still=profStill();if(view==='carte')still=carteStill()}
+function fit(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;fx.width=W*dpr;fx.height=H*dpr;dirty=true;placeHome();
+ if(view==='disc'){still=discStill();discCap()}if(view==='prof')still=profStill();if(view==='carte')still=globeStill}
 const homeB=()=>bFor(Math.min(W*.62,H*.42));
 const homePose=()=>hexP(W/2,H*.45,homeB(),5);
-// cadre de lecture : l'image entière
+// le losange : le cube aplati, il ne reste que le dessus
+const flat=(cx,cy,k)=>({yaw:Q,pit:ISO,hx:k,hy:0,hz:k,cx,cy,gap:0});
+// taille du losange qui contient entièrement un cadre R
+const coverK=R=>((R.w/2)/Math.SQRT2+(R.h/2)/(Math.SQRT2*Math.sin(ISO)))*1.02;
+const flatOver=R=>flat(R.x+R.w/2,R.y+R.h/2,coverK(R));
 function frameR(ar,top=64,bot=170){const aw=W-32,ah=H-top-bot;let w=Math.min(aw,900),h=w/ar;if(h>ah){h=ah;w=h*ar}return{x:(W-w)/2,y:top+(ah-h)/2,w,h}}
-const front=(R,yaw=0,pit=0,hz)=>({yaw,pit,hx:R.w/2,hy:R.h/2,hz:hz??Math.min(R.w,R.h)/2,cx:R.x+R.w/2,cy:R.y+R.h/2,gap:0});
 function run(a){return new Promise(res=>{anim={...a,t0:performance.now(),res};if(red)anim.dur=1})}
 function render(now){
  if(anim){let t=Math.min(1,(now-anim.t0)/anim.dur);g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);anim.draw(t);if(t>=1){const r=anim.res;anim=null;dirty=true;r()}}
  else if(dirty){g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);if(still)still();dirty=false}
  requestAnimationFrame(render)}
+// ouvrir : le cube s'aplatit en losange (3D → 2D), puis le losange grandit jusqu'à contenir l'image
+function opening(A,R,CA,CB,t){const e1=ease(t/.38),e2=ease((t-.3)/.7);
+ const P=lerpP(lerpP(A,{...A,hy:0,gap:0},e1),flatOver(R),e2);cube(g,P,CA,CB,sm(t/.4))}
 
-// ---------- accueil ----------
+// ---------- accueil : un hexagone d'encre, ses arêtes lues en creux ----------
 const home=document.getElementById('home'),doors=[...home.querySelectorAll('.door')];
 function placeHome(){const P=homePose(),b=P.hx;
  const pos={disc:[P.cx-b*1.15,P.cy+b*1.32],index:[P.cx+b*1.15,P.cy+b*1.32],carte:[P.cx,P.cy-b*1.95],prof:[P.cx,P.cy+b*2.25]};
  doors.forEach(d=>{const p=pos[d.dataset.go];d.style.left=p[0]+'px';d.style.top=p[1]+'px'})}
-const homeStill=()=>()=>cube(g,homePose(),homeC(),null,0);
-// entrée : le contour se trace, se remplit, puis s'ouvre en trois faces
-function intro(){return run({dur:1700,draw:t=>{const P=homePose(),F=project(P),hx=F.length?hullPts(F):[];
- const a=sm(t/.4),f=sm((t-.38)/.2),o=ease((t-.62)/.38);
- if(f<1&&hx.length){g.strokeStyle=INK;g.lineWidth=1.4;g.globalAlpha=1-f;const per=perim(hx);g.setLineDash([per*a,per]);poly(g,hx);g.stroke();g.setLineDash([])}
- if(f>0)cube(g,{...P,gap:5*o},INKC,homeC(),o,f);
- doors.forEach(d=>d.style.opacity=sm((t-.8)/.2))}})}
+const homeStill=()=>()=>cube(g,homePose(),INKC,null,0);
+function intro(){return run({dur:1500,draw:t=>{const P=homePose(),F=project(P),hx=hullPts(F);
+ const a=sm(t/.45),f=sm((t-.42)/.25),o=ease((t-.62)/.38);
+ if(f<1){g.strokeStyle=INK;g.lineWidth=1.4;g.globalAlpha=1-f;const per=perim(hx);g.setLineDash([per*a,per]);poly(g,hx);g.stroke();g.setLineDash([]);g.globalAlpha=1}
+ if(f>0)cube(g,{...P,gap:5*o},INKC,null,0,f);
+ doors.forEach(d=>d.style.opacity=sm((t-.75)/.25))}})}
 function hullPts(F){const P=[];F.forEach(f=>P.push(...f.pts));P.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
  for(const q of P){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],q)<=.01)lo.pop();lo.push(q)}
@@ -223,73 +230,72 @@ function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i
 home.addEventListener('click',e=>{const d=e.target.closest('.door');if(d)return go(d.dataset.go);
  const F=project(homePose()),f=F.find(f=>inPoly(e.clientX,e.clientY,f.pts));if(f)go({fr:'disc',ri:'index',top:'carte'}[f.k])});
 
-// ---------- portes : la face concernée tourne vers soi ----------
+// ---------- navigation ----------
 const where=document.getElementById('where'),NAMES={home:'',disc:'Découvrir',index:'Projets',proj:'Projet',prof:'Profil',carte:'Carte'};
-function show(v){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id===v));view=v;where.textContent=NAMES[v];drawLogo();dirty=true}
-function hideAll(){document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));sel.classList.remove('on');pj.style.opacity=''}
+function show(v,instant){document.querySelectorAll('.view').forEach(s=>{if(instant&&s.id===v){s.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>s.style.transition=''))}s.classList.toggle('on',s.id===v)});view=v;where.textContent=NAMES[v];drawLogo();dirty=true}
+function hideAll(){document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));sel.classList.remove('on');pj.style.opacity='';gcap.classList.remove('on')}
 let busy=false;
 async function go(v){if(busy||v===view)return;busy=true;try{
- const from=view;if(from!=='home'){await back();}
- hideAll();still=null;
+ if(view!=='home')await back();
+ hideAll();still=null;const A=homePose();
  if(v==='disc'){const p=DISC[di],i=img(p.hero);await ready(i);const R=discR(i);
-  await run({dur:1100,draw:t=>cube(g,lerpP(homePose(),front(R),ease(t)),homeC(),null,0)});still=discStill();discCap();show('disc')}
- if(v==='index'){const R={x:0,y:0,w:W,h:H};
-  await run({dur:1000,draw:t=>{const e=ease(t);cube(g,lerpP(homePose(),{...front(R,Math.PI/2),hz:W/2,hx:homeB()},e),homeC(),null,0,1-sm((t-.7)/.3))}});
-  buildIndex();show('index')}
- if(v==='carte'){const R={x:0,y:0,w:W,h:H};
-  still=carteStill();await run({dur:1000,draw:t=>cube(g,lerpP(homePose(),{...front(R,0,Math.PI/2),hz:H/2,hy:homeB()},ease(t)),homeC(),null,0,1-.85*sm((t-.6)/.4))});
-  show('carte')}
- if(v==='prof'){await ready(PORT);const R=profR();
-  await run({dur:1300,draw:t=>cube(g,lerpP(homePose(),front(R,Math.PI),ease(t)),homeC(),null,0)});still=profStill();show('prof')}
- if(v==='home'){show('home');still=homeStill()}
+  await run({dur:1150,draw:t=>opening(A,R,INKC,photo(p,R),t)});still=discStill();discCap();show('disc',1)}
+ if(v==='index')await toIndex();
+ if(v==='carte')await toGlobe();
+ if(v==='prof'){await ready(PORT);await run({dur:1300,draw:t=>cube(g,lerpP(A,profPose(),ease(t)),INKC,profC(),sm((t-.25)/.5))});still=profStill();show('prof')}
 }finally{busy=false}}
-// retour au signe : le chemin inverse
-async function back(){const v=view;if(v==='home')return;hideAll();still=null;
- if(v==='disc'){const R=discR(img(DISC[di].hero));await run({dur:900,draw:t=>cube(g,lerpP(front(R),homePose(),ease(t)),homeC(),null,0)})}
- else if(v==='index'||v==='proj'){const R={x:0,y:0,w:W,h:H};await run({dur:900,draw:t=>cube(g,lerpP({...front(R,Math.PI/2),hz:W/2,hx:homeB()},homePose(),ease(t)),homeC(),null,0,sm(t/.3))})}
- else if(v==='carte'){const R={x:0,y:0,w:W,h:H};await run({dur:900,draw:t=>cube(g,lerpP({...front(R,0,Math.PI/2),hz:H/2,hy:homeB()},homePose(),ease(t)),homeC(),null,0,.15+.85*sm(t/.4))})}
- else if(v==='prof'){await run({dur:1100,draw:t=>cube(g,lerpP(front(profR(),Math.PI),homePose(),ease(t)),homeC(),null,0)})}
+async function back(){const v=view;if(v==='home')return;hideAll();still=null;const A=homePose();
+ if(v==='disc'){const p=DISC[di],R=discR(img(p.hero));await run({dur:950,draw:t=>opening(A,R,INKC,photo(p,R),1-t)})}
+ else if(v==='index'||v==='proj')await fromIndex();
+ else if(v==='carte')await fromGlobe();
+ else if(v==='prof')await run({dur:1100,draw:t=>cube(g,lerpP(profPose(),A,ease(t)),profC(),INKC,sm((t-.2)/.5))});
  view='home'}
-async function goHome(){if(busy)return;if(view==='home'){busy=true;hideAll();still=null;await intro();show('home');still=homeStill();busy=false;return}
- busy=true;try{await back();show('home');still=homeStill()}finally{busy=false}}
+async function goHome(){if(busy)return;busy=true;try{if(view!=='home')await back();else{hideAll();still=null}
+ await intro();show('home');still=homeStill()}finally{busy=false}}
 document.getElementById('logo').addEventListener('click',goHome);
 
-// ---------- découvrir ----------
+// ---------- découvrir : l'image reste fixe, seul le losange bouge ----------
 const discR=i=>frameR(i&&i.naturalWidth?i.naturalWidth/i.naturalHeight:1.5,64,W<760?190:150);
-const discStill=()=>()=>{const p=DISC[di],i=img(p.hero);cube(g,front(discR(i)),photo(p),null,0)};
+const discStill=()=>()=>{const p=DISC[di],i=img(p.hero),R=discR(i);g.drawImage(i,R.x,R.y,R.w,R.h)};
 function discCap(){const p=DISC[di],R=discR(img(p.hero)),c=document.getElementById('dcap');
  c.style.top=(R.y+R.h+14)+'px';c.innerHTML=`<div class="t">${p.t}</div><div class="m">${p.line||''}</div><button class="go" id="dopen">Ouvrir le projet ›</button>`;
  document.getElementById('dnum').textContent=`${di+1} / ${DISC.length}`;
  document.getElementById('dopen').onclick=()=>openProject(p,{from:'disc'})}
-// passer au suivant : le masque se referme sur le signe du projet, puis se rouvre
-async function step(d){if(busy)return;busy=true;const a=DISC[di],ia=img(a.hero),Ra=discR(ia),c=document.getElementById('dcap');c.style.opacity=0;still=null;
+// suivant : le losange se referme sur le plan du projet, puis se rouvre sur le prochain
+async function step(d){if(busy)return;busy=true;const a=DISC[di],Ra=discR(img(a.hero)),c=document.getElementById('dcap');c.style.opacity=0;still=null;
  const n=(di+d+DISC.length)%DISC.length,b=DISC[n],ib=img(b.hero);
- const mid=hexP(W/2,Ra.y+Ra.h/2,bFor(Math.min(Ra.h,W*.5)),4);
- await run({dur:650,draw:t=>{const e=ease(t);cube(g,lerpP(front(Ra),mid,e),photo(a),motif(a),sm((t-.45)/.55))}});
+ const mid=flat(W/2,Ra.y+Ra.h/2,Math.min(Ra.h,W*.6)*.42);
+ await run({dur:650,draw:t=>cube(g,lerpP(flatOver(Ra),mid,ease(t)),photo(a,Ra),motif(a),sm((t-.4)/.6))});
  await ready(ib);di=n;const Rb=discR(ib);
- await run({dur:750,draw:t=>{const e=ease(t);cube(g,lerpP(mid,front(Rb),e),motif(b),photo(b),sm(t/.5))}});
+ await run({dur:750,draw:t=>cube(g,lerpP(mid,flatOver(Rb),ease(t)),motif(b),photo(b,Rb),sm(t/.5))});
  still=discStill();dirty=true;discCap();c.style.opacity=1;busy=false}
 document.getElementById('dprev').onclick=()=>step(-1);document.getElementById('dnext').onclick=()=>step(1);
 let sx=null;const disc=document.getElementById('disc');
 disc.addEventListener('pointerdown',e=>sx=e.clientX);disc.addEventListener('pointerup',e=>{if(sx!==null&&Math.abs(e.clientX-sx)>50)step(e.clientX<sx?1:-1);sx=null});
 document.getElementById('dcap').style.transition='opacity .3s';
 
-// ---------- profil, carte ----------
-function profR(){const s=Math.min(W-32,H*.42,320);return{x:(W-s)/2,y:84,w:s,h:s}}
-const profStill=()=>()=>{cube(g,front(profR(),Math.PI),homeC(),null,0);const c=document.getElementById('pcap');c.style.top=(profR().y+profR().h+18)+'px'};
-const carteStill=()=>()=>{g.fillStyle='#cfcec7';const st=24;for(let y=72;y<H;y+=st)for(let x=st/2+((W%st)/2);x<W;x+=st)g.fillRect(x-1.5,y-1.5,3,3);
- const c=document.getElementById('ccap');c.style.top=(H*.42)+'px'};
+// ---------- profil : le cube tourne en axo, l'envers montre le portrait ----------
+function profPose(){const b=bFor(Math.min(W*.7,H*.4,360));return{yaw:Q+Math.PI,pit:ISO,hx:b,hy:b,hz:b,cx:W/2,cy:64+b*1.7,gap:4}}
+const profC=()=>all([{k:'img',im:PORT}]);
+const profStill=()=>()=>{const P=profPose();cube(g,P,profC(),null,0);document.getElementById('pcap').style.top=(P.cy+P.hx*1.75+18)+'px'};
 
-// ---------- index : tout mélangé, la famille n'est qu'une étiquette ----------
+// ---------- index : le grand cube s'écarte en autant de signes que de projets ----------
 const grid=document.getElementById('grid'),sel=document.getElementById('sel');let order='cat',picked=null;const items={};
 function itemDraw(p,m){const it=items[p.id],cv=it.cv,gg=cv.getContext('2d'),s=cv.clientWidth||72,d=Math.min(2,devicePixelRatio||1);
  if(cv.width!==s*d){cv.width=s*d;cv.height=s*d}gg.setTransform(d,0,0,d,0,0);gg.clearRect(0,0,s,s);
  cube(gg,hexP(s/2,s/2,bFor(s),L(0,2.2,m)),motif(p),photo(p),m)}
 function buildIndex(){if(!grid.childElementCount){for(const p of PR){const b=document.createElement('button');b.className='it';b.dataset.id=p.id;
   b.innerHTML=`<canvas></canvas><span class="n">${p.t}</span><span class="y">${p.y}</span>`;b.setAttribute('aria-label',`${p.t}, ${FAM[p.fam]}, ${p.y}`);
-  items[p.id]={el:b,cv:b.querySelector('canvas'),m:0};b.onclick=()=>pick(p)}
-  arrange(false)}
- requestAnimationFrame(()=>PR.forEach(p=>itemDraw(p,items[p.id].m)))}
+  items[p.id]={el:b,cv:b.querySelector('canvas'),m:0};b.onclick=()=>pick(p)}arrange(false)}
+ PR.forEach(p=>{items[p.id].m=0;itemDraw(p,0)});picked=null}
+const itemRects=()=>PR.map(p=>{const r=items[p.id].cv.getBoundingClientRect();return{p,x:r.left+r.width/2,y:r.top+r.height/2,b:bFor(r.width)}});
+async function toIndex(){const ix=document.getElementById('index');ix.scrollTop=0;buildIndex();const T=itemRects(),A=homePose(),c=hexP(W/2,H*.45,T[0].b,1.6);
+ await run({dur:1500,draw:t=>{const e=ease(t/.3);if(t<.34)cube(g,lerpP(A,c,e),INKC,motif(PR[0]),sm((t-.15)/.2));
+  T.forEach((q,i)=>{const k=ease((t-.25-i*.012)/.5);if(k<=0)return;cube(g,lerpP(c,hexP(q.x,q.y,q.b,1.6),k),INKC,motif(q.p),Math.min(1,k*1.5))})}});
+ show('index',1)}
+async function fromIndex(){const T=itemRects(),A=homePose(),c=hexP(W/2,H*.45,T[0].b,1.6);
+ await run({dur:1300,draw:t=>{T.forEach((q,i)=>{const k=ease((t-i*.008)/.5);if(k>=1)return;cube(g,lerpP(hexP(q.x,q.y,q.b,1.6),c,k),motif(q.p),INKC,k)});
+  if(t>.5)cube(g,lerpP(c,A,ease((t-.5)/.5)),INKC,null,0)}})}
 function arrange(flip){
  const first={};if(flip)for(const p of PR)first[p.id]=items[p.id].el.getBoundingClientRect();
  grid.querySelectorAll('.gh').forEach(h=>h.remove());grid.classList.toggle('yr',order==='year');
@@ -302,7 +308,6 @@ function arrange(flip){
  grid.querySelectorAll('.gh').forEach(h=>h.animate([{opacity:0},{opacity:1}],{duration:400,delay:350,fill:'backwards'}))}
 document.querySelector('.tools').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.o===order)return;order=b.dataset.o;
  document.querySelectorAll('.tools button').forEach(x=>x.setAttribute('aria-pressed',x===b));arrange(true)});
-// toucher = creuser : le signe s'évide et laisse voir la photo ; second toucher = ouvrir
 function tweenItem(p,to){const it=items[p.id],m0=it.m,t0=performance.now();
  const f=now=>{const t=Math.min(1,(now-t0)/(red?1:450));it.m=L(m0,to,ease(t));itemDraw(p,it.m);if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function pick(p){if(picked===p){openProject(p,{from:'index'});return}
@@ -310,13 +315,54 @@ function pick(p){if(picked===p){openProject(p,{from:'index'});return}
  sel.innerHTML=`<div class="t">${p.t}</div><div class="m">${FAM[p.fam]} · ${p.line||p.y}</div><button class="go" id="sopen">Ouvrir ›</button>`;sel.classList.add('on');
  document.getElementById('sopen').onclick=()=>openProject(p,{from:'index'})}
 
+// ---------- carte : le losange s'arrondit et devient le globe ----------
+const gcap=document.getElementById('gsel');let lon0=4,lat0=38,zoom=1,gpick=null;
+const RG=()=>Math.min(W*.44,(H-200)*.46)*zoom,GC=()=>[W/2,64+Math.min(W*.44,(H-200)*.46)+16];
+function morphPts(cx,cy,k,r,m,n=72){const a=Math.SQRT2*k,b=Math.SQRT2*Math.sin(ISO)*k,out=[];
+ for(let i=0;i<n;i++){const t=i/n*2*Math.PI,c=Math.cos(t),s=Math.sin(t),d=1/(Math.abs(c)/a+Math.abs(s)/b);out.push([cx+c*L(d,r,m),cy+s*L(d,r,m)])}return out}
+function proj3(la,lo){const R=RG(),[cx,cy]=GC(),f=Math.PI/180,l=(lo-lon0)*f,p=la*f,p0=lat0*f;
+ const x=Math.cos(p)*Math.sin(l),y=Math.cos(p0)*Math.sin(p)-Math.sin(p0)*Math.cos(p)*Math.cos(l),z=Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(l);
+ return[cx+x*R,cy-y*R,z]}
+function globe(a=1,mk=1){const R=RG(),[cx,cy]=GC();g.globalAlpha=a;
+ g.fillStyle='#e7e6e0';g.beginPath();g.arc(cx,cy,R,0,7);g.fill();
+ g.save();g.beginPath();g.arc(cx,cy,R,0,7);g.clip();g.strokeStyle='#cfcec7';g.lineWidth=.8;
+ for(let lo=-180;lo<180;lo+=20){g.beginPath();let pen=0;for(let la=-90;la<=90;la+=4){const q=proj3(la,lo);if(q[2]<0){pen=0;continue}pen?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);pen=1}g.stroke()}
+ for(let la=-80;la<=80;la+=20){g.beginPath();let pen=0;for(let lo=-180;lo<=180;lo+=4){const q=proj3(la,lo);if(q[2]<0){pen=0;continue}pen?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);pen=1}g.stroke()}
+ g.restore();
+ const ms=PR.filter(p=>p.ll).map(p=>({p,q:proj3(p.ll[0],p.ll[1])})).filter(o=>o.q[2]>0).sort((a,b)=>a.q[2]-b.q[2]);
+ ms.forEach((o,i)=>{const k=sm((mk-i*.02)/.4);if(k<=0)return;const on=gpick===o.p,b=bFor(on?34:13)*k;
+  cube(g,hexP(o.q[0],o.q[1],b,on?1.6:.8),on?photo(o.p):INKC,null,0,a)});
+ g.globalAlpha=1;return ms}
+const globeStill=()=>globe(1,99);
+async function toGlobe(){const A=homePose(),[cx,cy]=GC(),r=RG(),k=r/Math.SQRT2;
+ await run({dur:1800,draw:t=>{
+  if(t<.55){const e1=ease(t/.3),e2=ease((t-.25)/.3);cube(g,lerpP(lerpP(A,{...A,hy:0,gap:0},e1),flat(cx,cy,k),e2),INKC,null,0)}
+  else{const m=ease((t-.55)/.25);g.fillStyle=`rgb(${L(29,231,m)},${L(29,230,m)},${L(27,224,m)})`;poly(g,morphPts(cx,cy,k,r,m));g.fill();
+   if(t>.78)globe(sm((t-.78)/.1),(t-.8)/.2*1.6)}}});
+ still=globeStill;show('carte',1)}
+async function fromGlobe(){const A=homePose(),[cx,cy]=GC(),r=RG(),k=r/Math.SQRT2;zoom=1;gpick=null;
+ await run({dur:1300,draw:t=>{
+  if(t<.45){const m=1-ease(t/.4);g.fillStyle=`rgb(${L(29,231,m)},${L(29,230,m)},${L(27,224,m)})`;poly(g,morphPts(cx,cy,k,r,m));g.fill();if(t<.15)globe(1-t/.15,99)}
+  else{const e=ease((t-.45)/.55);cube(g,lerpP(flat(cx,cy,k),A,e),INKC,null,0)}}})}
+let gd=null;const carte=document.getElementById('carte');
+carte.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;gd={x:e.clientX,y:e.clientY,l:lon0,a:lat0,m:0};carte.setPointerCapture(e.pointerId)});
+carte.addEventListener('pointermove',e=>{if(!gd)return;const dx=e.clientX-gd.x,dy=e.clientY-gd.y;if(Math.hypot(dx,dy)>5)gd.m=1;if(!gd.m)return;
+ const s=180/Math.PI/RG();lon0=gd.l-dx*s;lat0=Math.max(-80,Math.min(80,gd.a+dy*s));dirty=true});
+carte.addEventListener('pointerup',e=>{if(!gd)return;const m=gd.m;gd=null;if(m)return;
+ const ms=PR.filter(p=>p.ll).map(p=>({p,q:proj3(p.ll[0],p.ll[1])})).filter(o=>o.q[2]>0);
+ let best=null,bd=22;for(const o of ms){const d=Math.hypot(o.q[0]-e.clientX,o.q[1]-e.clientY);if(d<bd){bd=d;best=o.p}}
+ gpick=best;dirty=true;if(best){gcap.innerHTML=`<div class="t">${best.t}</div><div class="m">${FAM[best.fam]} · ${best.line||best.y}</div><button class="go" id="gopen">Ouvrir ›</button>`;gcap.classList.add('on');
+  document.getElementById('gopen').onclick=()=>openProject(best,{from:'carte'})}else gcap.classList.remove('on')});
+document.getElementById('zin').onclick=()=>{zoom=Math.min(10,zoom*1.8);dirty=true};
+document.getElementById('zout').onclick=()=>{zoom=Math.max(1,zoom/1.8);dirty=true};
+
 // ---------- page projet ----------
 const pj=document.getElementById('proj');let cur=null,empAxo=1,empA=1;
-function fillProject(p){const i=img(p.hero),ar=i&&i.naturalWidth?i.naturalWidth/i.naturalHeight:1;
+function fillProject(p){const i=img(p.hero),ar=i&&i.naturalWidth?i.naturalWidth/i.naturalHeight:1.73;
  const fiche=(p.fiche||[]).map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
  const tx=(p.txt||'').split(/\n+/).filter(Boolean).map(s=>`<p>${s}</p>`).join('');
  const pls=(p.pl||[]).filter(s=>s!==p.hero).map(s=>`<div class="pl"><img loading="lazy" src="${s}" alt=""></div>`).join('');
- pj.innerHTML=`<button class="go" id="pback" style="font-size:13px;margin-bottom:12px">‹ Projets</button>
+ pj.innerHTML=`<button class="go" id="pback" style="font-size:13px;margin-bottom:12px">‹ Retour</button>
  <canvas class="hero blank" id="phero" style="--ar:${ar}"></canvas>
  <h1>${p.t}</h1><div class="ln">${FAM[p.fam]} · ${p.line||p.y}</div>${fiche?`<dl>${fiche}</dl>`:''}<div class="tx">${tx}</div>
  ${EMP[p.id]?`<div class="blk"><div class="hd"><span>Emprise</span><span><button data-a="0" aria-pressed="false">Plan</button><button data-a="1" aria-pressed="true">Axo</button></span></div><canvas id="emp"></canvas></div>`:''}
@@ -328,38 +374,43 @@ function fillProject(p){const i=img(p.hero),ar=i&&i.naturalWidth?i.naturalWidth/
  pj.querySelectorAll('.blk .hd button').forEach(b=>b.onclick=()=>{empA=+b.dataset.a;pj.querySelectorAll('.blk .hd button').forEach(x=>x.setAttribute('aria-pressed',x===b));tickEmp()});
 }
 function heroRect(){const h=document.getElementById('phero').getBoundingClientRect();return{x:h.left,y:h.top,w:h.width,h:h.height}}
+// sans photo : le losange porte le plan du projet
 function heroPaint(p){const c=document.getElementById('phero'),r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);c.width=r.width*d;c.height=r.height*d;
- const gg=c.getContext('2d');gg.setTransform(d,0,0,d,0,0);cube(gg,front({x:0,y:0,w:r.width,h:r.height}),photo(p),null,0);c.classList.remove('blank')}
+ const gg=c.getContext('2d');gg.setTransform(d,0,0,d,0,0);const i=img(p.hero);
+ if(i)gg.drawImage(i,0,0,r.width,r.height);else cube(gg,flat(r.width/2,r.height/2,Math.min(r.width/2/Math.SQRT2,r.height/2/.816)*.9),motif(p),null,0);
+ c.classList.remove('blank')}
+const heroC=(p,R)=>p.hero?photo(p,R):motif(p);
+const heroEnd=(p,R)=>p.hero?flatOver(R):flat(R.x+R.w/2,R.y+R.h/2,Math.min(R.w/2/Math.SQRT2,R.h/2/.816)*.9);
+function origin(p,from){if(from==='index'){const r=items[p.id].cv.getBoundingClientRect();return hexP(r.left+r.width/2,r.top+r.height/2,bFor(r.width),2.2)}
+ if(from==='carte'){const q=proj3(p.ll[0],p.ll[1]);return hexP(q[0],q[1],bFor(34),1.6)}
+ return flatOver(discR(img(p.hero)))}
 async function openProject(p,{from}){if(busy)return;busy=true;try{
- const i=img(p.hero);await ready(i);let A;
- if(from==='index'){const r=items[p.id].cv.getBoundingClientRect();A=hexP(r.left+r.width/2,r.top+r.height/2,bFor(r.width),2.2)}
- else A=front(discR(i));
- cur={p,from};fillProject(p);pj.style.transition='none';pj.classList.add('on');pj.style.opacity=0;view='proj';sel.classList.remove('on');
- const R=heroRect(),C=from==='index'&&items[p.id].m<.5?motif(p):photo(p);
- document.querySelectorAll('.view').forEach(s=>{if(s!==pj)s.classList.remove('on')});
- await run({dur:950,draw:t=>{const e=ease(t);g.globalAlpha=1;cube(g,lerpP(A,front(R),e),C,photo(p),C===photo(p)?0:sm(t/.5))}});
- heroPaint(p);pj.style.transition='opacity .35s';pj.style.opacity=1;still=null;dirty=true;where.textContent=p.t;drawLogo();empAxo=1;empA=1;tickEmp();
+ const i=img(p.hero);await ready(i);const A=origin(p,from),CA=from==='index'&&items[p.id].m<.5?motif(p):photo(p);
+ cur={p,from};fillProject(p);pj.style.transition='none';pj.classList.add('on');pj.style.opacity=0;sel.classList.remove('on');gcap.classList.remove('on');
+ const R=heroRect(),E=heroEnd(p,R),dR=from==='disc'?discR(i):null;
+ document.querySelectorAll('.view').forEach(s=>{if(s!==pj)s.classList.remove('on')});still=null;view='proj';
+ await run({dur:1000,draw:t=>{if(from==='disc'){const e=ease(t),r={x:L(dR.x,R.x,e),y:L(dR.y,R.y,e),w:L(dR.w,R.w,e),h:L(dR.h,R.h,e)};g.drawImage(i,r.x,r.y,r.w,r.h)}
+  else{const e1=ease(t/.35),e2=ease((t-.28)/.72);cube(g,lerpP(lerpP(A,{...A,hy:0,gap:0},e1),E,e2),CA,heroC(p,R),sm(t/.4))}}});
+ heroPaint(p);pj.style.transition='';pj.style.opacity=1;dirty=true;where.textContent=p.t;drawLogo();empAxo=1;empA=1;tickEmp();
 }finally{busy=false}}
-async function closeProject(){if(busy||!cur)return;busy=true;const {p,from}=cur;const R=heroRect();
- pj.style.opacity=0;pj.classList.remove('on');
- if(from==='index'){show('index');const it=items[p.id];it.el.style.visibility='hidden';const r=it.cv.getBoundingClientRect();
-  await run({dur:800,draw:t=>cube(g,lerpP(front(R),hexP(r.left+r.width/2,r.top+r.height/2,bFor(r.width),2.2),ease(t)),photo(p),null,0)});
-  it.el.style.visibility='';picked=null;it.m=1;tweenItem(p,0)}
- else{const D=discR(img(p.hero));await run({dur:700,draw:t=>cube(g,lerpP(front(R),front(D),ease(t)),photo(p),null,0)});show('disc');still=discStill();discCap()}
- pj.style.opacity='';busy=false;cur=null}
-// emprise : les pixels du plan, extrudés quand on tourne
+async function closeProject(){if(busy||!cur)return;busy=true;const {p,from}=cur;const R=heroRect(),E=heroEnd(p,R),i=img(p.hero);
+ pj.classList.remove('on');pj.style.opacity='';
+ if(from==='disc'){const dR=discR(i);await run({dur:700,draw:t=>{const e=ease(t),r={x:L(R.x,dR.x,e),y:L(R.y,dR.y,e),w:L(R.w,dR.w,e),h:L(R.h,dR.h,e)};g.drawImage(i,r.x,r.y,r.w,r.h)}});show('disc',1);still=discStill();discCap()}
+ else{if(from==='index')show('index');else{show('carte',1);still=globeStill}
+  const A=origin(p,from);if(from==='index')items[p.id].el.style.visibility='hidden';
+  await run({dur:850,draw:t=>{if(from==='carte')globe(1,99);const e1=ease(t/.7),e2=ease((t-.62)/.38);cube(g,lerpP(lerpP(E,{...A,hy:0,gap:0},e1),A,e2),heroC(p,R),motif(p),sm((t-.5)/.5))}});
+  if(from==='index'){items[p.id].el.style.visibility='';picked=null;items[p.id].m=0;itemDraw(p,0)}}
+ busy=false;cur=null;dirty=true}
 function tickEmp(){const c=document.getElementById('emp');if(!c||!cur)return;const E=EMP[cur.p.id];
  const f=()=>{empAxo+=(empA-empAxo)*(red?1:.12);if(Math.abs(empA-empAxo)<.002)empAxo=empA;drawEmp(c,E,empAxo);if(empAxo!==empA)requestAnimationFrame(f)};f()}
-function drawEmp(c,E,ax){const r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(c.width!==r.width*d){c.width=r.width*d;c.height=r.height*d}
+// emprise : en plan, un losange de pixels ; en axo, les pixels montent
+function drawEmp(c,E,ax){const r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(c.width!==Math.round(r.width*d)){c.width=r.width*d;c.height=r.height*d}
  const gg=c.getContext('2d');gg.setTransform(d,0,0,d,0,0);gg.clearRect(0,0,r.width,r.height);
- const n=E.n,mx=Math.max(...E.h)||1,cell=Math.min(r.width,r.height*1.3)/n/(1+.45*ax),c0=cell/2,yaw=Q*ax,pit=L(Math.PI/2,ISO,ax);
+ const n=E.n,mx=Math.max(...E.h)||1,cell=Math.min(r.width/1.414,r.height/1.6)/n,c0=cell/2;
  const cells=[];for(let j=0;j<n;j++)for(let i=0;i<n;i++){const h=E.h[j*n+i];if(h>0)cells.push({i,j,h})}
- const sy=Math.sin(yaw),cy=Math.cos(yaw);cells.sort((a,b)=>((a.i-n/2)*sy+(a.j-n/2)*cy)-((b.i-n/2)*sy+(b.j-n/2)*cy));
- const pr=cam(yaw,pit);const o=[r.width/2,r.height/2+cell*1.2*ax];
- for(const q of cells){const hz=Math.max(.15,q.h/mx*2.4)*c0;
-  // la boîte posée au sol : centre décalé de la moitié de sa hauteur
-  const ctr=pr([(q.i-n/2+.5)*cell,hz,(q.j-n/2+.5)*cell]);
-  cube(gg,{yaw,pit,hx:c0*.98,hy:hz,hz:c0*.98,cx:o[0]+ctr[0],cy:o[1]+ctr[1],gap:0},{fr:[{k:'ink',c:'#55554f'}],ri:[{k:'ink',c:'#8f8f88'}],top:[{k:'ink'}],bk:[{k:'ink',c:'#55554f'}],le:[{k:'ink',c:'#8f8f88'}]},null,0)}}
+ const pr=cam(Q,ISO);cells.sort((a,b)=>(a.i+a.j)-(b.i+b.j));const o=[r.width/2,r.height/2+cell*1.5*ax];
+ for(const q of cells){const hz=Math.max(.01,q.h/mx*3*ax)*c0;const ctr=pr([(q.i-n/2+.5)*cell,hz,(q.j-n/2+.5)*cell]);
+  cube(gg,{yaw:Q,pit:ISO,hx:c0,hy:hz,hz:c0,cx:o[0]+ctr[0],cy:o[1]+ctr[1],gap:0},{fr:[{k:'ink',c:'#55554f'}],ri:[{k:'ink',c:'#8f8f88'}],top:[{k:'ink'}]},null,0)}}
 
 // ---------- logo : le même cube ; la face allumée dit où l'on est ----------
 const lg=document.querySelector('#logo canvas');
@@ -370,11 +421,10 @@ function drawLogo(){const gg=lg.getContext('2d');gg.setTransform(2,0,0,2,0,0);gg
 
 addEventListener('resize',()=>{fit();if(view==='index')PR.forEach(p=>itemDraw(p,items[p.id].m))});
 addEventListener('keydown',e=>{if(view==='disc'&&e.key==='ArrowRight')step(1);if(view==='disc'&&e.key==='ArrowLeft')step(-1);if(e.key==='Escape'){if(view==='proj')closeProject();else goHome()}});
-// préchargement léger : la photo de la porte Découvrir et le portrait
 img(DISC[0].hero);
 fit();drawLogo();requestAnimationFrame(render);
 doors.forEach(d=>d.style.opacity=0);
-Promise.all([document.fonts.ready,ready(img(DISC[0].hero))]).then(async()=>{busy=true;await intro();show('home');still=homeStill();busy=false;
+document.fonts.ready.then(async()=>{busy=true;await intro();show('home');still=homeStill();busy=false;
  const q=new URLSearchParams(location.search).get('v');if(q)go(q)});
 </script>
 </body>
