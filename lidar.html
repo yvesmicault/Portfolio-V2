@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Index en points</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--bg:#0b0b0c;--ink:#ecebe6;--mut:#7d7d78}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+header{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:baseline;padding:18px 20px;z-index:3}
+header b{font-weight:600;font-size:15px;font-stretch:90%;cursor:pointer}
+.mono{font-family:Mono;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+#photo{position:fixed;z-index:1;opacity:0;transition:opacity .45s;object-fit:fill;pointer-events:none}
+#photo.on{pointer-events:auto;cursor:pointer}
+.gl{position:fixed;z-index:2;transform:translateY(-50%);transition:opacity .5s;pointer-events:none}
+.cap{position:fixed;left:20px;right:20px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:3}
+.cap h1{font-weight:600;font-size:30px;font-stretch:84%;letter-spacing:-.01em;line-height:1.02;margin:6px 0 4px}
+.cap .ln{font-size:14px;line-height:1.4;color:#b9b9b3}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.bar button{font:inherit;font-size:14px;color:var(--ink);background:#1d1d1f;border:0;border-radius:99px;padding:8px 14px;cursor:pointer}
+.bar button.on{background:var(--ink);color:var(--bg)}
+.hint{margin-top:10px}
+.fade{animation:f .5s both}@keyframes f{from{opacity:0}}
+@media(min-width:900px){.cap{left:32px;right:auto;max-width:620px;bottom:28px}header{padding:22px 32px}.cap h1{font-size:40px}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<img id="photo" alt="">
+<header><b id="home">Yves Micault</b><span class="mono" id="st">Index</span></header>
+<div id="glab"></div>
+<div class="cap" id="cap"></div>
+<script src="data.js"></script>
+<script src="lidar-img.js"></script>
+<script>
+// Un seul nuage de points. Chaque projet est un cube relevé en points ; l'index se réordonne sur place ; un cube ouvert devient l'image du projet.
+const PR=window.PROJ,IM=window.IMGS,NC=PR.length,M=520,N=NC*M;
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd=(()=>{let s=11;return()=>(s=(s*1664525+1013904223)>>>0)/4294967296})();
+const FAM={e:'Études',c:'Concours',a:'Agence'};
+const country=p=>{const a=p.c.split(',');return a.length>1?a[a.length-1].trim():'France'};
+
+// ---------- les points de chaque cube : la façon de remplir dit le cadre ----------
+// études : les arêtes seules ; concours : arêtes et toit ; agence : le volume plein
+const CI=new Uint16Array(N),LX=new Float32Array(N),LY=new Float32Array(N),LZ=new Float32Array(N),BA=new Float32Array(N),RN=new Float32Array(N),DX=new Float32Array(N),DY=new Float32Array(N);
+const E=[[0,1,1],[0,1,-1],[0,-1,1],[0,-1,-1],[1,0,1],[1,0,-1],[-1,0,1],[-1,0,-1],[1,1,0],[1,-1,0],[-1,1,0],[-1,-1,0]];
+for(let c=0;c<NC;c++){const f=PR[c].fam,pe=f==='e'?1:f==='c'?.62:.42;
+ for(let j=0;j<M;j++){const i=c*M+j;let x,y,z,b;
+  if(rnd()<pe){const e=E[Math.floor(rnd()*12)],t=rnd()-.5;[x,y,z]=e.map(v=>v===0?t:v*.5);b=.95}
+  else if(f==='c'){x=rnd()-.5;z=rnd()-.5;y=.5;b=.5}
+  else{const ax=Math.floor(rnd()*3),sg=rnd()<.5?-.5:.5,u=rnd()-.5,v=rnd()-.5;[x,y,z]=ax===0?[sg,u,v]:ax===1?[u,sg,v]:[u,v,sg];b=.42}
+  const j2=.012;CI[i]=c;LX[i]=x+(rnd()-.5)*j2;LY[i]=y+(rnd()-.5)*j2;LZ[i]=z+(rnd()-.5)*j2;BA[i]=b;RN[i]=rnd();const a=rnd()*6.283;DX[i]=Math.cos(a);DY[i]=Math.sin(a)}}
+
+// ---------- WebGL : un seul tableau de points carrés ----------
+const cv=document.getElementById('gl'),gl=cv.getContext('webgl',{antialias:false,premultipliedAlpha:false});
+const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o},pg=gl.createProgram();
+gl.attachShader(pg,sh(gl.VERTEX_SHADER,`attribute vec2 p;attribute float z;attribute vec4 c;uniform vec2 R;uniform float D;varying vec4 v;
+void main(){gl_Position=vec4(p.x/R.x*2.-1.,1.-p.y/R.y*2.,0.,1.);gl_PointSize=max(1.,z*D);v=c;}`));
+gl.attachShader(pg,sh(gl.FRAGMENT_SHADER,`precision mediump float;varying vec4 v;void main(){gl_FragColor=v;}`));
+gl.linkProgram(pg);gl.useProgram(pg);
+const S=7,DSP=new Float32Array(N*S),FR=new Float32Array(N*S),TG=new Float32Array(S),buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+const at=(n,k,o)=>{const l=gl.getAttribLocation(pg,n);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,k,gl.FLOAT,false,S*4,o*4)};at('p',2,0);at('z',1,2);at('c',4,3);
+gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+const uR=gl.getUniformLocation(pg,'R'),uD=gl.getUniformLocation(pg,'D');
+
+// ---------- rangements : mélange, année, cadre, lieu ----------
+const ORD=[...Array(NC).keys()].map(i=>[i,rnd()]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]);
+const SORTS={mix:'Mélange',an:'Année',cad:'Cadre',lieu:'Lieu'};
+function groups(m){if(m==='mix')return[{l:'',it:ORD}];const g=new Map(),key=i=>{const p=PR[i];return m==='an'?String(p.y):m==='cad'?FAM[p.fam]:country(p)};
+ const src=m==='an'?[...Array(NC).keys()].sort((a,b)=>PR[a].y-PR[b].y):ORD;for(const i of src){const k=key(i);if(!g.has(k))g.set(k,[]);g.get(k).push(i)}
+ let G=[...g].map(([l,it])=>({l,it}));if(m==='cad')G.sort((a,b)=>'ÉCA'.indexOf(a.l[0])-'ÉCA'.indexOf(b.l[0]));if(m==='lieu')G.sort((a,b)=>b.it.length-a.it.length);return G}
+let L=[],GL=[];
+function layout(m){const W=innerWidth,H=innerHeight,ph=W<700,top=64,bot=ph?170:150,G=groups(m),lab=m!=='mix',x0=(ph?16:32)+(lab?(ph?66:110):0),uw=W-x0-(ph?12:32);
+ let s=ph?84:130,cols,h;for(;s>18;s-=1){cols=Math.max(1,Math.floor(uw/s));h=0;for(const g of G)h+=Math.ceil(g.it.length/cols)*s;h+=(G.length-1)*(lab?s*.18:0);if(h<=H-top-bot)break}
+ const out=[],labs=[];let y=top+(H-top-bot-h)/2;const bw=Math.min(cols,lab?cols:NC)*s,bx=lab?x0:(W-Math.min(cols,NC)*s)/2;
+ for(const g of G){labs.push({t:g.l,y:y+s/2});g.it.forEach((c,k)=>{out[c]={x:bx+(k%cols+.5)*s,y:y+(Math.floor(k/cols)+.5)*s,s}});y+=Math.ceil(g.it.length/cols)*s+(lab?s*.18:0)}
+ return{L:out,labs,x0:ph?16:32}}
+function showLabels(lb){const box=document.getElementById('glab');box.innerHTML='';for(const l of lb.labs){if(!l.t)continue;const d=document.createElement('div');d.className='gl mono fade';d.textContent=l.t;d.style.left=lb.x0+'px';d.style.top=l.y+'px';box.appendChild(d)}}
+
+// ---------- état ----------
+let mode='cubes',sortM='mix',sel=-1,yaw=0,spin=red?0:.22,tr=null,DL=new Float32Array(N),img=null,big=null,cur=-1,ii=0,dpr=1;
+function snapshot(){FR.set(DSP)}
+function start(kind,origin){snapshot();const d=red?1:kind==='img'?1700:1300;
+ // chaque point part avec un léger retard : depuis le cube touché pour une ouverture, cube après cube pour un rangement
+ for(let i=0;i<N;i++){const c=CI[i];if(kind==='sort')DL[i]=ORD.indexOf(c)/NC*.32+RN[i]*.18;
+  else{const o=origin||{x:innerWidth/2,y:innerHeight/2},dd=Math.hypot(FR[i*S]-o.x,FR[i*S+1]-o.y)/Math.hypot(innerWidth,innerHeight);DL[i]=Math.min(1,dd*1.1)*.36+RN[i]*.2}}
+ tr={t0:performance.now(),d,amp:kind==='img'?46:30,w:.42}}
+function setSort(m){if(m===sortM&&mode==='cubes')return;sortM=m;const lb=layout(m);L=lb.L;showLabels(lb);start('sort');capHome()}
+
+// ---------- cibles ----------
+function target(i,cy,sy,cp,sp){const c=CI[i];
+ if(mode==='img'){const o=i*5;TG[0]=img.x[i];TG[1]=img.y[i];TG[2]=img.z;TG[3]=img.c[i*3];TG[4]=img.c[i*3+1];TG[5]=img.c[i*3+2];TG[6]=1;return}
+ let cx,cyy,a,dim=1;if(mode==='big'){cx=big.x;cyy=big.y;a=big.a}else{const l=L[c];cx=l.x;cyy=l.y;a=l.s*.42;if(sel>=0)dim=c===sel?1.25:.26}
+ const x=LX[i],y=LY[i],z=LZ[i],x1=x*cy-z*sy,z1=x*sy+z*cy,d=-y*sp+z1*cp;
+ TG[0]=cx+x1*a;TG[1]=cyy-(y*cp+z1*sp)*a;TG[2]=innerWidth<700?1.5:1.7;TG[3]=TG[4]=.93;TG[5]=.9;TG[6]=Math.min(1,BA[i]*(.5+.5*(d+.87)/1.74)*dim)}
+
+// ---------- l'image : le nuage se range en grille aux couleurs du rendu ----------
+function box(ar){const W=innerWidth,H=innerHeight,ph=W<700,top=64,bot=ph?210:200;let w=W-(ph?32:W*.3),h=w/ar;if(h>H-top-bot){h=H-top-bot;w=h*ar}return{x:(W-w)/2,y:top+(H-top-bot-h)/2,w,h}}
+const loadImg=src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=src});
+async function gridOf(src){const im=await loadImg(src);if(!im)return null;const ar=im.naturalWidth/im.naturalHeight,b=box(ar),cols=Math.round(Math.sqrt(N*ar)),rows=Math.ceil(N/cols);
+ const k=document.createElement('canvas');k.width=cols;k.height=rows;const g=k.getContext('2d');g.drawImage(im,0,0,cols,rows);const px=g.getImageData(0,0,cols,rows).data;
+ const cells=[...Array(cols*rows).keys()];for(let j=cells.length-1;j>0;j--){const r=Math.floor(rnd()*(j+1));[cells[j],cells[r]]=[cells[r],cells[j]]}
+ const x=new Float32Array(N),y=new Float32Array(N),c=new Float32Array(N*3),cw=b.w/cols,ch=b.h/rows;
+ for(let i=0;i<N;i++){const q=cells[i],cx=q%cols,ry=Math.floor(q/cols);x[i]=b.x+(cx+.5)*cw;y[i]=b.y+(ry+.5)*ch;const o=(ry*cols+cx)*4;c[i*3]=px[o]/255;c[i*3+1]=px[o+1]/255;c[i*3+2]=px[o+2]/255}
+ return{x,y,c,z:Math.max(cw,ch)*1.08,b,src}}
+
+const photo=document.getElementById('photo'),cap=document.getElementById('cap'),st=document.getElementById('st');
+function hidePhoto(){photo.style.opacity=0;photo.classList.remove('on')}
+async function openP(c,origin){const list=IM[PR[c].id]||[];cur=c;ii=0;sel=-1;hidePhoto();document.getElementById('glab').innerHTML='';
+ if(list.length){const g=await gridOf(list[0]);if(cur!==c)return;img=g;mode='img'}else{const b=box(1.4);big={x:innerWidth/2,y:b.y+b.h/2,a:Math.min(b.w,b.h)*.5};mode='big'}
+ st.textContent=FAM[PR[c].fam];start('img',origin);capProj()}
+async function nextImg(){const list=IM[PR[cur].id]||[];if(list.length<2||mode!=='img')return;ii=(ii+1)%list.length;hidePhoto();const g=await gridOf(list[ii]);if(!g)return;img=g;start('img',{x:innerWidth/2,y:innerHeight/2});capProj()}
+function close(){if(mode==='cubes')return;hidePhoto();const o=L[cur]||{x:innerWidth/2,y:innerHeight/2};mode='cubes';img=null;st.textContent='Index';start('img',o);showLabels(layout(sortM));capHome()}
+function nextP(){const G=groups(sortM).flatMap(g=>g.it),c=G[(G.indexOf(cur)+1)%NC];hidePhoto();openP(c,{x:innerWidth/2,y:innerHeight/2})}
+function onDone(){if(mode==='img'){const b=img.b;Object.assign(photo.style,{left:b.x+'px',top:b.y+'px',width:b.w+'px',height:b.h+'px'});photo.onload=()=>{photo.style.opacity=1;photo.classList.add('on')};photo.src=img.src;if(photo.complete){photo.style.opacity=1;photo.classList.add('on')}}}
+photo.onclick=nextImg;
+
+// ---------- légendes ----------
+function capHome(){if(sel>=0){const p=PR[sel];cap.innerHTML=`<div class="fade"><div class="mono">${FAM[p.fam]} · ${p.y}</div><h1>${p.t}</h1><div class="ln">${p.c}</div>
+ <div class="bar"><button class="on" id="bo">Ouvrir</button><button id="bx">Retour à l’index</button></div></div>`;bo.onclick=()=>openP(sel,L[sel]);bx.onclick=()=>{sel=-1;capHome()};return}
+ cap.innerHTML=`<div class="mono">${NC} projets · études, concours, agence</div><div class="bar">${Object.entries(SORTS).map(([k,v])=>`<button data-k="${k}" class="${k===sortM?'on':''}">${v}</button>`).join('')}</div><div class="hint mono">Touchez un cube · glissez pour le tourner</div>`;
+ cap.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>setSort(b.dataset.k))}
+function capProj(){const p=PR[cur],n=(IM[p.id]||[]).length,line=p.fam==='a'?`${p.c} · ${p.role||''}`:(p.line||p.c);
+ cap.innerHTML=`<div class="fade"><div class="mono">${FAM[p.fam]} · ${p.y}${n>1?` · image ${ii+1}/${n}`:''}</div><h1>${p.t}</h1><div class="ln">${line}</div>
+ <div class="bar"><button id="bc">Index</button>${n>1?'<button id="bn">Image suivante</button>':''}<button id="bp">Projet suivant</button></div></div>`;
+ bc.onclick=close;bp.onclick=nextP;if(n>1)bn.onclick=nextImg}
+document.getElementById('home').onclick=close;
+
+// ---------- gestes : toucher, tourner ----------
+let pd=null;
+cv.addEventListener('pointerdown',e=>{pd={x:e.clientX,y:e.clientY,yaw,moved:false}});
+addEventListener('pointermove',e=>{if(!pd||mode!=='cubes')return;const dx=e.clientX-pd.x;if(Math.abs(dx)>6)pd.moved=true;if(pd.moved)yaw=pd.yaw+dx*.012});
+addEventListener('pointerup',e=>{if(!pd)return;const m=pd.moved;pd=null;if(m||mode!=='cubes'||tr)return;
+ let best=-1,bd=1e9;for(let c=0;c<NC;c++){const l=L[c],d=Math.hypot(e.clientX-l.x,e.clientY-l.y);if(d<l.s*.5&&d<bd){bd=d;best=c}}
+ if(best<0){if(sel>=0){sel=-1;capHome()}return}if(best===sel)openP(best,L[best]);else{sel=best;capHome()}});
+
+// ---------- boucle ----------
+function size(){dpr=Math.min(2,devicePixelRatio||1);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;gl.viewport(0,0,cv.width,cv.height);
+ const lb=layout(sortM);L=lb.L;if(mode==='cubes')showLabels(lb);if(mode==='img'&&img)gridOf(img.src).then(g=>{if(g&&mode==='img'){img=g;onDone()}});if(mode==='big'){const b=box(1.4);big={x:innerWidth/2,y:b.y+b.h/2,a:Math.min(b.w,b.h)*.5}}}
+addEventListener('resize',size);
+const ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,P0=Math.atan(1/Math.SQRT2);let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!pd||!pd.moved)yaw+=spin*dt;
+ const ya=Math.PI/4+yaw,cy=Math.cos(ya),sy=Math.sin(ya),cp=Math.cos(P0),sp=Math.sin(P0);
+ let T=1;if(tr){T=(now-tr.t0)/tr.d;if(T>=1){tr=null;T=1;onDone()}}
+ for(let i=0;i<N;i++){target(i,cy,sy,cp,sp);const o=i*S;
+  if(tr){let k=(T-DL[i]*(1-tr.w)/.56*.56)/tr.w;k=k<0?0:k>1?1:ease(k);const sc=Math.sin(k*Math.PI)*tr.amp*(.3+RN[i]);
+   for(let q=0;q<S;q++)DSP[o+q]=FR[o+q]+(TG[q]-FR[o+q])*k;DSP[o]+=DX[i]*sc;DSP[o+1]+=DY[i]*sc}
+  else for(let q=0;q<S;q++)DSP[o+q]=TG[q]}
+ gl.clearColor(.043,.043,.047,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform2f(uR,innerWidth,innerHeight);gl.uniform1f(uD,dpr);
+ gl.bufferData(gl.ARRAY_BUFFER,DSP,gl.DYNAMIC_DRAW);gl.drawArrays(gl.POINTS,0,N);requestAnimationFrame(frame)}
+// départ : le nuage dispersé se rassemble en cubes
+size();for(let i=0;i<N;i++){const o=i*S;DSP[o]=innerWidth/2+DX[i]*innerWidth*(.2+RN[i]*.6);DSP[o+1]=innerHeight/2+DY[i]*innerHeight*(.2+RN[i]*.5);DSP[o+2]=1.4;DSP[o+3]=DSP[o+4]=DSP[o+5]=.9;DSP[o+6]=0}
+start('sort');tr.d=red?1:2200;capHome();
+const q=new URLSearchParams(location.search);if(q.get('sort'))setTimeout(()=>setSort(q.get('sort')),2600);if(q.get('p'))setTimeout(()=>openP(PR.findIndex(p=>p.id===q.get('p'))),2600);
+document.fonts.ready.then(()=>requestAnimationFrame(frame));
+</script>
+</body>
+</html>
