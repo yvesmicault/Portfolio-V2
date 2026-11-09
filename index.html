@@ -33,8 +33,7 @@ header button{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-t
 .card{flex:0 0 100%;scroll-snap-align:center;padding:0 16px 12px;display:flex;flex-direction:column;min-width:0}
 .stage{position:relative;flex:1 1 auto;min-height:0;background:var(--card);border:1px solid var(--line);overflow:hidden}
 .stage canvas,.stage img{position:absolute;inset:0;width:100%;height:100%}
-.stage img{object-fit:cover;opacity:0;transition:opacity .5s}
-.stage.showimg img{opacity:1}
+.stage img{object-fit:cover;transform:scale(1.14);will-change:transform}
 .stage .tl,.stage .tr,.stage .bl,.stage .br{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--mute);z-index:2}
 .stage .tl{left:10px;top:9px}.stage .tr{right:10px;top:9px}.stage .bl{left:10px;bottom:9px}.stage .br{right:6px;bottom:4px}
 .stage.showimg .tl,.stage.showimg .tr,.stage.showimg .bl{color:#fff;text-shadow:0 0 6px rgba(0,0,0,.45)}
@@ -53,8 +52,17 @@ header button{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-t
 .agyear .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:center;padding:0 24px}
 .hatch{position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 9px,rgba(70,82,94,.07) 9px 10px)}
 /* carte d'ouverture */
-.intro .stage{display:flex;flex-direction:column;justify-content:space-between;padding:22px 20px}
-.intro h1{font-weight:300;font-size:clamp(34px,10vw,64px);line-height:1;letter-spacing:-.01em}
+.intro .stage{background:#111}
+.flip img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:none}
+.flip img.on{opacity:1;animation:reveal .5s steps(6) both}
+.flip img.was{opacity:1}
+.intro .ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:20px;color:#fff;background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,0) 45%,rgba(0,0,0,.55));z-index:2}
+.intro h1{color:#fff}.intro h1 i{color:#fff;font-weight:400}
+.intro .lead{color:rgba(255,255,255,.9)}
+.intro .now{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#fff;display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(255,255,255,.5);padding-top:10px;margin-top:14px;text-align:left}
+.intro .legend{flex-direction:row!important;flex-wrap:wrap;gap:6px 16px!important}
+.intro .legend div{font-size:13px!important}
+.intro h1{font-weight:300;font-size:clamp(52px,17vw,128px);line-height:.92;letter-spacing:-.02em}
 .intro h1 i{font-style:normal;color:var(--e)}
 .intro .lead{font-size:16px;line-height:1.45;max-width:30em;margin-top:16px}
 .intro .legend{display:flex;flex-direction:column;gap:8px}
@@ -134,6 +142,25 @@ dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:
 #prof blockquote{font-weight:300;font-size:22px;line-height:1.3;margin:22px 0 8px}
 
 /* ordinateur : la carte devient une double page */
+/* mouvement : révélations par crans (stop motion), parallaxe, vol de l'image vers la fiche */
+.card.rev .stage{animation:reveal .62s steps(7) both}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.card.rev h2{animation:rise .45s steps(5) .12s both}
+.card.rev .fam,.card.rev .info p{animation:rise .45s steps(4) .28s both}
+.card.rev .open{animation:rise .4s steps(3) .4s both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cell{animation:pop .36s steps(3) both;animation-delay:calc(var(--i)*32ms)}
+@keyframes pop{from{opacity:0;transform:translateY(10px)}}
+.intro h1 span{display:inline-block;animation:rise .24s steps(2) both;animation-delay:calc(var(--i)*60ms)}
+.intro .legend div{animation:rise .3s steps(3) both;animation-delay:calc(.9s + var(--i)*120ms)}
+.flyer{position:fixed;z-index:60;object-fit:cover;pointer-events:none;margin:0}
+#sheet.fly{transition:none;transform:none;animation:fade .3s both}
+@keyframes fade{from{opacity:0}}
+#sheet.fly .sh-stage img{visibility:hidden}
+#sheet.fly .sh-in>*:not(.sh-stage){animation:rise .5s steps(5) .25s both}
+#flux.drag{scroll-snap-type:none;cursor:grabbing}
+@media (hover:hover){#flux{cursor:grab}}
+.agyear .y{will-change:transform}
 @media (min-width:860px){
   :root{--hdH:72px;--barH:68px}
   header{padding-left:40px;padding-right:40px}
@@ -198,31 +225,6 @@ const yrs=p=>p.y1&&p.y1!=p.y?`${p.y}–${p.y1}`:`${p.y}`;
 const coord=ll=>ll?`${Math.abs(ll[0]).toFixed(3)} ${ll[0]>=0?"N":"S"} · ${Math.abs(ll[1]).toFixed(3)} ${ll[1]>=0?"E":"O"}`:"";
 const surfNum=p=>{const m=(p.surf||"").replace(/\s/g,"").match(/([\d.,]+)(m²|ha)/);if(!m)return 0;let v=parseFloat(m[1].replace(",","."));return m[2]=="ha"?v*1e4:v};
 
-/* ---------- maquette en stop motion (canvas 2D, axonométrie) ---------- */
-const DPR=Math.min(2,devicePixelRatio||1);
-function fitCanvas(cv){const r=cv.getBoundingClientRect();const w=Math.max(1,Math.round(r.width*DPR)),h=Math.max(1,Math.round(r.height*DPR));if(cv.width!=w||cv.height!=h){cv.width=w;cv.height=h}return [w,h]}
-function bounds(g){if(g._b)return g._b;let R=0,H=0;const a=g.m;for(let i=0;i<a.length;i+=3){R=Math.max(R,Math.hypot(a[i],a[i+2]));H=Math.max(H,a[i+1])}return g._b={R:R||1,H}}
-function drawAxo(cv,g,t,ang,opt={}){
-  const [w,h]=fitCanvas(cv),x=cv.getContext("2d");x.clearRect(0,0,w,h);
-  const {R,H}=bounds(g);const c=Math.cos(ang),s=Math.sin(ang),k30=Math.cos(Math.PI/6),s30=.5;
-  const sc=Math.min(w/(2*R*k30*1.08),h/((R+H*1.0)*1.25));const ox=w/2,oy=h/2+H*sc*.35;
-  const P=(X,Y,Z)=>{const xr=X*c-Z*s,zr=X*s+Z*c;return [ox+(xr-zr)*k30*sc,oy+(xr+zr)*s30*sc-Y*t*sc]};
-  const seg=(a,col,lw,clip)=>{x.strokeStyle=col;x.lineWidth=lw*DPR;x.beginPath();for(let i=0;i+5<a.length;i+=6){
-    if(clip&&Math.hypot(a[i],a[i+2])>R*1.25)continue;
-    const p=P(a[i],a[i+1],a[i+2]),q=P(a[i+3],a[i+4],a[i+5]);x.moveTo(p[0],p[1]);x.lineTo(q[0],q[1])}x.stroke()};
-  if(g.c&&g.c.length&&opt.ctx!==false)seg(g.c,"rgba(139,134,124,.45)",.6,1);
-  seg(g.m,opt.col||"#171716",.8);
-}
-function drawPlan(cv,g,col){const [w,h]=fitCanvas(cv),x=cv.getContext("2d");x.clearRect(0,0,w,h);const {R}=bounds(g);const sc=Math.min(w,h)/(2*R*1.1);x.strokeStyle=col;x.lineWidth=.8*DPR;x.beginPath();const a=g.m;for(let i=0;i+5<a.length;i+=6){x.moveTo(w/2+a[i]*sc,h/2+a[i+2]*sc);x.lineTo(w/2+a[i+3]*sc,h/2+a[i+5]*sc)}x.stroke()}
-
-/* une animation par scène visible : construction en 9 images, puis rotation par crans (7 images/s) */
-class Stop{constructor(cv,g){this.cv=cv;this.g=g;this.f=0;this.on=false;this.ang=-.62}
-  start(){if(this.on)return;this.on=true;this.f=0;this.tick()}
-  stop(){this.on=false;clearTimeout(this.to)}
-  tick(){if(!this.on)return;const B=9;
-    if(this.f<B){drawAxo(this.cv,this.g,this.f/(B-1),this.ang)}else{this.ang+=Math.PI/18;drawAxo(this.cv,this.g,1,this.ang)}
-    this.f++;this.to=setTimeout(()=>this.tick(),this.f<B?130:150)}
-  still(){drawAxo(this.cv,this.g,1,this.ang)}}
 
 /* ---------- état ---------- */
 const st={fam:"all",tag:"all",sort:"mix",i:0};
@@ -234,33 +236,42 @@ function view(){let L=ALL.filter(p=>(st.fam=="all"||p.fam==st.fam)&&(st.tag=="al
   if(st.sort=="mix")L=mix(L);else if(st.sort=="new")L=L.slice().sort((p,q)=>q.y-p.y);else if(st.sort=="old")L=L.slice().sort((p,q)=>p.y-q.y);else L=L.slice().sort((p,q)=>surfNum(q)-surfNum(p));return L}
 
 /* ---------- flux ---------- */
-let L=[],stops=new Map();
+let L=[];
 function stageHTML(p,n,tot){
   const top=`<span class="tl">${String(n).padStart(2,"0")} / ${String(tot).padStart(2,"0")}</span><span class="tr">${coord(p.ll)}</span>`;
-  if(p.geo)return `<div class="stage" data-id="${p.id}">${top}<canvas></canvas>${p.hero?`<img loading="lazy" src="${p.hero}" alt="${p.t}, image du projet">`:""}<span class="bl">Maquette schématique</span><div class="br tog"><button class="on" data-v="m">Maquette</button>${p.hero?`<button data-v="i">Image</button>`:""}</div></div>`;
   if(p.hero)return `<div class="stage showimg" data-id="${p.id}">${top}<img loading="lazy" src="${p.hero}" alt="${p.t}, ${p.c}"><span class="bl">${p.cr||""}</span></div>`;
   return `<div class="stage" data-id="${p.id}">${top}<div class="hatch"></div><div class="agyear"><div class="y">${p.y}</div><div class="k">${p.c}<br>${p.tags.join(" · ")}</div></div></div>`}
 function render(){
-  stops.forEach(s=>s.stop());stops.clear();L=view();const tot=L.length;
-  const intro=`<article class="card intro"><div class="stage"><div><h1>Yves <i>Micault</i></h1><p class="lead">Architecte HMONP. ${ALL.length} projets, des études aux concours et aux opérations menées en agence chez Hamonic+Masson.</p></div>
-    <div class="legend"><div><span class="dot a"></span>Agence · ${ALL.filter(p=>p.fam=="a").length}</div><div><span class="dot c"></span>Concours · ${ALL.filter(p=>p.fam=="c").length}</div><div><span class="dot e"></span>Études · ${ALL.filter(p=>p.fam=="e").length}</div></div>
-    <p class="hint">Glissez <span>→</span> · Touchez ↑ pour ouvrir</p></div></article>`;
+  L=view();const tot=L.length;
+  const fl=ALL.filter(p=>p.hero);
+  const intro=`<article class="card intro"><div class="stage"><div class="flip">${fl.map((p,i)=>`<img src="${p.hero}" alt="" data-i="${i}"${i?' loading="lazy"':""}>`).join("")}</div>
+    <div class="ov"><div><h1>${[..."Yves"].map((c,i)=>`<span style="--i:${i}">${c}</span>`).join("")}<br><i>${[..."Micault"].map((c,i)=>`<span style="--i:${i+4}">${c}</span>`).join("")}</i></h1><p class="lead">Architecte HMONP · ${ALL.length} projets, des études aux opérations menées en agence.</p></div>
+    <div><div class="legend"><div style="--i:0"><span class="dot a"></span>Agence ${ALL.filter(p=>p.fam=="a").length}</div><div style="--i:1"><span class="dot c"></span>Concours ${ALL.filter(p=>p.fam=="c").length}</div><div style="--i:2"><span class="dot e"></span>Études ${ALL.filter(p=>p.fam=="e").length}</div></div>
+    <button class="now" id="now"><span id="nowT"></span><span>Ouvrir ↑</span></button><p class="hint" style="margin-top:12px">Glissez <span>→</span></p></div></div></div></article>`;
   $("flux").innerHTML=(st.fam=="all"&&st.tag=="all"?intro:"")+L.map((p,k)=>`<article class="card" data-id="${p.id}">${stageHTML(p,k+1,tot)}
     <div class="info"><div class="fam"><span class="dot ${p.fam}"></span>${famLine(p)}</div><div><h2>${p.t}</h2><p>${p.c} · ${yrs(p)}</p></div><button class="open" data-open="${p.id}" aria-label="Ouvrir ${p.t}">↑</button></div></article>`).join("");
   $("flux").scrollLeft=0;
-  $("flux").querySelectorAll(".stage[data-id]").forEach(sg=>{const p=byId(sg.dataset.id);if(p.geo){const s=new Stop(sg.querySelector("canvas"),p.geo);stops.set(p.id,s)}});
   io&&$("flux").querySelectorAll(".card").forEach(c=>io.observe(c));
-  renderGrid();$("nOn").textContent=tot;updCount();
+  renderGrid();$("nOn").textContent=tot;updCount();typeof flip=="function"&&flip();
 }
 const byId=id=>ALL.find(p=>p.id==id);
-let io=new IntersectionObserver(es=>{es.forEach(e=>{const id=e.target.dataset.id;const s=id&&stops.get(id);
-  if(e.isIntersecting&&e.intersectionRatio>.6){e.target.classList.add("cur");s&&s.start()}else{e.target.classList.remove("cur");s&&s.stop()}});updCount()},{root:$("flux"),threshold:[0,.6,1]});
+let io=new IntersectionObserver(es=>{es.forEach(e=>{const id=e.target.dataset.id;
+  if(e.isIntersecting&&e.intersectionRatio>.6){if(!e.target.classList.contains("cur")){e.target.classList.remove("rev");void e.target.offsetWidth;e.target.classList.add("rev")}e.target.classList.add("cur")}else if(!e.isIntersecting||e.intersectionRatio<.2){e.target.classList.remove("cur")}});updCount()},{root:$("flux"),threshold:[0,.6,1]});
 function cardW(){const c=$("flux").querySelector(".card");return c?c.getBoundingClientRect().width:innerWidth}
 function curIdx(){return Math.round($("flux").scrollLeft/cardW())}
 function updCount(){if(document.body.classList.contains("mode-plan")){$("count").textContent=`${L.length} projets`;return}const hasIntro=!!$("flux").querySelector(".intro");const i=curIdx()-(hasIntro?1:0);const n=L.length;
   $("count").textContent=i<0?`${n} projets`:`${String(i+1).padStart(2,"0")} / ${String(n).padStart(2,"0")}`;
   $("prog").style.width=(n?Math.max(0,(i+1)/n*100):0)+"%"}
-$("flux").addEventListener("scroll",()=>requestAnimationFrame(updCount),{passive:true});
+/* parallaxe : l'image glisse moins vite que la carte */
+function para(){const W=innerWidth;$("flux").querySelectorAll(".card").forEach(c=>{const r=c.getBoundingClientRect();if(r.right<-50||r.left>W+50)return;if(c.classList.contains("intro"))return;const o=(r.left+r.width/2-W/2)/r.width;
+  const im=c.querySelector(".stage img");if(im)im.style.transform=`translateX(${(o*-16).toFixed(2)}%) scale(1.14)`;
+  const y=c.querySelector(".agyear .y");if(y)y.style.transform=`translateX(${(o*-40).toFixed(2)}%)`})}
+let raf=0;$("flux").addEventListener("scroll",()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;updCount();para()})},{passive:true});
+/* à la souris : on attrape et on fait glisser */
+let dg=null,moved=false;$("flux").addEventListener("pointerdown",e=>{if(e.pointerType!="mouse"||e.button)return;dg={x:e.clientX,s:$("flux").scrollLeft};moved=false});
+addEventListener("pointermove",e=>{if(!dg)return;const dx=e.clientX-dg.x;if(Math.abs(dx)>4){moved=true;$("flux").classList.add("drag")}if(moved)$("flux").scrollLeft=dg.s-dx});
+addEventListener("pointerup",e=>{if(!dg)return;const dx=e.clientX-dg.x;dg=null;if(!moved)return;$("flux").classList.remove("drag");const w=cardW();let i=Math.round($("flux").scrollLeft/w);if(Math.abs(dx)>40)i=Math.round((dg?0:$("flux").scrollLeft)/w+(dx<0?.3:-.3));$("flux").scrollTo({left:i*w,behavior:"smooth"})});
+$("flux").addEventListener("click",e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
 const go=d=>$("flux").scrollBy({left:d*cardW(),behavior:"smooth"});
 $("prev").onclick=()=>go(-1);$("next").onclick=()=>go(1);
 addEventListener("keydown",e=>{if($("sheet").classList.contains("on")||$("lb").classList.contains("on")){if(e.key=="Escape"){closeLb();closeSheet()}if($("lb").classList.contains("on")){if(e.key=="ArrowRight")lbStep(1);if(e.key=="ArrowLeft")lbStep(-1)}return}
@@ -276,11 +287,10 @@ $("flux").addEventListener("touchend",e=>{if(ty0==null)return;const t=e.changedT
   if(dy<-70&&Math.abs(dx)<40){const c=e.target.closest(".card[data-id]");c&&openSheet(c.dataset.id)}},{passive:true});
 
 /* ---------- plan (grille de tous les projets) ---------- */
-function renderGrid(){$("grid").innerHTML=L.map(p=>`<button class="cell" data-open="${p.id}"><div class="th">${p.geo?"<canvas></canvas>":p.hero?`<img src="${p.hero}" alt="" style="width:100%;height:100%;object-fit:cover">`:`<div class="hatch"></div><div class="yy">${p.y}</div>`}</div><span class="nm">${p.t}</span><span class="sub"><span class="dot ${p.fam}"></span>${p.c.split(",")[0]} · ${p.y}</span></button>`).join("");
-  if(document.body.classList.contains("mode-plan"))drawGrid()}
-function drawGrid(){$("grid").querySelectorAll(".cell").forEach(c=>{const p=byId(c.dataset.open);const cv=c.querySelector("canvas");if(cv)drawPlan(cv,p.geo,getComputedStyle(document.documentElement).getPropertyValue("--"+p.fam))})}
+function renderGrid(){$("grid").innerHTML=L.map((p,k)=>`<button class="cell" style="--i:${Math.min(k,24)}" data-open="${p.id}"><div class="th">${p.hero?`<img src="${p.hero}" alt="" style="width:100%;height:100%;object-fit:cover">`:`<div class="hatch"></div><div class="yy">${p.y}</div>`}</div><span class="nm">${p.t}</span><span class="sub"><span class="dot ${p.fam}"></span>${p.c.split(",")[0]} · ${p.y}</span></button>`).join("");
+}
 $("grid").addEventListener("click",e=>{const b=e.target.closest("[data-open]");b&&openSheet(b.dataset.open)});
-$("modeTog").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;document.body.classList.toggle("mode-plan",b.dataset.m=="plan");$("modeTog").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x==b));if(b.dataset.m=="plan")drawGrid();updCount()});
+$("modeTog").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;document.body.classList.toggle("mode-plan",b.dataset.m=="plan");$("modeTog").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x==b));if(b.dataset.m=="plan")renderGrid();else para();updCount()});
 
 /* ---------- tiroirs ---------- */
 const TAGS=["Logement","Bureau","Équipement","Urbain & paysage"];
@@ -295,22 +305,28 @@ const closeDr=()=>{$("drawer").classList.remove("on");$("scrim").classList.remov
 $("drawBtn").onclick=openDr;$("scrim").onclick=closeDr;$("dGo").onclick=()=>{closeDr();render()};
 
 /* ---------- fiche projet ---------- */
-let shStop=null,lbList=[],lbI=0;
-function openSheet(id){const p=byId(id);if(!p)return;stops.forEach(s=>s.stop());
+let lbList=[],lbI=0;
+function openSheet(id){const p=byId(id);if(!p)return;
   const img=p.hero?`<img src="${p.hero}" alt="${p.t}">`:"";
-  const stage=p.geo?`<div class="sh-stage" id="shSt"><canvas></canvas>${img?img.replace("<img",'<img style="opacity:0;transition:opacity .4s"'):""}<div class="tog"><button class="on" data-v="m">Maquette</button>${img?'<button data-v="i">Image</button>':""}</div></div>`
-    :p.hero?`<div class="sh-stage">${img}</div>`:`<div class="sh-stage"><div class="hatch"></div><div class="agyear"><div class="y">${p.y}</div><div class="k">${p.c}</div></div></div>`;
+  const stage=p.hero?`<div class="sh-stage">${img}</div>`:`<div class="sh-stage"><div class="hatch"></div><div class="agyear"><div class="y">${p.y}</div><div class="k">${p.c}</div></div></div>`;
   const rows=(p.fiche||[]).filter(r=>r[1]&&r[1]!="—").map(r=>`<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("");
   const pl=(p.pl||[]).filter(x=>x!=p.hero||p.fam!="a");
   const links=[p.url?`<a href="${p.url}" target="_blank" rel="noopener">Fiche du projet chez Hamonic+Masson <span>↗</span></a>`:"",
-    p.geo?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
+    p.fam!="a"?`<a href="https://yvesmicault.com/#projet/${p.id}" target="_blank" rel="noopener">Maquette 3D interactive (site actuel) <span>↗</span></a>`:""].join("");
   $("shIn").innerHTML=`${stage}${p.cr?`<p class="cr">${p.cr}</p>`:""}<div class="sh-cols"><div><div class="fam"><span class="dot ${p.fam}"></span>${famLine(p)}</div><h2>${p.t}</h2><p class="ln">${p.line||p.c+" · "+yrs(p)}</p><dl>${rows}</dl>${links?`<div class="links">${links}</div>`:""}</div>
     <div>${p.txt?`<p class="txt">${p.txt}</p>`:""}${pl.length?`<div class="sec"><span>Planches et images</span><span>${pl.length}</span></div><div class="pl">${pl.map((s,i)=>`<button data-lb="${i}"><img loading="lazy" src="${s}" alt="${p.t}, image ${i+1}"></button>`).join("")}</div>`:""}</div></div>`;
   lbList=pl;$("shN").textContent=FAM[p.fam]+" · "+yrs(p);
-  $("sheet").scrollTop=0;$("sheet").classList.add("on");if(location.hash!="#p/"+id)history.pushState(null,"","#p/"+id);
-  if(p.geo){requestAnimationFrame(()=>{shStop=new Stop($("shSt").querySelector("canvas"),p.geo);shStop.start()})}}
-function closeSheet(){if(!$("sheet").classList.contains("on"))return;$("sheet").classList.remove("on");shStop&&shStop.stop();shStop=null;
-  if(location.hash.startsWith("#p/"))history.pushState(null,"",location.pathname);const c=document.querySelector(".card.cur[data-id]");c&&stops.get(c.dataset.id)&&stops.get(c.dataset.id).start()}
+  const src=document.querySelector(`.card[data-id="${id}"] .stage img, .cell[data-open="${id}"] img`);
+  $("sheet").scrollTop=0;
+  if(src&&src.getBoundingClientRect().width>0&&!matchMedia("(prefers-reduced-motion:reduce)").matches){
+    const a=src.getBoundingClientRect();$("sheet").classList.add("fly","on");const dst=$("shIn").querySelector(".sh-stage img");const b=dst.getBoundingClientRect();
+    const f=document.createElement("img");f.src=src.src;f.className="flyer";Object.assign(f.style,{left:b.left+"px",top:b.top+"px",width:b.width+"px",height:b.height+"px"});document.body.appendChild(f);
+    // l'image vole de la carte vers la fiche en 6 crans, comme un stop motion
+    f.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(${a.width/b.width},${a.height/b.height})`,transformOrigin:"0 0"},{transform:"none",transformOrigin:"0 0"}],{duration:520,easing:"steps(6,end)"}).onfinish=()=>{$("sheet").classList.remove("fly");f.remove()};
+  }else $("sheet").classList.add("on");
+  if(location.hash!="#p/"+id)history.pushState(null,"","#p/"+id)}
+function closeSheet(){if(!$("sheet").classList.contains("on"))return;$("sheet").classList.remove("on","fly");
+  if(location.hash.startsWith("#p/"))history.pushState(null,"",location.pathname);}
 $("shClose").onclick=closeSheet;
 $("shIn").addEventListener("click",e=>{const v=e.target.closest(".tog button");if(v){const sg=v.closest(".sh-stage"),im=sg.querySelector("img");if(im)im.style.opacity=v.dataset.v=="i"?1:0;v.parentNode.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x==v));return}
   const b=e.target.closest("[data-lb]");if(b)openLb(+b.dataset.lb)});
@@ -335,7 +351,11 @@ $("profBtn").onclick=()=>{$("shIn").innerHTML=`<h2>Profil</h2><dl>
   <p class="txt">Depuis 2017, cette approche s’est enrichie d’une pratique professionnelle au sein de l’agence Hamonic + Masson, à Paris puis à Marseille. De la conception aux phases de développement technique, à travers des projets de logements, d’équipements et d’opérations urbaines, j’ai appris à confronter l’intention architecturale à la complexité du réel.</p>`;
   $("shN").textContent="Yves Micault";$("sheet").scrollTop=0;$("sheet").classList.add("on")};
 
-render();
+/* ouverture : un projet toutes les 1,4 s, révélé par crans */
+let flipT=0,flipI=0;function flip(){clearInterval(flipT);const box=document.querySelector(".flip");if(!box)return;const im=[...box.children],fl=ALL.filter(p=>p.hero);
+  const show=()=>{im.forEach(x=>x.classList.remove("on","was"));im[(flipI-1+im.length)%im.length].classList.add("was");im[flipI].classList.add("on");const p=fl[flipI];
+    $("nowT").textContent=`${p.t} · ${p.c.split(",")[0]} · ${p.y}`;$("now").dataset.open=p.id;flipI=(flipI+1)%im.length};show();flipT=setInterval(show,1400)}
+render();flip();para();addEventListener("resize",para);
 const m0=location.hash.match(/^#p\/(.+)/);if(m0)openSheet(m0[1]);
 </script>
 </body>
