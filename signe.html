@@ -9,107 +9,81 @@
 @font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
 html,body{margin:0;height:100%;background:#f2f1ed;overflow:hidden;-webkit-font-smoothing:antialiased}
 canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#nav{position:fixed;left:0;right:0;bottom:0;height:92px;display:flex;justify-content:center;gap:0;padding-bottom:env(safe-area-inset-bottom)}
-#nav button{all:unset;width:64px;height:76px;cursor:pointer}
+#nav{position:fixed;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom));height:64px;display:flex;justify-content:center}
+#nav button{all:unset;width:56px;height:64px;cursor:pointer}
 #nav button:focus-visible{outline:1.5px solid #1d1d1b;outline-offset:-6px}
 </style>
 </head>
 <body>
-<canvas id="c" aria-label="Le signe du portfolio. Glisser ou toucher pour l'ouvrir."></canvas>
-<nav id="nav" aria-label="États"><button aria-label="Signe"></button><button aria-label="Profondeur"></button><button aria-label="Ouverture"></button><button aria-label="Lecture du projet"></button></nav>
+<canvas id="c" aria-label="Le signe. Glisser ou toucher pour l'ouvrir."></canvas>
+<nav id="nav" aria-label="États"><button aria-label="Signe"></button><button aria-label="Motif"></button><button aria-label="Évidé"></button><button aria-label="Lecture"></button></nav>
 <script>
-// Un seul objet : le cube. Vu en axo et en aplat c'est un hexagone ; une face est un losange ;
-// de face c'est un carré. Le fond et la navigation sont dessinés avec la même projection.
+// Le cube vu en aplat : hexagone. Ses trois faces sont des losanges ; de face, un carré.
+// Le signe est un MASQUE : la photo reste fixe derrière, la forme change et la laisse voir.
 const cv=document.getElementById('c'),g=cv.getContext('2d');
-const BG=[242,241,237],INK=[29,29,27],MID=[118,118,111],LT=[200,199,191];
+const BG='#f2f1ed',INK='#1d1d1b',MUT='#8a8a83';
 const img=new Image();img.src='img/varese_ensemble.jpg';
 const PRJ={t:'Sospesa',l:'Gare de Varèse, passerelle habitée',m:'Varèse, Italie · Master 1 · 2013–2014'};
 const ISO=[Math.PI/4,Math.atan(1/Math.SQRT2)];
-// états : yaw, pitch, échelle, face avant (couleur, image), dessus, côté, légende
+// ink : face pleine ; hat : motif ; pho : photo à travers ; gap : arêtes lues en négatif
 const ST=[
- {yaw:ISO[0],pit:ISO[1],k:.16,top:INK,fr:INK,ri:INK,im:0,cap:0,asp:0},
- {yaw:ISO[0],pit:ISO[1],k:.16,top:LT,fr:INK,ri:MID,im:0,cap:0,asp:0},
- {yaw:ISO[0]-.12,pit:ISO[1]-.05,k:.2,top:LT,fr:BG,ri:MID,im:1,cap:0,asp:0},
- {yaw:0,pit:0,k:1,top:LT,fr:BG,ri:MID,im:1,cap:1,asp:1}
-];
-let W,H,dpr,p=0,tgt=0;
-const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function fit(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;placeNav()}
-const L=(a,b,t)=>a+(b-a)*t,LC=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t),rgb=c=>`rgb(${c.map(Math.round)})`;
-const sm=t=>t*t*(3-2*t);
-function state(q){const i=Math.min(2,Math.floor(q)),t=sm(Math.min(1,q-i)),A=ST[i],B=ST[i+1],o={};
- for(const k in A)o[k]=Array.isArray(A[k])?LC(A[k],B[k],t):L(A[k],B[k],t);return o}
+ {yaw:ISO[0],pit:ISO[1],ink:1,hat:0,pho:0,gap:0,rd:0},
+ {yaw:ISO[0],pit:ISO[1],ink:0,hat:1,pho:0,gap:5,rd:0},
+ {yaw:ISO[0],pit:ISO[1],ink:0,hat:0,pho:1,gap:5,rd:0},
+ {yaw:0,pit:0,ink:0,hat:0,pho:1,gap:0,rd:1}];
+let W,H,dpr,p=0,tgt=0;const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const L=(a,b,t)=>a+(b-a)*t,sm=t=>t*t*(3-2*t);
+function state(q){const i=Math.min(2,Math.floor(q)),t=sm(Math.min(1,q-i)),A=ST[i],B=ST[i+1],o={};for(const k in A)o[k]=L(A[k],B[k],t);return o}
 function cam(yaw,pit){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);
  return v=>{const x=v[0]*cy-v[2]*sy,z=v[0]*sy+v[2]*cy;return[x,-(v[1]*cp-z*sp),v[1]*sp+z*cp]}}
-// faces visibles d'une boîte de demi-côtés hx,hy,hz
-function faces(pr,hx,hy,hz){
- const F=[
-  {n:'fr',o:[-hx,hy,hz],u:[2*hx,0,0],v:[0,-2*hy,0],N:[0,0,1]},
-  {n:'ri',o:[hx,hy,hz],u:[0,0,-2*hz],v:[0,-2*hy,0],N:[1,0,0]},
-  {n:'top',o:[-hx,hy,-hz],u:[2*hx,0,0],v:[0,0,2*hz],N:[0,1,0]}];
- return F.filter(f=>pr(f.N)[2]>1e-3).map(f=>{const O=pr(f.o),U=pr(f.u),V=pr(f.v);return{...f,O,U,V,
+function faces(S,hx,hy,hz){const pr=cam(S.yaw,S.pit);
+ return[{o:[-hx,hy,hz],u:[2*hx,0,0],v:[0,-2*hy,0],N:[0,0,1],h:'v'},{o:[hx,hy,hz],u:[0,0,-2*hz],v:[0,-2*hy,0],N:[1,0,0],h:'u'},{o:[-hx,hy,-hz],u:[2*hx,0,0],v:[0,0,2*hz],N:[0,1,0],h:'u'}]
+ .filter(f=>pr(f.N)[2]>1e-3).map(f=>{const O=pr(f.o),U=pr(f.u),V=pr(f.v);return{...f,O,U,V,
   pts:[O,[O[0]+U[0],O[1]+U[1]],[O[0]+U[0]+V[0],O[1]+U[1]+V[1]],[O[0]+V[0],O[1]+V[1]]]}})}
-function poly(pts,x,y,s){g.beginPath();pts.forEach((q,i)=>g[i?'lineTo':'moveTo'](x+q[0]*s,y+q[1]*s));g.closePath()}
-function cube(S,x,y,s,hx,hy,hz,alpha){
- const pr=cam(S.yaw,S.pit);g.globalAlpha=alpha;
- for(const f of faces(pr,hx,hy,hz)){
-  const c=rgb(S[f.n]);poly(f.pts,x,y,s);g.fillStyle=c;g.fill();g.strokeStyle=c;g.lineWidth=.8;g.stroke();
-  if(f.n==='fr'&&S.im>0&&img.complete&&img.naturalWidth){
-   g.save();poly(f.pts,x,y,s);g.clip();g.globalAlpha=alpha*S.im;
-   const iw=img.naturalWidth,ih=img.naturalHeight,d=dpr;
-   g.setTransform(d*f.U[0]*s/iw,d*f.U[1]*s/iw,d*f.V[0]*s/ih,d*f.V[1]*s/ih,d*(x+f.O[0]*s),d*(y+f.O[1]*s));
-   g.drawImage(img,0,0);g.restore();g.setTransform(dpr,0,0,dpr,0,0);g.globalAlpha=alpha}
+const path=(pts,x,y,s)=>{g.beginPath();pts.forEach((q,i)=>g[i?'lineTo':'moveTo'](x+q[0]*s,y+q[1]*s));g.closePath()};
+// dessine le signe ; R = cadre fixe de la photo
+function sign(S,cx,cy,s,hx,hy,hz,R,alpha,b){
+ const F=faces(S,hx,hy,hz);g.globalAlpha=alpha;
+ for(const f of F){
+  g.save();path(f.pts,cx,cy,s);g.clip();
+  if(S.ink>0){g.globalAlpha=alpha*S.ink;g.fillStyle=INK;g.fill();g.strokeStyle=INK;g.lineWidth=2;g.stroke()}
+  if(S.hat>0){g.globalAlpha=alpha*S.hat;g.strokeStyle=INK;g.lineWidth=b>30?1.3:.8;
+   const A=f.h==='u'?f.U:f.V,Bv=f.h==='u'?f.V:f.U,len=Math.hypot(Bv[0],Bv[1])*s,n=Math.max(3,Math.round(len/(b>30?Math.max(5,b*.075):2.6)));
+   g.beginPath();for(let i=0;i<=n;i++){const t=i/n,x=cx+(f.O[0]+Bv[0]*t)*s,y=cy+(f.O[1]+Bv[1]*t)*s;g.moveTo(x,y);g.lineTo(x+A[0]*s,y+A[1]*s)}g.stroke()}
+  if(S.pho>0&&img.naturalWidth){g.globalAlpha=alpha*S.pho;g.drawImage(img,R.x,R.y,R.w,R.h)}
+  g.restore();
  }
+ if(S.gap>.2){g.globalAlpha=1;g.strokeStyle=BG;g.lineWidth=S.gap*(b>30?1:.3);g.lineJoin='miter';for(const f of F){path(f.pts,cx,cy,s);g.stroke()}}
  g.globalAlpha=1}
-function hull(P){P=P.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
- for(const q of P){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q)}
- for(const q of P.reverse()){while(up.length>1&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q)}
- return lo.slice(0,-1).concat(up.slice(0,-1))}
-const navY=()=>H-46-(parseFloat(getComputedStyle(document.body).paddingBottom)||0);
-function navX(i){return W/2+(i-1.5)*64}
-function placeNav(){}
 function frame(){
- p+=(tgt-p)*(red?1:.085);if(Math.abs(tgt-p)<.0005)p=tgt;
- const S=state(p);g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle=rgb(BG);g.fillRect(0,0,W,H);
- const ar=img.naturalWidth?img.naturalWidth/img.naturalHeight:1.5;
- const hx=L(1,ar>1?1:ar,S.asp),hy=L(1,ar>1?1/ar:1,S.asp),hz=1;
- // zone de lecture
- const top=56,bot=H-112,availW=W-32,availH=bot-top-(S.cap>0?70:0)*S.asp;
- const sMin=Math.min(W,H-170),s0=sMin*.16/ (1) ;
- const sRead=Math.min(availW/(2*hx),(bot-top-70)/(2*hy));
- const s=L(sMin*Math.min(S.k,.2)/.16*.16,sRead,S.asp);
- const cx=W/2,cy=L((top+bot)/2,top+hy*sRead,S.asp);
- // silhouette pour le fond (même caméra)
- const pr=cam(S.yaw,S.pit),corners=[];for(const a of[-1,1])for(const b of[-1,1])for(const c of[-1,1])corners.push(pr([a,b,c]));
- const hu=hull(corners);
- const ex=Math.max(...corners.map(q=>Math.abs(q[0]))),ey=Math.max(...corners.map(q=>Math.abs(q[1])));
- const bx=ex*s*hx+26,by=ey*s*hy+26;
- const step=W<600?24:28,ms=step*.12;
- g.fillStyle='rgb(226,225,218)';
- for(let y=step*2.5;y<H-90;y+=step)for(let x=step/2;x<W;x+=step){
-  const dx=Math.max(0,Math.abs(x-cx)-bx),dy=Math.max(0,Math.abs(y-cy)-by-(S.cap*60*(y>cy?1:0)));
-  const d=Math.hypot(dx,dy),k=Math.min(1,d/90);if(k<.05)continue;
-  poly(hu,x,y,ms*sm(k));g.fill()}
- cube(S,cx,cy,s,hx,hy,hz,1);
- const ca=Math.pow(S.cap,6);if(ca>.01){g.globalAlpha=ca;g.fillStyle=rgb(INK);g.textAlign='left';g.textBaseline='top';
-  const x0=cx-hx*s,y0=cy+hy*s+14;g.font='600 17px Archivo';g.fillText(PRJ.t,x0,y0);
-  g.font='14px Archivo';g.fillText(PRJ.l,x0,y0+22);g.fillStyle=rgb(MID);g.font='10.5px Mono';g.fillText(PRJ.m,x0,y0+42);g.globalAlpha=1}
- // en-tête
- g.fillStyle=rgb(INK);g.font='600 14px Archivo';g.textAlign='left';g.textBaseline='alphabetic';g.fillText('Yves Micault',16,32);
- g.fillStyle=rgb(MID);g.font='10.5px Mono';g.textAlign='right';g.fillText(['signe','profondeur','ouverture','lecture'][Math.round(p)],W-16,32);
- // navigation : les quatre états dessinés par le même cube
- const ny=navY();g.fillStyle='rgb(224,223,216)';g.fillRect(W/2-128,ny-46,256,1);
- for(let i=0;i<4;i++){const T={...ST[i],asp:0},on=Math.abs(p-i)<.5;
-  cube(T,navX(i),ny,9,i===3?1.25:1,i===3?.83:1,1,on?1:.32)}
- const kx=navX(0)+p*64;g.fillStyle=rgb(INK);g.fillRect(kx-10,ny+22,20,2);
+ p+=(tgt-p)*(red?1:.075);if(Math.abs(tgt-p)<.0005)p=tgt;
+ g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle=BG;g.fillRect(0,0,W,H);
+ const S=state(p),ar=img.naturalWidth?img.naturalWidth/img.naturalHeight:1.5;
+ // cadre de lecture fixe : la photo ne bouge jamais, seul le masque change
+ const top=60,bot=H-96-74,aw=W-(W<600?32:120),ah=bot-top;let rw=aw,rh=rw/ar;if(rh>ah){rh=ah;rw=rh*ar}
+ const R={x:(W-rw)/2,y:top+(ah-rh)/2,w:rw,h:rh},cx=W/2,cy=R.y+rh/2;
+ // signe : cube unité qui tient dans le cadre ; lecture : la face avant devient le cadre
+ const b=Math.min(rw/2/1.414,rh/2/1.633)*.96,t=S.rd;
+ const hx=L(b,rw/2,t),hy=L(b,rh/2,t),hz=L(b,b*.6,t);
+ sign(S,cx,cy,1,hx,hy,hz,R,1,b);
+ if(t>.02){const a=Math.pow(t,5);g.globalAlpha=a;g.textAlign='left';g.textBaseline='top';g.fillStyle=INK;
+  g.font='600 17px Archivo';g.fillText(PRJ.t,R.x,R.y+rh+16);g.font='14px Archivo';g.fillText(PRJ.l,R.x,R.y+rh+38);
+  g.fillStyle=MUT;g.font='10.5px Mono';g.fillText(PRJ.m,R.x,R.y+rh+58);g.globalAlpha=1}
+ g.fillStyle=INK;g.font='600 14px Archivo';g.textAlign='left';g.textBaseline='alphabetic';g.fillText('Yves Micault',16,32);
+ // navigation : le même signe en petit, à chaque état
+ const ny=H-10-32-(parseFloat(getComputedStyle(document.getElementById('nav')).bottom)-10||0);
+ for(let i=0;i<4;i++){const T=ST[i],x=W/2+(i-1.5)*56,on=Math.abs(p-i)<.5,bb=8.5,
+  r=i===3?{w:bb*2.4,h:bb*1.6}:{w:bb*2,h:bb*2},Rn={x:x-r.w/2,y:ny-r.h/2,w:r.w,h:r.h};
+  sign({...T,gap:T.gap*.25},x,ny,1,i===3?r.w/2:bb,i===3?r.h/2:bb,bb,{x:x-bb*1.8,y:ny-bb*1.2,w:bb*3.6,h:bb*2.4},on?1:.3,bb)}
+ g.fillStyle=INK;g.fillRect(W/2+(p-1.5)*56-9,ny+22,18,1.5);
  requestAnimationFrame(frame)}
-// gestes : glisser = parcourir les états (réversible), toucher = état suivant / retour au signe
 let down=null;
 cv.addEventListener('pointerdown',e=>{down={x:e.clientX,p,m:0};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.m=1;if(down.m){tgt=Math.max(0,Math.min(3,down.p+dx/160));p=tgt}});
+cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.m=1;if(down.m){tgt=Math.max(0,Math.min(3,down.p+dx/150));p=tgt}});
 cv.addEventListener('pointerup',()=>{if(!down)return;tgt=down.m?Math.round(tgt):(Math.round(p)>=3?0:Math.round(p)+1);down=null});
 document.querySelectorAll('#nav button').forEach((b,i)=>b.addEventListener('click',()=>tgt=i));
 addEventListener('keydown',e=>{if(e.key==='ArrowRight')tgt=Math.min(3,Math.round(tgt)+1);if(e.key==='ArrowLeft')tgt=Math.max(0,Math.round(tgt)-1)});
+function fit(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr}
 addEventListener('resize',fit);
 const q=new URLSearchParams(location.search);if(q.has('p'))p=tgt=+q.get('p');
 fit();document.fonts.ready.then(()=>requestAnimationFrame(frame));
