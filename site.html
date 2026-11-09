@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Yves Micault</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--bg:#f2f1ed;--ink:#1d1d1b;--mut:#8a8a83;--hair:#deddd6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{all:unset;cursor:pointer}
+button:focus-visible{outline:1.5px solid var(--ink);outline-offset:3px}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+header{position:fixed;top:0;left:0;right:0;height:56px;z-index:10;display:flex;align-items:center;gap:10px;padding:0 16px;pointer-events:none}
+header>*{pointer-events:auto}
+#logo{width:28px;height:28px;display:block}
+#logo canvas{width:28px;height:28px;display:block}
+#name{font-weight:600;font-size:14px;font-stretch:92%}
+#where{margin-left:auto;font-family:Mono;font-size:10.5px;color:var(--mut);letter-spacing:.04em}
+.view{position:fixed;inset:0;z-index:1;opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
+.view.on{opacity:1;visibility:visible;transition:opacity .35s}
+.solid{background:var(--bg);z-index:2;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* accueil */
+#home .door{position:absolute;font-size:15px;font-stretch:92%;padding:8px 4px;transform:translate(-50%,-50%);white-space:nowrap}
+#home .door small{display:block;font-family:Mono;font-size:10px;color:var(--mut);text-align:center;margin-top:2px}
+/* découvrir */
+#disc .cap{position:absolute;left:16px;right:16px}
+.cap .t{font-weight:600;font-size:18px;font-stretch:90%}
+.cap .l{font-size:14px;margin-top:3px}
+.cap .m{font-family:Mono;font-size:10.5px;color:var(--mut);margin-top:6px}
+.cap .go{display:inline-block;margin-top:12px;font-size:14px;border-bottom:1px solid var(--ink);padding-bottom:1px}
+#disc .nv{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:16px;right:16px;display:flex;justify-content:space-between;font-family:Mono;font-size:11px;color:var(--mut)}
+#disc .nv button{padding:10px 4px;color:var(--ink);font-size:13px;font-family:Archivo}
+/* index */
+#index{padding:64px 16px 120px}
+.tools{display:flex;gap:18px;align-items:baseline;margin-bottom:18px}
+.tools b{font-family:Mono;font-weight:400;font-size:10px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.tools button{font-size:14px;color:var(--mut);border-bottom:1.5px solid transparent;padding-bottom:1px;transition:color .3s,border-color .3s}
+.tools button[aria-pressed=true]{color:var(--ink);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:18px 8px}
+.gh{grid-column:1/-1;font-family:Mono;font-size:10.5px;color:var(--mut);border-top:1px solid var(--hair);padding-top:8px;margin-top:6px}
+.grid.yr .gh{grid-column:auto;border:0;margin:0;padding:0 0 26px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink)}
+.it{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.it canvas{width:72px;height:72px;display:block}
+.it .n{font-size:11.5px;line-height:1.2;font-stretch:90%;max-width:92px}
+.it .y{font-family:Mono;font-size:9.5px;color:var(--mut)}
+#sel{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:1px solid var(--hair);padding:12px 16px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+#sel.on{transform:none}
+/* projet */
+#proj{padding:64px 16px 80px}
+#proj .hero{width:100%;display:block;aspect-ratio:var(--ar,1.5);background:transparent}
+#proj .hero.blank{visibility:hidden}
+#proj h1{font-size:26px;font-weight:600;font-stretch:88%;margin-top:16px;line-height:1.1}
+#proj .ln{font-family:Mono;font-size:10.5px;color:var(--mut);margin-top:6px}
+#proj dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;margin-top:18px;border-top:1px solid var(--hair);padding-top:12px}
+#proj dt{color:var(--mut)}
+#proj .tx{font-size:15px;line-height:1.5;margin-top:18px;max-width:640px}
+#proj .tx p+p{margin-top:.8em}
+.blk{margin-top:30px;border-top:1px solid var(--hair);padding-top:10px}
+.blk .hd{display:flex;justify-content:space-between;align-items:baseline;font-family:Mono;font-size:10.5px;color:var(--mut)}
+.blk .hd button{font-family:Archivo;font-size:13px;color:var(--mut);margin-left:12px;border-bottom:1.5px solid transparent}
+.blk .hd button[aria-pressed=true]{color:var(--ink);border-color:var(--ink)}
+#emp{width:100%;height:240px;display:block;margin-top:8px}
+.pl{margin-top:14px}
+.pl img{width:100%;display:block;clip-path:polygon(50% calc(50% - 46px),calc(50% + 40px) calc(50% - 23px),calc(50% + 40px) calc(50% + 23px),50% calc(50% + 46px),calc(50% - 40px) calc(50% + 23px),calc(50% - 40px) calc(50% - 23px));transition:clip-path 1s cubic-bezier(.6,0,.2,1)}
+.pl img.in{clip-path:polygon(50% 0%,100% 0%,100% 100%,50% 100%,0% 100%,0% 0%)}
+/* profil, carte */
+#prof .cap,#carte .cap{position:absolute;left:16px;right:16px}
+#prof a{color:var(--ink)}
+@media (min-width:760px){
+ #index,#proj{padding-left:max(40px,calc(50% - 440px));padding-right:max(40px,calc(50% - 440px))}
+ .grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+ .it canvas{width:88px;height:88px}
+}
+@media (prefers-reduced-motion:reduce){.pl img{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<header><button id="logo" aria-label="Accueil"><canvas width="56" height="56"></canvas></button><span id="name">Yves Micault</span><span id="where"></span></header>
+
+<section id="home" class="view" aria-label="Accueil">
+ <button class="door" data-go="disc">Découvrir</button>
+ <button class="door" data-go="index">Projets</button>
+ <button class="door" data-go="carte">Carte</button>
+ <button class="door" data-go="prof">Profil<small>↻ l'envers</small></button>
+</section>
+
+<section id="disc" class="view" aria-label="Découvrir">
+ <div class="cap" id="dcap"></div>
+ <div class="nv"><button id="dprev">‹ Précédent</button><span id="dnum"></span><button id="dnext">Suivant ›</button></div>
+</section>
+
+<section id="index" class="view solid" aria-label="Tous les projets">
+ <div class="tools"><b>Ranger</b><button aria-pressed="true" data-o="cat">Assembler</button><button aria-pressed="false" data-o="year">Écarter</button></div>
+ <div class="grid" id="grid"></div>
+</section>
+<div id="sel" class="cap" aria-live="polite"></div>
+
+<section id="proj" class="view solid" aria-label="Projet"></section>
+
+<section id="prof" class="view" aria-label="Profil"><div class="cap" id="pcap">
+ <div class="t">Yves Micault</div><div class="l">Architecte HMONP. Chef de projet chez Hamonic+Masson &amp; Associés depuis 2017.</div>
+ <div class="m">Études, concours et projets d'agence, 2013–2026</div>
+ <a class="go" href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Le CV (PDF)</a>
+</div></section>
+
+<section id="carte" class="view" aria-label="Carte"><div class="cap" id="ccap">
+ <div class="t">Carte</div><div class="l">Le globe du site actuel se branchera ici : chaque projet y sera posé en petit hexagone.</div>
+</div></section>
+
+<script src="data.js"></script>
+<script src="emp.js"></script>
+<script>
+// =============== moteur : un cube, vu comme masque ===============
+// En aplat, le cube est un hexagone ; une face, un losange ; de face, un carré.
+// Chaque face reçoit un remplissage : encre, hachures, pixels, ou la photo vue À TRAVERS.
+const BG='#f2f1ed',INK='#1d1d1b',PALE='#cfcec7';
+const ISO=Math.atan(1/Math.SQRT2),Q=Math.PI/4;
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const L=(a,b,t)=>a+(b-a)*t,sm=t=>t<=0?0:t>=1?1:t*t*(3-2*t),ease=t=>t<=0?0:t>=1?1:t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const FACES={
+ fr:{N:[0,0,1],o:(x,y,z)=>[-x,y,z],u:(x,y,z)=>[2*x,0,0],v:(x,y,z)=>[0,-2*y,0]},
+ ri:{N:[1,0,0],o:(x,y,z)=>[x,y,z],u:(x,y,z)=>[0,0,-2*z],v:(x,y,z)=>[0,-2*y,0]},
+ top:{N:[0,1,0],o:(x,y,z)=>[-x,y,-z],u:(x,y,z)=>[2*x,0,0],v:(x,y,z)=>[0,0,2*z]},
+ bk:{N:[0,0,-1],o:(x,y,z)=>[x,y,-z],u:(x,y,z)=>[-2*x,0,0],v:(x,y,z)=>[0,-2*y,0]},
+ le:{N:[-1,0,0],o:(x,y,z)=>[-x,y,-z],u:(x,y,z)=>[0,0,2*z],v:(x,y,z)=>[0,-2*y,0]}};
+function cam(yaw,pit){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);
+ return v=>{const x=v[0]*cy-v[2]*sy,z=v[0]*sy+v[2]*cy;return[x,-(v[1]*cp-z*sp),v[1]*sp+z*cp]}}
+function project(P){const pr=cam(P.yaw,P.pit),out=[];
+ for(const k in FACES){const F=FACES[k],n=pr(F.N);if(n[2]<=1e-3)continue;
+  const O=pr(F.o(P.hx,P.hy,P.hz)),U=pr(F.u(P.hx,P.hy,P.hz)),V=pr(F.v(P.hx,P.hy,P.hz)),o=[P.cx+O[0],P.cy+O[1]];
+  out.push({k,O:o,U,V,pts:[o,[o[0]+U[0],o[1]+U[1]],[o[0]+U[0]+V[0],o[1]+U[1]+V[1]],[o[0]+V[0],o[1]+V[1]]]})}
+ return out}
+const poly=(g,pts)=>{g.beginPath();pts.forEach((q,i)=>g[i?'lineTo':'moveTo'](q[0],q[1]));g.closePath()};
+function bbox(F){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const f of F)for(const q of f.pts){a=Math.min(a,q[0]);b=Math.min(b,q[1]);c=Math.max(c,q[0]);d=Math.max(d,q[1])}return{x:a,y:b,w:c-a,h:d-b}}
+function layer(g,f,Ly,bb,a,size){
+ if(a<=.003)return;g.globalAlpha=a;
+ if(Ly.k==='ink'){g.fillStyle=Ly.c||INK;poly(g,f.pts);g.fill();g.strokeStyle=Ly.c||INK;g.lineWidth=1.2;g.stroke();return}
+ if(Ly.k==='img'){const im=Ly.im;if(!im||!im.naturalWidth)return;const r=Ly.r||bb,s=Math.max(r.w/im.naturalWidth,r.h/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;
+  g.drawImage(im,r.x+(r.w-w)/2,r.y+(r.h-h)/2,w,h);return}
+ const A=Ly.d==='v'?f.V:f.U,B=Ly.d==='v'?f.U:f.V;
+ if(Ly.k==='hat'){const len=Math.hypot(B[0],B[1]),sp=Math.max(2.4,(Ly.sp||.08)*size),n=Math.max(2,Math.round(len/sp));
+  g.strokeStyle=INK;g.lineWidth=Math.max(.7,Math.min(1.4,size*.012));g.beginPath();
+  for(let i=0;i<=n;i++){const t=i/n,x=f.O[0]+B[0]*t,y=f.O[1]+B[1]*t;g.moveTo(x,y);g.lineTo(x+A[0],y+A[1])}g.stroke();return}
+ if(Ly.k==='dot'){const n=Ly.n||9;g.fillStyle=INK;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const s=.34,u0=(i+.5-s/2)/n,v0=(j+.5-s/2)/n,d=s/n;
+   const p=(u,v)=>[f.O[0]+f.U[0]*u+f.V[0]*v,f.O[1]+f.U[1]*u+f.V[1]*v];poly(g,[p(u0,v0),p(u0+d,v0),p(u0+d,v0+d),p(u0,v0+d)]);g.fill()}return}
+ if(Ly.k==='pix'){const E=Ly.e,n=E.n,mx=Math.max(...E.h)||1;g.fillStyle=INK;
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const h=E.h[j*n+i];if(h<=0)continue;g.globalAlpha=a*(.45+.55*h/mx);
+   const p=(u,v)=>[f.O[0]+f.U[0]*u+f.V[0]*v,f.O[1]+f.U[1]*u+f.V[1]*v],u0=i/n,v0=j/n,d=1/n;
+   poly(g,[p(u0,v0),p(u0+d,v0),p(u0+d,v0+d),p(u0,v0+d)]);g.fill()}return}
+}
+// C = {fr:[layers],...}; deux contenus A→B fondus par m
+function cube(g,P,A,B,m,alpha=1){
+ const F=project(P),bb=bbox(F),size=Math.max(P.hx,P.hy,P.hz)*2;
+ for(const f of F){g.save();poly(g,f.pts);g.clip();
+  for(const Ly of (A[f.k]||[]))layer(g,f,Ly,bb,alpha*(1-m)*(Ly.a??1),size);
+  if(B&&m>0)for(const Ly of (B[f.k]||[]))layer(g,f,Ly,bb,alpha*m*(Ly.a??1),size);
+  g.restore()}
+ g.globalAlpha=1;
+ if(P.gap>.2){g.strokeStyle=BG;g.lineWidth=P.gap;g.lineJoin='miter';for(const f of F){poly(g,f.pts);g.stroke()}}
+ return F}
+const lerpP=(A,B,t)=>{const o={};for(const k in A)o[k]=L(A[k],B[k]??A[k],t);return o};
+const hexP=(cx,cy,b,gap=0)=>({yaw:Q,pit:ISO,hx:b,hy:b,hz:b,cx,cy,gap});
+const bFor=s=>s/2/1.633*.94;
+
+// =============== données ===============
+const PR=window.PROJ,EMP=window.EMP||{},FAM={e:'Études',c:'Concours',a:'Agence'};
+const IM={};function img(src){if(!src)return null;if(!IM[src]){const i=new Image();i.decoding='async';i.src=src;IM[src]=i}return IM[src]}
+const ready=i=>!i||i.complete?Promise.resolve():new Promise(r=>{i.onload=i.onerror=r});
+const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
+// le signe d'un projet : son emprise en pixels sur le dessus, la famille sur les côtés
+function motif(p){const h=hash(p.id),e=EMP[p.id];
+ return{top:[e?{k:'pix',e}:{k:'hat',d:h%2?'u':'v',sp:.06+(h%5)*.012}],
+  fr:[{k:'hat',d:'v',sp:p.fam==='e'?.13:.08}],
+  ri:[p.fam==='a'?{k:'ink'}:{k:'hat',d:'u',sp:p.fam==='c'?.06:.11}],bk:[{k:'ink'}],le:[{k:'ink'}]}}
+function photo(p,r){const i=img(p.hero);const L1=i?[{k:'img',im:i,r}]:null;
+ return L1?{fr:L1,ri:L1,top:L1,bk:L1,le:L1}:motif(p)}
+const DISC=PR.filter(p=>p.hero);let di=0;
+const PORT=img('img/yves_cv.jpg');
+function homeC(){const p=DISC[di];const ph=[{k:'img',im:img(p.hero)}];
+ return{fr:ph,ri:[{k:'hat',d:'u',sp:.07}],top:[{k:'dot',n:7}],bk:[{k:'img',im:PORT}],le:[{k:'ink'}]}}
+const INKC={fr:[{k:'ink'}],ri:[{k:'ink'}],top:[{k:'ink'}],bk:[{k:'ink'}],le:[{k:'ink'}]};
+
+// =============== scène ===============
+const fx=document.getElementById('fx'),g=fx.getContext('2d');
+let W,H,dpr,view='home',anim=null,still=null,dirty=true;
+function fit(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;fx.width=W*dpr;fx.height=H*dpr;dirty=true;placeHome();if(view==='disc')still=discStill();if(view==='prof')still=profStill();if(view==='carte')still=carteStill()}
+const homeB=()=>bFor(Math.min(W*.62,H*.42));
+const homePose=()=>hexP(W/2,H*.45,homeB(),5);
+// cadre de lecture : l'image entière
+function frameR(ar,top=64,bot=170){const aw=W-32,ah=H-top-bot;let w=Math.min(aw,900),h=w/ar;if(h>ah){h=ah;w=h*ar}return{x:(W-w)/2,y:top+(ah-h)/2,w,h}}
+const front=(R,yaw=0,pit=0,hz)=>({yaw,pit,hx:R.w/2,hy:R.h/2,hz:hz??Math.min(R.w,R.h)/2,cx:R.x+R.w/2,cy:R.y+R.h/2,gap:0});
+function run(a){return new Promise(res=>{anim={...a,t0:performance.now(),res};if(red)anim.dur=1})}
+function render(now){
+ if(anim){let t=Math.min(1,(now-anim.t0)/anim.dur);g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);anim.draw(t);if(t>=1){const r=anim.res;anim=null;dirty=true;r()}}
+ else if(dirty){g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);if(still)still();dirty=false}
+ requestAnimationFrame(render)}
+
+// ---------- accueil ----------
+const home=document.getElementById('home'),doors=[...home.querySelectorAll('.door')];
+function placeHome(){const P=homePose(),b=P.hx;
+ const pos={disc:[P.cx-b*1.15,P.cy+b*1.32],index:[P.cx+b*1.15,P.cy+b*1.32],carte:[P.cx,P.cy-b*1.95],prof:[P.cx,P.cy+b*2.25]};
+ doors.forEach(d=>{const p=pos[d.dataset.go];d.style.left=p[0]+'px';d.style.top=p[1]+'px'})}
+const homeStill=()=>()=>cube(g,homePose(),homeC(),null,0);
+// entrée : le contour se trace, se remplit, puis s'ouvre en trois faces
+function intro(){return run({dur:1700,draw:t=>{const P=homePose(),F=project(P),hx=F.length?hullPts(F):[];
+ const a=sm(t/.4),f=sm((t-.38)/.2),o=ease((t-.62)/.38);
+ if(f<1&&hx.length){g.strokeStyle=INK;g.lineWidth=1.4;g.globalAlpha=1-f;const per=perim(hx);g.setLineDash([per*a,per]);poly(g,hx);g.stroke();g.setLineDash([])}
+ if(f>0)cube(g,{...P,gap:5*o},INKC,homeC(),o,f);
+ doors.forEach(d=>d.style.opacity=sm((t-.8)/.2))}})}
+function hullPts(F){const P=[];F.forEach(f=>P.push(...f.pts));P.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
+ for(const q of P){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],q)<=.01)lo.pop();lo.push(q)}
+ for(const q of P.reverse()){while(up.length>1&&cr(up[up.length-2],up[up.length-1],q)<=.01)up.pop();up.push(q)}
+ const h=lo.slice(0,-1).concat(up.slice(0,-1));const i=h.reduce((m,q,k)=>q[1]<h[m][1]?k:m,0);return h.slice(i).concat(h.slice(0,i))}
+const perim=h=>h.reduce((s,q,i)=>s+Math.hypot(q[0]-h[(i+1)%h.length][0],q[1]-h[(i+1)%h.length][1]),0);
+function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c}
+home.addEventListener('click',e=>{const d=e.target.closest('.door');if(d)return go(d.dataset.go);
+ const F=project(homePose()),f=F.find(f=>inPoly(e.clientX,e.clientY,f.pts));if(f)go({fr:'disc',ri:'index',top:'carte'}[f.k])});
+
+// ---------- portes : la face concernée tourne vers soi ----------
+const where=document.getElementById('where'),NAMES={home:'',disc:'Découvrir',index:'Projets',proj:'Projet',prof:'Profil',carte:'Carte'};
+function show(v){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id===v));view=v;where.textContent=NAMES[v];drawLogo();dirty=true}
+function hideAll(){document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));sel.classList.remove('on');pj.style.opacity=''}
+let busy=false;
+async function go(v){if(busy||v===view)return;busy=true;try{
+ const from=view;if(from!=='home'){await back();}
+ hideAll();still=null;
+ if(v==='disc'){const p=DISC[di],i=img(p.hero);await ready(i);const R=discR(i);
+  await run({dur:1100,draw:t=>cube(g,lerpP(homePose(),front(R),ease(t)),homeC(),null,0)});still=discStill();discCap();show('disc')}
+ if(v==='index'){const R={x:0,y:0,w:W,h:H};
+  await run({dur:1000,draw:t=>{const e=ease(t);cube(g,lerpP(homePose(),{...front(R,Math.PI/2),hz:W/2,hx:homeB()},e),homeC(),null,0,1-sm((t-.7)/.3))}});
+  buildIndex();show('index')}
+ if(v==='carte'){const R={x:0,y:0,w:W,h:H};
+  still=carteStill();await run({dur:1000,draw:t=>cube(g,lerpP(homePose(),{...front(R,0,Math.PI/2),hz:H/2,hy:homeB()},ease(t)),homeC(),null,0,1-.85*sm((t-.6)/.4))});
+  show('carte')}
+ if(v==='prof'){await ready(PORT);const R=profR();
+  await run({dur:1300,draw:t=>cube(g,lerpP(homePose(),front(R,Math.PI),ease(t)),homeC(),null,0)});still=profStill();show('prof')}
+ if(v==='home'){show('home');still=homeStill()}
+}finally{busy=false}}
+// retour au signe : le chemin inverse
+async function back(){const v=view;if(v==='home')return;hideAll();still=null;
+ if(v==='disc'){const R=discR(img(DISC[di].hero));await run({dur:900,draw:t=>cube(g,lerpP(front(R),homePose(),ease(t)),homeC(),null,0)})}
+ else if(v==='index'||v==='proj'){const R={x:0,y:0,w:W,h:H};await run({dur:900,draw:t=>cube(g,lerpP({...front(R,Math.PI/2),hz:W/2,hx:homeB()},homePose(),ease(t)),homeC(),null,0,sm(t/.3))})}
+ else if(v==='carte'){const R={x:0,y:0,w:W,h:H};await run({dur:900,draw:t=>cube(g,lerpP({...front(R,0,Math.PI/2),hz:H/2,hy:homeB()},homePose(),ease(t)),homeC(),null,0,.15+.85*sm(t/.4))})}
+ else if(v==='prof'){await run({dur:1100,draw:t=>cube(g,lerpP(front(profR(),Math.PI),homePose(),ease(t)),homeC(),null,0)})}
+ view='home'}
+async function goHome(){if(busy)return;if(view==='home'){busy=true;hideAll();still=null;await intro();show('home');still=homeStill();busy=false;return}
+ busy=true;try{await back();show('home');still=homeStill()}finally{busy=false}}
+document.getElementById('logo').addEventListener('click',goHome);
+
+// ---------- découvrir ----------
+const discR=i=>frameR(i&&i.naturalWidth?i.naturalWidth/i.naturalHeight:1.5,64,W<760?190:150);
+const discStill=()=>()=>{const p=DISC[di],i=img(p.hero);cube(g,front(discR(i)),photo(p),null,0)};
+function discCap(){const p=DISC[di],R=discR(img(p.hero)),c=document.getElementById('dcap');
+ c.style.top=(R.y+R.h+14)+'px';c.innerHTML=`<div class="t">${p.t}</div><div class="m">${p.line||''}</div><button class="go" id="dopen">Ouvrir le projet ›</button>`;
+ document.getElementById('dnum').textContent=`${di+1} / ${DISC.length}`;
+ document.getElementById('dopen').onclick=()=>openProject(p,{from:'disc'})}
+// passer au suivant : le masque se referme sur le signe du projet, puis se rouvre
+async function step(d){if(busy)return;busy=true;const a=DISC[di],ia=img(a.hero),Ra=discR(ia),c=document.getElementById('dcap');c.style.opacity=0;still=null;
+ const n=(di+d+DISC.length)%DISC.length,b=DISC[n],ib=img(b.hero);
+ const mid=hexP(W/2,Ra.y+Ra.h/2,bFor(Math.min(Ra.h,W*.5)),4);
+ await run({dur:650,draw:t=>{const e=ease(t);cube(g,lerpP(front(Ra),mid,e),photo(a),motif(a),sm((t-.45)/.55))}});
+ await ready(ib);di=n;const Rb=discR(ib);
+ await run({dur:750,draw:t=>{const e=ease(t);cube(g,lerpP(mid,front(Rb),e),motif(b),photo(b),sm(t/.5))}});
+ still=discStill();dirty=true;discCap();c.style.opacity=1;busy=false}
+document.getElementById('dprev').onclick=()=>step(-1);document.getElementById('dnext').onclick=()=>step(1);
+let sx=null;const disc=document.getElementById('disc');
+disc.addEventListener('pointerdown',e=>sx=e.clientX);disc.addEventListener('pointerup',e=>{if(sx!==null&&Math.abs(e.clientX-sx)>50)step(e.clientX<sx?1:-1);sx=null});
+document.getElementById('dcap').style.transition='opacity .3s';
+
+// ---------- profil, carte ----------
+function profR(){const s=Math.min(W-32,H*.42,320);return{x:(W-s)/2,y:84,w:s,h:s}}
+const profStill=()=>()=>{cube(g,front(profR(),Math.PI),homeC(),null,0);const c=document.getElementById('pcap');c.style.top=(profR().y+profR().h+18)+'px'};
+const carteStill=()=>()=>{g.fillStyle='#cfcec7';const st=24;for(let y=72;y<H;y+=st)for(let x=st/2+((W%st)/2);x<W;x+=st)g.fillRect(x-1.5,y-1.5,3,3);
+ const c=document.getElementById('ccap');c.style.top=(H*.42)+'px'};
+
+// ---------- index : tout mélangé, la famille n'est qu'une étiquette ----------
+const grid=document.getElementById('grid'),sel=document.getElementById('sel');let order='cat',picked=null;const items={};
+function itemDraw(p,m){const it=items[p.id],cv=it.cv,gg=cv.getContext('2d'),s=cv.clientWidth||72,d=Math.min(2,devicePixelRatio||1);
+ if(cv.width!==s*d){cv.width=s*d;cv.height=s*d}gg.setTransform(d,0,0,d,0,0);gg.clearRect(0,0,s,s);
+ cube(gg,hexP(s/2,s/2,bFor(s),L(0,2.2,m)),motif(p),photo(p),m)}
+function buildIndex(){if(!grid.childElementCount){for(const p of PR){const b=document.createElement('button');b.className='it';b.dataset.id=p.id;
+  b.innerHTML=`<canvas></canvas><span class="n">${p.t}</span><span class="y">${p.y}</span>`;b.setAttribute('aria-label',`${p.t}, ${FAM[p.fam]}, ${p.y}`);
+  items[p.id]={el:b,cv:b.querySelector('canvas'),m:0};b.onclick=()=>pick(p)}
+  arrange(false)}
+ requestAnimationFrame(()=>PR.forEach(p=>itemDraw(p,items[p.id].m)))}
+function arrange(flip){
+ const first={};if(flip)for(const p of PR)first[p.id]=items[p.id].el.getBoundingClientRect();
+ grid.querySelectorAll('.gh').forEach(h=>h.remove());grid.classList.toggle('yr',order==='year');
+ let groups;if(order==='cat')groups=['e','c','a'].map(f=>({t:FAM[f],ps:PR.filter(p=>p.fam===f).sort((a,b)=>b.y-a.y)}));
+ else{const ys=[...new Set(PR.map(p=>p.y))].sort((a,b)=>b-a);groups=ys.map(y=>({t:String(y),ps:PR.filter(p=>p.y===y)}))}
+ for(const gr of groups){const h=document.createElement('div');h.className='gh';h.textContent=gr.t;grid.appendChild(h);for(const p of gr.ps)grid.appendChild(items[p.id].el)}
+ if(!flip)return;
+ PR.forEach((p,i)=>{const el=items[p.id].el,b=el.getBoundingClientRect(),a=first[p.id],dx=a.left-b.left,dy=a.top-b.top;
+  if(!dx&&!dy)return;el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:red?1:700,delay:red?0:i*12,easing:'cubic-bezier(.6,0,.2,1)',fill:'backwards'})});
+ grid.querySelectorAll('.gh').forEach(h=>h.animate([{opacity:0},{opacity:1}],{duration:400,delay:350,fill:'backwards'}))}
+document.querySelector('.tools').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.o===order)return;order=b.dataset.o;
+ document.querySelectorAll('.tools button').forEach(x=>x.setAttribute('aria-pressed',x===b));arrange(true)});
+// toucher = creuser : le signe s'évide et laisse voir la photo ; second toucher = ouvrir
+function tweenItem(p,to){const it=items[p.id],m0=it.m,t0=performance.now();
+ const f=now=>{const t=Math.min(1,(now-t0)/(red?1:450));it.m=L(m0,to,ease(t));itemDraw(p,it.m);if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function pick(p){if(picked===p){openProject(p,{from:'index'});return}
+ if(picked)tweenItem(picked,0);picked=p;tweenItem(p,1);
+ sel.innerHTML=`<div class="t">${p.t}</div><div class="m">${FAM[p.fam]} · ${p.line||p.y}</div><button class="go" id="sopen">Ouvrir ›</button>`;sel.classList.add('on');
+ document.getElementById('sopen').onclick=()=>openProject(p,{from:'index'})}
+
+// ---------- page projet ----------
+const pj=document.getElementById('proj');let cur=null,empAxo=1,empA=1;
+function fillProject(p){const i=img(p.hero),ar=i&&i.naturalWidth?i.naturalWidth/i.naturalHeight:1;
+ const fiche=(p.fiche||[]).map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+ const tx=(p.txt||'').split(/\n+/).filter(Boolean).map(s=>`<p>${s}</p>`).join('');
+ const pls=(p.pl||[]).filter(s=>s!==p.hero).map(s=>`<div class="pl"><img loading="lazy" src="${s}" alt=""></div>`).join('');
+ pj.innerHTML=`<button class="go" id="pback" style="font-size:13px;margin-bottom:12px">‹ Projets</button>
+ <canvas class="hero blank" id="phero" style="--ar:${ar}"></canvas>
+ <h1>${p.t}</h1><div class="ln">${FAM[p.fam]} · ${p.line||p.y}</div>${fiche?`<dl>${fiche}</dl>`:''}<div class="tx">${tx}</div>
+ ${EMP[p.id]?`<div class="blk"><div class="hd"><span>Emprise</span><span><button data-a="0" aria-pressed="false">Plan</button><button data-a="1" aria-pressed="true">Axo</button></span></div><canvas id="emp"></canvas></div>`:''}
+ ${pls?`<div class="blk"><div class="hd"><span>Planches</span></div>${pls}</div>`:''}`;
+ pj.scrollTop=0;
+ document.getElementById('pback').onclick=closeProject;
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.25});
+ pj.querySelectorAll('.pl img').forEach(im=>io.observe(im));
+ pj.querySelectorAll('.blk .hd button').forEach(b=>b.onclick=()=>{empA=+b.dataset.a;pj.querySelectorAll('.blk .hd button').forEach(x=>x.setAttribute('aria-pressed',x===b));tickEmp()});
+}
+function heroRect(){const h=document.getElementById('phero').getBoundingClientRect();return{x:h.left,y:h.top,w:h.width,h:h.height}}
+function heroPaint(p){const c=document.getElementById('phero'),r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);c.width=r.width*d;c.height=r.height*d;
+ const gg=c.getContext('2d');gg.setTransform(d,0,0,d,0,0);cube(gg,front({x:0,y:0,w:r.width,h:r.height}),photo(p),null,0);c.classList.remove('blank')}
+async function openProject(p,{from}){if(busy)return;busy=true;try{
+ const i=img(p.hero);await ready(i);let A;
+ if(from==='index'){const r=items[p.id].cv.getBoundingClientRect();A=hexP(r.left+r.width/2,r.top+r.height/2,bFor(r.width),2.2)}
+ else A=front(discR(i));
+ cur={p,from};fillProject(p);pj.style.transition='none';pj.classList.add('on');pj.style.opacity=0;view='proj';sel.classList.remove('on');
+ const R=heroRect(),C=from==='index'&&items[p.id].m<.5?motif(p):photo(p);
+ document.querySelectorAll('.view').forEach(s=>{if(s!==pj)s.classList.remove('on')});
+ await run({dur:950,draw:t=>{const e=ease(t);g.globalAlpha=1;cube(g,lerpP(A,front(R),e),C,photo(p),C===photo(p)?0:sm(t/.5))}});
+ heroPaint(p);pj.style.transition='opacity .35s';pj.style.opacity=1;still=null;dirty=true;where.textContent=p.t;drawLogo();empAxo=1;empA=1;tickEmp();
+}finally{busy=false}}
+async function closeProject(){if(busy||!cur)return;busy=true;const {p,from}=cur;const R=heroRect();
+ pj.style.opacity=0;pj.classList.remove('on');
+ if(from==='index'){show('index');const it=items[p.id];it.el.style.visibility='hidden';const r=it.cv.getBoundingClientRect();
+  await run({dur:800,draw:t=>cube(g,lerpP(front(R),hexP(r.left+r.width/2,r.top+r.height/2,bFor(r.width),2.2),ease(t)),photo(p),null,0)});
+  it.el.style.visibility='';picked=null;it.m=1;tweenItem(p,0)}
+ else{const D=discR(img(p.hero));await run({dur:700,draw:t=>cube(g,lerpP(front(R),front(D),ease(t)),photo(p),null,0)});show('disc');still=discStill();discCap()}
+ pj.style.opacity='';busy=false;cur=null}
+// emprise : les pixels du plan, extrudés quand on tourne
+function tickEmp(){const c=document.getElementById('emp');if(!c||!cur)return;const E=EMP[cur.p.id];
+ const f=()=>{empAxo+=(empA-empAxo)*(red?1:.12);if(Math.abs(empA-empAxo)<.002)empAxo=empA;drawEmp(c,E,empAxo);if(empAxo!==empA)requestAnimationFrame(f)};f()}
+function drawEmp(c,E,ax){const r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(c.width!==r.width*d){c.width=r.width*d;c.height=r.height*d}
+ const gg=c.getContext('2d');gg.setTransform(d,0,0,d,0,0);gg.clearRect(0,0,r.width,r.height);
+ const n=E.n,mx=Math.max(...E.h)||1,cell=Math.min(r.width,r.height*1.3)/n/(1+.45*ax),c0=cell/2,yaw=Q*ax,pit=L(Math.PI/2,ISO,ax);
+ const cells=[];for(let j=0;j<n;j++)for(let i=0;i<n;i++){const h=E.h[j*n+i];if(h>0)cells.push({i,j,h})}
+ const sy=Math.sin(yaw),cy=Math.cos(yaw);cells.sort((a,b)=>((a.i-n/2)*sy+(a.j-n/2)*cy)-((b.i-n/2)*sy+(b.j-n/2)*cy));
+ const pr=cam(yaw,pit);const o=[r.width/2,r.height/2+cell*1.2*ax];
+ for(const q of cells){const hz=Math.max(.15,q.h/mx*2.4)*c0;
+  // la boîte posée au sol : centre décalé de la moitié de sa hauteur
+  const ctr=pr([(q.i-n/2+.5)*cell,hz,(q.j-n/2+.5)*cell]);
+  cube(gg,{yaw,pit,hx:c0*.98,hy:hz,hz:c0*.98,cx:o[0]+ctr[0],cy:o[1]+ctr[1],gap:0},{fr:[{k:'ink',c:'#55554f'}],ri:[{k:'ink',c:'#8f8f88'}],top:[{k:'ink'}],bk:[{k:'ink',c:'#55554f'}],le:[{k:'ink',c:'#8f8f88'}]},null,0)}}
+
+// ---------- logo : le même cube ; la face allumée dit où l'on est ----------
+const lg=document.querySelector('#logo canvas');
+function drawLogo(){const gg=lg.getContext('2d');gg.setTransform(2,0,0,2,0,0);gg.clearRect(0,0,28,28);
+ const lit={disc:'fr',index:'ri',proj:'ri',carte:'top',prof:'le'}[view];
+ const C={};for(const k of ['fr','ri','top','le','bk'])C[k]=[{k:'ink',c:!lit||lit===k?INK:PALE}];
+ cube(gg,hexP(14,14,bFor(28),1.2),C,null,0)}
+
+addEventListener('resize',()=>{fit();if(view==='index')PR.forEach(p=>itemDraw(p,items[p.id].m))});
+addEventListener('keydown',e=>{if(view==='disc'&&e.key==='ArrowRight')step(1);if(view==='disc'&&e.key==='ArrowLeft')step(-1);if(e.key==='Escape'){if(view==='proj')closeProject();else goHome()}});
+// préchargement léger : la photo de la porte Découvrir et le portrait
+img(DISC[0].hero);
+fit();drawLogo();requestAnimationFrame(render);
+doors.forEach(d=>d.style.opacity=0);
+Promise.all([document.fonts.ready,ready(img(DISC[0].hero))]).then(async()=>{busy=true;await intro();show('home');still=homeStill();busy=false;
+ const q=new URLSearchParams(location.search).get('v');if(q)go(q)});
+</script>
+</body>
+</html>
