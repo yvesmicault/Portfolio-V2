@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000">
+<title>Yves Micault, architecte</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Mono;src:url(fonts/plexmono-400.woff2) format("woff2")}
+:root{--fg:#f5f5f7;--mut:#86868b;--line:#2a2a2c}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#000;color:var(--fg);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+/* barre */
+nav{position:fixed;top:0;left:0;right:0;z-index:20;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc(50% - 520px));
+ background:rgba(0,0,0,.55);-webkit-backdrop-filter:saturate(1.8) blur(18px);backdrop-filter:saturate(1.8) blur(18px);border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+nav b{font-weight:600;letter-spacing:-.01em}
+nav span{display:flex;gap:20px;color:#d2d2d7}
+/* intro */
+.intro{height:300vh;position:relative}
+.stick{position:sticky;top:0;height:100vh;height:100svh;display:grid;place-items:center;overflow:hidden}
+.intro h1{font-size:clamp(44px,11vw,150px);font-weight:700;font-stretch:84%;letter-spacing:-.045em;line-height:.95;text-align:center;padding:0 18px}
+.intro h1 span{display:block;will-change:transform,opacity}
+.grad{background:linear-gradient(100deg,#f5f5f7 20%,#8e8e93 60%,#f5f5f7 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cue{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-family:Mono;font-size:11px;color:var(--mut);letter-spacing:.08em}
+/* projets */
+.pj{height:320vh;position:relative}
+.pj .stick{place-items:stretch}
+.frame{position:absolute;inset:0;will-change:clip-path}
+.frame img{width:100%;height:100%;object-fit:cover;will-change:transform}
+.frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 45%,rgba(0,0,0,.85) 100%);opacity:var(--sh,0)}
+.ttl{position:absolute;left:0;right:0;top:50%;text-align:center;will-change:transform,opacity;padding:0 18px;pointer-events:none}
+.ttl .k{font-family:Mono;font-size:12px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.ttl h2{font-size:clamp(46px,12vw,170px);font-weight:700;font-stretch:82%;letter-spacing:-.05em;line-height:.92;margin-top:10px}
+.specs{position:absolute;left:0;right:0;bottom:0;padding:0 max(20px,calc(50% - 520px)) calc(40px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr;gap:18px}
+.specs .tg{font-size:clamp(22px,3.4vw,40px);font-weight:600;font-stretch:90%;letter-spacing:-.02em;line-height:1.12;max-width:760px}
+.specs .tg em{font-style:normal;color:var(--mut)}
+.nums{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:8px 34px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
+.nums div{will-change:transform,opacity}
+.nums b{display:block;font-size:clamp(24px,4vw,44px);font-weight:600;font-stretch:88%;letter-spacing:-.03em}
+.nums small{font-family:Mono;font-size:10.5px;color:#a1a1a6;letter-spacing:.04em}
+.more{justify-self:start;font-size:15px;color:#2997ff}
+.rv{opacity:0;transform:translateY(24px)}
+/* gamme */
+section.flat{padding:120px 0 80px}
+.hd{padding:0 max(20px,calc(50% - 520px))}
+.hd h3{font-size:clamp(36px,7vw,80px);font-weight:700;font-stretch:84%;letter-spacing:-.045em;line-height:1}
+.hd p{color:var(--mut);font-size:clamp(17px,2vw,21px);margin-top:12px;max-width:640px;line-height:1.4}
+.chips{display:flex;gap:8px;margin:26px 0 0;padding:0 max(20px,calc(50% - 520px));overflow-x:auto}
+.chips button{all:unset;cursor:pointer;font-size:14px;padding:8px 16px;border-radius:99px;background:#1d1d1f;color:#d2d2d7;transition:background .3s,color .3s}
+.chips button[aria-pressed=true]{background:#f5f5f7;color:#000}
+.rail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:26px max(20px,calc(50% - 520px)) 10px;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.card{flex:0 0 min(72vw,300px);aspect-ratio:3/4;border-radius:22px;background:#111113;overflow:hidden;position:relative;scroll-snap-align:start;transition:opacity .4s,transform .5s cubic-bezier(.2,.7,.2,1)}
+.card img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.card:hover img{transform:scale(1.04)}
+.card .cp{position:absolute;left:0;right:0;bottom:0;padding:18px;background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,0))}
+.card .cp b{display:block;font-size:19px;font-weight:600;font-stretch:90%;letter-spacing:-.02em}
+.card .cp small{font-family:Mono;font-size:10.5px;color:#a1a1a6}
+.card.txt{display:flex;flex-direction:column;justify-content:space-between;padding:18px;background:#141416}
+.card.txt .yy{font-size:64px;font-weight:700;font-stretch:80%;letter-spacing:-.05em;color:#2c2c2e;line-height:1}
+.card.txt .cp{position:static;padding:0;background:none}
+.card.off{display:none}
+/* carte */
+.map{position:relative;margin:40px auto 0;width:min(100% - 40px,1040px);aspect-ratio:16/9}
+.map canvas{width:100%;height:100%;display:block}
+/* fin */
+.omt{height:220vh;position:relative}
+.omt h3{font-size:clamp(40px,9vw,120px);font-weight:700;font-stretch:84%;letter-spacing:-.045em;text-align:center;line-height:1}
+.omt .box{text-align:center;padding:0 20px}
+.omt p{color:var(--mut);font-size:19px;margin-top:16px}
+.pill{display:inline-block;margin-top:26px;background:#f5f5f7;color:#000;font-size:16px;font-weight:500;padding:13px 26px;border-radius:99px}
+footer{padding:40px 20px 60px;text-align:center;font-family:Mono;font-size:11px;color:#6e6e73}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<nav><b>Yves Micault</b><span><a href="#gamme">Projets</a><a href="#carte">Carte</a><a href="#fin">Profil</a></span></nav>
+
+<section class="intro" id="intro"><div class="stick">
+ <h1><span class="grad">Yves Micault.</span><span>Architecte.</span><span class="grad" id="count"></span></h1>
+ <div class="cue">FAIRE DÉFILER</div>
+</div></section>
+
+<main id="feat"></main>
+
+<section class="flat" id="gamme">
+ <div class="hd"><h3>Toute la collection.</h3><p id="gsub"></p></div>
+ <div class="chips" id="chips"><button aria-pressed="true" data-f="all">Tout</button><button aria-pressed="false" data-f="e">Études</button><button aria-pressed="false" data-f="c">Concours</button><button aria-pressed="false" data-f="a">Agence</button></div>
+ <div class="rail" id="rail"></div>
+</section>
+
+<section class="flat" id="carte">
+ <div class="hd"><h3 id="mapt"></h3><p>Chaque point est un projet. Les études et les concours en blanc, l'agence en gris.</p></div>
+ <div class="map"><canvas id="map"></canvas></div>
+</section>
+
+<section class="omt" id="fin"><div class="stick"><div class="box">
+ <h3><span id="o1" class="grad">Et une dernière chose.</span></h3>
+ <div id="o2" class="rv"><p>Architecte HMONP. Chef de projet chez Hamonic+Masson &amp; Associés depuis 2017.</p>
+ <a class="pill" href="doc/CV_2026_Yves_Micault.pdf" target="_blank" rel="noopener">Télécharger le CV</a></div>
+</div></div></section>
+<footer>Yves Micault · Architecte HMONP</footer>
+
+<script src="data.js"></script>
+<script>
+const PR=window.PROJ,FAM={e:'Études',c:'Concours',a:'Agence'};
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),seg=(p,a,b)=>cl((p-a)/(b-a)),ease=t=>1-Math.pow(1-t,3);
+const years=PR.map(p=>p.y),y0=Math.min(...years),y1=Math.max(...years);
+document.getElementById('count').textContent=`${PR.length} projets.`;
+document.getElementById('gsub').textContent=`Études, concours et projets d'agence, de ${y0} à ${y1}. Filtrez, faites glisser.`;
+// ---------- les projets phares : un écran chacun ----------
+const FEAT=PR.filter(p=>p.fam!=='a'&&p.hero);
+const get=(p,k)=>(p.fiche||[]).find(f=>f[0]===k)?.[1];
+const first=s=>{if(!s)return'';const m=s.match(/^.*?[.!?](\s|$)/);return(m?m[0]:s).trim()};
+const feat=document.getElementById('feat');
+feat.innerHTML=FEAT.map((p,i)=>{const surf=p.surf&&p.surf!=='—'?p.surf:null,place=(p.c||'').split(',')[0];
+ const nums=[[surf||String(p.y),surf?'surface':'année'],[surf?String(p.y):place,surf?'année':'lieu'],[get(p,'Nature')||FAM[p.fam],'nature']];
+ return`<section class="pj" data-i="${i}"><div class="stick">
+  <div class="frame"><img src="${p.hero}" alt="${p.t}" ${i>1?'loading="lazy"':''} decoding="async"></div>
+  <div class="ttl"><div class="k">${FAM[p.fam]} · ${p.y}</div><h2>${p.t}</h2></div>
+  <div class="specs"><div class="tg rv">${first(p.txt)}</div>
+   <div class="nums">${nums.map(n=>`<div class="rv"><b>${n[0]}</b><small>${n[1].toUpperCase()}</small></div>`).join('')}</div>
+  </div></div></section>`}).join('');
+// ---------- défilement : tout est piloté par la position ----------
+const secs=[...document.querySelectorAll('.pj')].map(s=>({s,fr:s.querySelector('.frame'),im:s.querySelector('.frame img'),tt:s.querySelector('.ttl'),tg:s.querySelector('.tg'),nums:[...s.querySelectorAll('.nums div')]}));
+const intro=document.getElementById('intro'),ih=[...intro.querySelectorAll('h1 span')],cue=intro.querySelector('.cue');
+const fin=document.getElementById('fin'),o1=document.getElementById('o1'),o2=document.getElementById('o2');
+function prog(el){const r=el.getBoundingClientRect(),H=innerHeight;return cl(-r.top/(r.height-H))}
+const show=(el,a,dy=24)=>{el.style.opacity=a;el.style.transform=`translateY(${(1-a)*dy}px)`};
+let ticking=false;
+function update(){ticking=false;const H=innerHeight,W=innerWidth;
+ // intro : trois lignes l'une après l'autre, puis tout s'éloigne
+ const p=prog(intro);ih.forEach((s,i)=>{const a=ease(seg(p,i*.2,i*.2+.18)),out=seg(p,.78,1);s.style.opacity=i===0?1-out:a*(1-out);s.style.transform=`translateY(${(1-(i?a:1))*30}px) scale(${1-out*.08})`});
+ cue.style.opacity=1-seg(p,0,.1);
+ for(const o of secs){const r=o.s.getBoundingClientRect();if(r.bottom<-H||r.top>H*2)continue;const q=prog(o.s);
+  // l'image naît en carte arrondie au centre, puis prend tout l'écran
+  const g=ease(seg(q,0,.42)),ix=L(W<700?.14:.3,0,g),iy=L(W<700?.3:.22,0,g),rad=L(28,0,g);
+  o.fr.style.clipPath=`inset(${iy*100}% ${ix*100}% ${iy*100}% ${ix*100}% round ${rad}px)`;
+  o.im.style.transform=`scale(${L(1.18,1,g)+seg(q,.42,1)*.06})`;
+  // le titre est là, puis monte et s'efface quand l'image s'ouvre
+  const tA=1-seg(q,.18,.4);o.tt.style.opacity=tA;o.tt.style.transform=`translateY(calc(-50% - ${(1-tA)*80+(W<700?H*.33:H*.36)*(1-g)*0}px))`;
+  o.tt.style.top=`${L(W<700?14:12,50,0)}%`;
+  o.fr.style.setProperty('--sh',seg(q,.4,.6));
+  show(o.tg,ease(seg(q,.5,.64)));o.nums.forEach((n,i)=>show(n,ease(seg(q,.6+i*.05,.72+i*.05))))}
+ const f=prog(fin);o1.style.opacity=ease(seg(f,0,.25));o1.parentElement.style.transform=`scale(${L(.92,1,ease(seg(f,0,.3)))})`;show(o2,ease(seg(f,.3,.5)));
+}
+const L=(a,b,t)=>a+(b-a)*t;
+addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(update)}},{passive:true});addEventListener('resize',update);
+// ---------- la collection ----------
+const rail=document.getElementById('rail');
+rail.innerHTML=PR.slice().sort((a,b)=>b.y-a.y).map(p=>{const im=p.hero?`<img src="${p.hero}" alt="" loading="lazy" decoding="async">`:'';
+ return`<a class="card ${p.hero?'':'txt'}" data-f="${p.fam}" href="${p.hero&&p.fam!=='a'?'#p-'+p.id:'#gamme'}">${p.hero?im:`<span class="yy">${p.y}</span>`}<div class="cp"><b>${p.t}</b><small>${FAM[p.fam]} · ${p.y}</small></div></a>`}).join('');
+document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ document.querySelectorAll('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b));const f=b.dataset.f;
+ rail.querySelectorAll('.card').forEach(c=>c.classList.toggle('off',f!=='all'&&c.dataset.f!==f));rail.scrollTo({left:0,behavior:red?'auto':'smooth'})});
+secs.forEach((o,i)=>o.s.id='p-'+FEAT[i].id);
+// ---------- carte : des points qui s'allument ----------
+const ll=PR.filter(p=>p.ll),lat=ll.map(p=>p.ll[0]),lon=ll.map(p=>p.ll[1]);
+const far=(f)=>ll.reduce((a,b)=>f(b)>f(a)?b:a);
+const south=far(p=>-p.ll[0]),east=far(p=>p.ll[1]);
+document.getElementById('mapt').textContent=`${ll.length} lieux, d'${(south.c||'').split(',')[0]} à la Sibérie.`;
+const mc=document.getElementById('map'),mg=mc.getContext('2d');let mT0=null;
+function drawMap(now){const r=mc.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(mc.width!==Math.round(r.width*d)){mc.width=r.width*d;mc.height=r.height*d}
+ mg.setTransform(d,0,0,d,0,0);mg.clearRect(0,0,r.width,r.height);
+ const L0=-14,L1=92,A0=0,A1=64,X=lo=>(lo-L0)/(L1-L0)*r.width,Y=la=>(1-(la-A0)/(A1-A0))*r.height;
+ mg.fillStyle='#1c1c1e';const st=Math.max(8,r.width/90);for(let x=st/2;x<r.width;x+=st)for(let y=st/2;y<r.height;y+=st)mg.fillRect(x-1,y-1,2,2);
+ const t=mT0===null?0:(now-mT0)/1000;
+ ll.forEach((p,i)=>{const k=red?1:ease(cl((t-i*.05)/.6));if(k<=0)return;const x=X(p.ll[1]),y=Y(p.ll[0]),pa=p.fam==='a';
+  mg.globalAlpha=.25*(1-cl((t-i*.05)/1.4));mg.strokeStyle='#fff';mg.beginPath();mg.arc(x,y,4+k*18,0,7);mg.stroke();mg.globalAlpha=1;
+  mg.fillStyle=pa?'#6e6e73':'#f5f5f7';mg.beginPath();mg.arc(x,y,3.2*k,0,7);mg.fill()});
+ [[south,'left'],[east,'right'],[PR.find(p=>p.id==='varese'),'left'],[PR.find(p=>p.id==='terminus'),'left']].forEach(([p,al])=>{if(!p)return;mg.globalAlpha=cl(t-1);mg.fillStyle='#a1a1a6';mg.font='11px Mono';mg.textAlign=al==='left'?'left':'right';
+  mg.fillText((p.c||p.t).split(',')[0],X(p.ll[1])+(al==='left'?9:-9),Y(p.ll[0])+4)});mg.globalAlpha=1;
+ if(t<4)requestAnimationFrame(drawMap)}
+new IntersectionObserver(es=>{if(es[0].isIntersecting&&mT0===null){mT0=performance.now();requestAnimationFrame(drawMap)}},{threshold:.4}).observe(mc);
+addEventListener('resize',()=>{if(mT0!==null)requestAnimationFrame(drawMap)});
+update();
+</script>
+</body>
+</html>
