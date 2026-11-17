@@ -31,7 +31,7 @@ for p in json.load(open(AGJ))['p']:
     out.append(dict(id=p['id'], t=p['t'], c=p['c'], y=int(p['y']) if str(p.get('y', '')).isdigit() else None,
                     k='a', nat=nat, stat=stat_of(p), prog=p.get('n', ''), s=p.get('s', ''),
                     ph=p.get('ph', ''), r=p.get('r', ''), st=p.get('st') or '', ll=p['ll'],
-                    th=img, hero=hero or img, txt=v.get('txt', ''), src='Hamonic + Masson',
+                    th=img, hero=hero or img, txt=v.get('txt', ''), src='Hamonic + Masson', hm=1 if p.get('u') else 0,
                     cr=v.get('cr', '')))
 
 # Études (e) et concours personnels (c) : fiches complètes du dépôt V2
