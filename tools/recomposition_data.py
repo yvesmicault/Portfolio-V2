@@ -81,3 +81,38 @@ print(len(out), collections.Counter(p['nat'] for p in out), collections.Counter(
       sum(1 for p in out if p['th']), sum(1 for p in out if p['hero']))
 missing = [p['hero'] for p in out if p['hero'] and not os.path.exists(REPO + '/' + p['hero'])] + [p['th'] for p in out if p['th'] and not os.path.exists(REPO + '/' + p['th'])]
 print('missing', missing)
+
+# --- Compléments repris de l'ancien site (textes longs à chapitres, cadre, résultat, liens, documents) ---
+OLD = json.load(open(REPO + '/tools/ancien_site_etudes.json'))
+OMAP = {'sospesa': 'varese', 'champ-libre': 'agri', 'terminus': 'terminus', 'elle': 'elle', 'les-petits-ventres-villes': 'ventres',
+        'the-crank-house': 'crank', 'synergies-latentes': 'synergies', 'siberian-spotlight': 'siberian', 'equilibrium': 'equilibrium'}
+BYID = {p['id']: p for p in out}
+for o in OLD:
+    p = BYID[OMAP[o['id']]]
+    p['txtL'] = o['txt']
+    p['ctx'] = o.get('ctx') or ''
+    p['sl'] = o.get('s') or ''
+    p['org'] = o.get('org') or ''
+    p['res'] = o.get('res') or ''
+    p['fmt'] = o.get('fmt') or ''
+    p['eu'] = o.get('eu') or []
+    docs = []
+    for d in o.get('docs') or []:
+        f = 'img/' + d['src'].split('/')[-1]
+        if os.path.exists(REPO + '/' + f): docs.append([f, d.get('cap', '')])
+    p['docs'] = docs
+# Agence : toutes les images publiées par projet, co-traitant
+AGX = sorted(os.listdir(REPO + '/img/agx'))
+AL = {'coeur-de-carnoles': 'cur-de-carnoles', 'le-cabanon-ideal': 'cabanon'}
+AGJP = {p['id']: p for p in json.load(open(AGJ))['p']}
+for p in out:
+    if p['k'] != 'a': continue
+    key = AL.get(p['id'], p['id'])
+    gal = ['img/agx/' + f for f in AGX if re.search(r'^\d{4}-' + re.escape(key) + r'(-|\.)', f)]
+    p['gal'] = gal
+    if gal and (not p['hero'] or p['hero'].startswith('img/agt/')): p['hero'] = gal[0]
+    p['co'] = AGJP[p['id']].get('co') or ''
+
+js = 'window.RP=' + json.dumps(out, ensure_ascii=False) + ';\nwindow.RPROFIL=' + json.dumps(PROFIL, ensure_ascii=False) + ';\nwindow.RPUB=' + json.dumps(D['PUB'], ensure_ascii=False) + ';\n'
+open(REPO + '/recomposition/data.js', 'w').write(js)
+print('compléments', sum(1 for p in out if p.get('txtL')), sum(len(p.get('gal', [])) for p in out), [p['id'] for p in out if p.get('gal')])
