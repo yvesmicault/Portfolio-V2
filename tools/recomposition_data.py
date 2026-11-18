@@ -72,7 +72,21 @@ PROFIL = {
            ['2014 — 2015', 'Institut d’architecture de Moscou', 'МАРХИ'],
            ['2009 — 2013', 'Licence en architecture', 'ENSA Clermont-Ferrand'],
            ['2007 — 2009', 'BTCA, brevet de technicien collaborateur d’architecte', 'Lycée Arago, Reims']],
-  'cv': D['CV'], 'pdf': 'doc/CV_2026_Yves_Micault.pdf'}
+  'cv': D['CV'], 'pdf': 'doc/CV_2026_Yves_Micault.pdf',
+  # repris du CV 2026 (profil, compétences, outils, langues, mobilité, distinctions)
+  'resume': 'Architecte HMONP avec près de dix ans d’expérience en agence, spécialisé dans la conception et le développement de projets de logements, d’équipements et d’opérations urbaines. Expérience de l’esquisse aux études de projet et aux dossiers d’appel d’offres.',
+  'apport': [['Mener un projet', 'Chef de projet chez Hamonic + Masson : pilotage des études, coordination des équipes et des bureaux d’études, suivi des délais et des livrables.'],
+             ['La culture du concours', '63 projets en agence depuis 2017, concours pour la plupart, à toutes les échelles : du logement à l’opération urbaine de 150 000 m².'],
+             ['De l’esquisse au DCE', 'Faisabilité, implantation, conception des plans, synthèse technique et analyse réglementaire, jusqu’aux dossiers d’appel d’offres.'],
+             ['Le BIM au quotidien', 'ArchiCAD en maquette numérique, modélisation 3D, pièces graphiques et supports de présentation.']],
+  'comp': [['Conception', ['Analyse de site', 'Études de faisabilité', 'Programme et surfaces', 'Implantation / volumétrie', 'Conception des plans']],
+           ['Représentation', ['Modélisation 3D', 'BIM / ArchiCAD', 'Pièces graphiques', 'Supports de présentation']],
+           ['Pilotage', ['Pilotage des études', 'Coordination d’équipe', 'Coordination BET', 'Synthèse technique', 'Analyse réglementaire', 'Suivi des délais et livrables']]],
+  'outils': ['Archicad', 'AutoCAD', 'SketchUp', 'QGIS', 'InDesign', 'Photoshop', 'Illustrator', 'Enscape', 'D5 Render', 'Notion'],
+  'langues': [['Français', 'natif'], ['Anglais', 'bilingue']],
+  'mob': 'Permis B · voiture et moto',
+  'dist': [['Europan 16', 'Limoges · mars 2021', 'Les petits ventres-villes', 'Mentionné', 'ventres'],
+           ['Bee Breeders · Transiberian Pit Stops', 'novembre 2016', 'Siberian Spotlight', 'Mention honorable', 'siberian']]}
 
 js = 'window.RP=' + json.dumps(out, ensure_ascii=False) + ';\nwindow.RPROFIL=' + json.dumps(PROFIL, ensure_ascii=False) + ';\n'
 open(REPO + '/recomposition/data.js', 'w').write(js)
